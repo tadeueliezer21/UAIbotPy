@@ -4,10 +4,6 @@
 
 <h2>Introduction</h2>
 
-<p align="center">
-    <img src="https://viniciusmgn.github.io/aulas_manipuladores/presentation/images/aula1/logouaibot.svg" alt="UAIBot Logo"/>
-</p>
-
 UAIBot is a <strong>web-based Python robotic simulator</strong> developed by <strong>Vinicius Mariano Gonçalves</strong>  (Electrical Engineering Department, Federal University of Minas Gerais, Brazil) and his students. 
 
 While teaching robotics, I used many different desktop-based simulators with my students (such as CoppeliaSim and Matlab Toolboxes). However, I realized that students nowadays are much more used to web-based applications. This is why I, together with my students, came with the idea of creating a simulator with the following goals:
@@ -40,8 +36,8 @@ It is easier to start using UAIBot in a web browser. We will use [GoogleColab](h
 Open a new notebook. Now, we need to install UAIBot in the GoogleColab servers. This can be done by simply running the following commands:
 
 ```python
-!git clone https://github.com/viniciusmgn/uaibot_vinicius.git
-!pip install uaibot_vinicius/
+!git clone https://github.com/UAIbot/UAIbotPy.git
+!pip install UAIbotPy/
 ```
 
 After it is done, we test if it is working by running the following command
@@ -63,8 +59,8 @@ Note that you will need to reinstall UAIBot every time you open GoogleColab, sin
 You can install the UAIBot package in a desktop-based IDE as Pycharm. Install using the terminal
 
 ```python
->>git clone https://github.com/viniciusmgn/uaibot_vinicius.git
->>pip install uaibot_vinicius/
+>>git clone https://github.com/UAIbot/UAIbotPy.git
+>>pip install UAIbotPy/
 ```
 
 The <strong>sim.run()</strong> may not work in some IDEs. In that case, you need to save the simulation as a HTML file:
