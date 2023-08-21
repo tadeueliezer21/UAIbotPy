@@ -6,6 +6,7 @@ from simobjects.box import *
 from simobjects.pointlight import *
 from simobjects.pointcloud import *
 import time
+from pathlib import Path
 
 # ts stores the time in seconds
 import httplib2
@@ -97,7 +98,9 @@ class Simulation:
 
     #_STRJAVASCRIPT += httplib2.Http().request(_URL)[1].decode()
 
-    for line in open("/home/viniciusmg/PycharmProjects/uaibot_vinicius/uaibot/threejs_sim.js").readlines():
+    p = Path(__file__).with_name('threejs_sim.js')
+
+    for line in open(p.absolute()).readlines():
         _STRJAVASCRIPT += line
 
     _STRJAVASCRIPT += "\n </script>"
