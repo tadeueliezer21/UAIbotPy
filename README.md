@@ -40,8 +40,8 @@ It is easier to start using UAIBot in a web browser. We will use [GoogleColab](h
 Open a new notebook. Now, we need to install UAIBot in the GoogleColab servers. This can be done by simply running the following commands:
 
 ```python
-!git clone https://github.com/viniciusmgn/uaibot_vinicius.git
-!pip install uaibot_vinicius/
+!git clone https://github.com/UAIbot/UAIbotPy.git
+!pip install UAIbotPy/
 ```
 
 After it is done, we test if it is working by running the following command
@@ -63,8 +63,8 @@ Note that you will need to reinstall UAIBot every time you open GoogleColab, sin
 You can install the UAIBot package in a desktop-based IDE as Pycharm. Install using the terminal
 
 ```python
->>git clone https://github.com/viniciusmgn/uaibot_vinicius.git
->>pip install uaibot_vinicius/
+>>git clone https://github.com/UAIbot/UAIbotPy.git
+>>pip install UAIbotPy/
 ```
 
 The <strong>sim.run()</strong> may not work in some IDEs. In that case, you need to save the simulation as a HTML file:
