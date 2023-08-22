@@ -660,7 +660,7 @@ var manualTime=0;
 gui.add({Progress: 0}, "Progress", 0, maxTime, 0.01).onChange(function (value) {
     automaticPlay = false;
 	manualTime = value+0.0001;
-	btn.innerHTML = ">";
+	btn.innerHTML = "&#9654";
 })
 customContainer.getElementsByClassName('c')[0].style.width = (canvas.clientWidth-20).toString()+'px';
 customContainer.getElementsByClassName('dg main')[0].style.width = canvas.clientWidth.toString()+'px';
@@ -699,7 +699,7 @@ btn.onclick = function () {
 	else
 	{
 		manualTime = parseFloat(customContainer.querySelectorAll("input[type=text]")[0].value)+0.0001;
-		btn.innerHTML = "▶";
+		btn.innerHTML = "&#9654";
 	}
 
 };
