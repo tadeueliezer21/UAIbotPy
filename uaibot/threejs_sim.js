@@ -699,7 +699,7 @@ btn.onclick = function () {
 	else
 	{
 		manualTime = parseFloat(customContainer.querySelectorAll("input[type=text]")[0].value)+0.0001;
-		btn.innerHTML = ">";
+		btn.innerHTML = "▶";
 	}
 
 };
