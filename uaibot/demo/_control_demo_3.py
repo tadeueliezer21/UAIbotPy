@@ -21,7 +21,7 @@ def _control_demo_3():
     robot = rb.Robot.create_kuka_lbr_iiwa()
 
     texture_wall = Texture(
-        url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/Textures/rough_metal.jpg',
+        url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_6.stl',
         wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
 
     material_wall = MeshMaterial(texture_map=texture_wall, roughness=1, metalness=1)

@@ -7,7 +7,7 @@ from ispathfree import *
 from scipy.linalg import expm, null_space
 
 texture_gold = ub.Texture(
-    url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/Textures/gold_metal.png',
+    url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/gold_metal.png',
     wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
 
 material_robot  = ub.MeshMaterial(texture_map=texture_gold, roughness=1, metalness=1)

@@ -99,7 +99,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
 
     base_3d_obj = [Model3D(
-        'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/base_link.dae',
+        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/base_link.dae',
         scale,
         Utils.rotx(3.14 / 2) ,
         MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
@@ -109,7 +109,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/link_1.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_1.dae',
             scale,
             np.matrix([[-1,0,0,0] , [0,-1,0,0.34-dy], [0,0,1,0], [0,0,0,1]])* Utils.roty(3.14),
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -120,7 +120,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/link_2.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_2.dae',
             scale,
             np.matrix([[-1,0,0,0] , [0,-0, 1, 0], [0,1,0,0.02+dy], [0,0,0,1]])* Utils.roty(3.14),
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -130,7 +130,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/link_3.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_3.dae',
             scale,
             np.matrix([[-1,0,0,0] , [0, 1, 0, -0.38+2*dy], [0,0,-1, 0], [0,0,0,1]])* Utils.roty(3.14),
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -140,7 +140,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/link_4.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_4.dae',
             scale,
             np.matrix([[-1,0,0,0] , [0,-0, 1, 0], [0,1,0,0.04+2*dy], [0,0,0,1]])* Utils.roty(3.14),
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -150,7 +150,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/link_5.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_5.dae',
             scale,
             np.matrix([[1,0,0,0] , [0,-1, 0, 0.36-2*dy], [0,0,-1,0], [0,0,0,1]]) ,
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -159,7 +159,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
     )
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/link_6.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_6.dae',
             scale,
             np.matrix([[1,0,0,0] , [0,0, -1, 0], [0,1,0,0.04+2*dy], [0,0,0,1]]) ,
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -168,7 +168,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
     )
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaLBRIIWA/link_7.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_7.dae',
             scale,
             Utils.trn([0, 0, -(0.08 + 0.05)+2*dy]) @ Utils.rotx(3.14 / 2),
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#707070",

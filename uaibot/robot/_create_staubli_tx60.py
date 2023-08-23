@@ -56,7 +56,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
     # Create 3d objects
 
     base_3d_obj = [Model3D(
-        'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/StaubliTX60/base_link.stl',
+        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/base_link.stl',
         scale,
         np.identity(4),
         MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
@@ -66,7 +66,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/StaubliTX60/link_1.stl',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_1.stl',
             scale,
             Utils.trn([0, -0.005, 0]) @ Utils.rotx(-3.14 / 2),
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -76,7 +76,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/StaubliTX60/link_2.stl',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_2.stl',
             scale,
             Utils.trn([-0.31, 0, 0.02]) @ Utils.rotz(-3.14 / 2) @ Utils.rotx(-3.14 / 2 + c * 7.3),
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -86,7 +86,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/StaubliTX60/link_3.stl',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_3.stl',
             scale,
             Utils.rotz(-3.14) @ Utils.trn([0, 0.045 - 0.05, 0]),
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -96,7 +96,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/StaubliTX60/link_4.stl',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_4.stl',
             scale,
             Utils.trn([0, -0.31, 0]) @ Utils.roty(3.14) @ Utils.rotx(-3.14 / 2),
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -106,7 +106,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/StaubliTX60/link_5.stl',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_5.stl',
             scale,
             np.identity(4),
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#C0C0C0",
@@ -115,7 +115,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
     )
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/StaubliTX60/link_6.stl',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_6.stl',
             scale,
             np.identity(4),
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="black",

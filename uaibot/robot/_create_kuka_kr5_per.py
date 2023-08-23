@@ -57,7 +57,7 @@ def _create_kuka_kr5_per(htm, name, color, opacity, pf):
     # Create 3d objects
 
     base_3d_obj = [
-        Model3D('https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaKR5/Base.obj',
+        Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaKR5/Base.obj',
                 0.001,
                 Utils.rotz(1.5 * 3.14) @ Utils.rotx(3.14 / 2),
                 MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#242526",
@@ -66,7 +66,7 @@ def _create_kuka_kr5_per(htm, name, color, opacity, pf):
     link_3d_obj = []
 
     link_3d_obj.append(
-        [Model3D('https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaKR5/Axis1.obj',
+        [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaKR5/Axis1.obj',
                  0.001,
                  Utils.trn([-0.08, 0.135, 0]) @ Utils.rotx(3.14),
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -74,7 +74,7 @@ def _create_kuka_kr5_per(htm, name, color, opacity, pf):
     )
 
     link_3d_obj.append(
-        [Model3D('https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaKR5/Axis2.obj',
+        [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaKR5/Axis2.obj',
                  0.001,
                  Utils.trn([-0.37, 0, 0.11]) @ Utils.rotz(-3.14 / 2 + 3.14 / 13) @ Utils.rotx(3.14 / 2),
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -82,7 +82,7 @@ def _create_kuka_kr5_per(htm, name, color, opacity, pf):
     )
 
     link_3d_obj.append(
-        [Model3D('https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaKR5/Axis3.obj',
+        [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaKR5/Axis3.obj',
                  0.001,
                  Utils.trn([-0.09, 0, 0]) @ Utils.rotx(0) @ Utils.rotz(-3.14 / 2),
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -90,7 +90,7 @@ def _create_kuka_kr5_per(htm, name, color, opacity, pf):
     )
 
     link_3d_obj.append(
-        [Model3D('https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaKR5/Axis4.obj',
+        [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaKR5/Axis4.obj',
                  0.001,
                  Utils.trn([0, -0.185, 0]) @ Utils.rotz(3.14 / 2),
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -98,7 +98,7 @@ def _create_kuka_kr5_per(htm, name, color, opacity, pf):
     )
 
     link_3d_obj.append(
-        [Model3D('https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaKR5/Axis5.obj',
+        [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaKR5/Axis5.obj',
                  0.001,
                  Utils.trn([0, 0, 0]) @ Utils.roty(3.14),
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -106,7 +106,7 @@ def _create_kuka_kr5_per(htm, name, color, opacity, pf):
     )
 
     link_3d_obj.append(
-        [Model3D('https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/KukaKR5/Axis6.obj',
+        [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaKR5/Axis6.obj',
                  0.001,
                  Utils.trn([0, 0, -0.012]) @ Utils.rotx(3.14 / 2),
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#242526",

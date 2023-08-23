@@ -9,7 +9,7 @@ material_glass = ub.MeshMaterial(metalness=0.9, roughness=0.05, env_map_intensit
                               reflectivity=0.2, refraction_ratio=0.985, ior=1.52, specular_intensity=0.1,
                               specular_color="white", transmission=1, side="BackSide")
 texture_wall = ub.Texture(
-    url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/Textures/rough_metal.jpg',
+    url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/rough_metal.jpg',
     wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
 
 material_wall = ub.MeshMaterial(texture_map=texture_wall, roughness=1, metalness=1)

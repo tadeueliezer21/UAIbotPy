@@ -11,11 +11,11 @@ np.set_printoptions(precision=4, suppress=True, linewidth=150)
 
 
 texture_gold = ub.Texture(
-    url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/Textures/gold_metal.png',
+    url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/gold_metal.png',
     wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
 
 texture_wall = ub.Texture(
-    url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/Textures/rough_metal.jpg',
+    url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/rough_metal.jpg',
     wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
 
 material_obstacle = ub.MeshMaterial(texture_map=texture_wall, roughness=1, metalness=1)

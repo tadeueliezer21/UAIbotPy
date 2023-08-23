@@ -59,7 +59,7 @@ def _create_franka_ermika_3(htm, name, color, opacity):
 
 
     base_3d_obj = [Model3D(
-        'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link0.obj',
+        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link0.obj',
         scale,
         Utils.trn([0, 0, 0]) ,
         MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
@@ -69,7 +69,7 @@ def _create_franka_ermika_3(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link1.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link1.obj',
             scale,
             Utils.trn([0, 0, 0]),
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -80,7 +80,7 @@ def _create_franka_ermika_3(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link2.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link2.obj',
             scale,
             Utils.trn([0, 0, 0]),
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -90,7 +90,7 @@ def _create_franka_ermika_3(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link3.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link3.obj',
             scale,
             Utils.trn([0, 0, 0]),
             MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
