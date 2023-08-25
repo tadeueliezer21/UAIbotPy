@@ -34,7 +34,7 @@ Examples of HTML simulations made using UAIBot can be seen [here](https://vinici
 The animations are displayed using [Three.js](https://threejs.org/), in JavaScript. So the Python code automatically generates the JavaScript code to set up the animation that was coded using Python. In fact, UAIBot wraps in Python many of Three.js' functions, allowing us to use many of Three.js' features to visually customize the simulation.
 
 <h2>Getting started</h2>
-
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1i3sxpV_DvVr_WH3vPFoN-ZPSP0ktpFlx?usp=sharing)
 It is easier to start using UAIBot in a web browser. We will use [GoogleColab](https://colab.research.google.com/) since it allows us to run Python code in a web browser.
 
 Open a new notebook. Now, we need to install UAIBot in the GoogleColab servers. This can be done by simply running the following commands:
