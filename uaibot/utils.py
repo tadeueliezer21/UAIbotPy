@@ -107,11 +107,11 @@ class Utils:
       htm : 4x4 numpy matrix
           The homogeneous transformation matrix.
       """
-        v = np.matrix(vector).reshape((3,1))
+        v = np.matrix(vector, dtype=object).reshape((3,1))
         return np.matrix([[1, 0, 0, v[0,0]],
                          [0, 1, 0, v[1,0]],
                          [0, 0, 1, v[2,0]],
-                         [0, 0, 0, 1]])
+                         [0, 0, 0, 1]], dtype=object)
 
     @staticmethod
     def rotx(angle):
