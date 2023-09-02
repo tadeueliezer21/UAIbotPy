@@ -80,7 +80,7 @@ This will save the file <strong>test_uaibot.html</strong> in your C: directory. 
 
 <h2>How to use the simulator</h2>
 
-Please see the [UAIBot Wiki](???).
+Please see the [UAIBot documentation](http://uaibot.github.io/).
 
 If you know Portuguese, you can also see my [Robotic Manipulator course](https://viniciusmgn.github.io/aulas_manipuladores), which uses UAIBot.
 
