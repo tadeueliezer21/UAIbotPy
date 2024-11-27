@@ -8,7 +8,7 @@
     <img src="https://viniciusmgn.github.io/aulas_manipuladores/presentation/images/aula1/logouaibot.svg" alt="UAIBot Logo"/>
 </p>
 
-UAIBot is a <strong>web-based Python robotic simulator</strong> developed by <strong>Vinicius Mariano Gonçalves</strong>  (Electrical Engineering Department, Federal University of Minas Gerais, Brazil) and his students. 
+UAIBot is a web-based Python robotic simulator developed by <strong>Vinicius Mariano Gonçalves</strong>  (Electrical Engineering Department, Federal University of Minas Gerais, Brazil) and his students. 
 
 While teaching robotics, I used many different desktop-based simulators with my students (such as CoppeliaSim and Matlab Toolboxes). However, I realized that students nowadays are much more used to web-based applications. This is why I, together with my students, came up with the idea of creating a simulator with the following goals:
 
