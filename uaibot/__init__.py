@@ -5,6 +5,7 @@ from .demo import *
 from .utils import *
 from uaibot.robot.links import *
 from .simulation import *
+from sfm import *
 from uaibot.simobjects.ball import *
 from uaibot.simobjects.box import *
 from uaibot.simobjects.smoothbox import *

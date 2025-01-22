@@ -29,7 +29,7 @@ class Utils:
     UAIBOT_NAME_TYPES = ['uaibot.', 'cylinder.', 'box.', 'smoothbox.', 'ball.', 'robot.', 'simulation.', 'meshmaterial.',
                              'texture.',
                              'pointlight.', 'frame.', 'model3d.', 'links.', 'pointcloud.', 'vector.', 'rigidobject.',
-                             '.group', '.htmldiv']
+                             '.group', '.htmldiv', '.Pedestrian']
 
     IS_SIMPLE = ['uaibot.Ball', 'uaibot.Box', 'uaibot.Cylinder', 'uaibot.SmoothBox', 'uaibot.Cone']
 
@@ -38,7 +38,7 @@ class Utils:
 
     IS_OBJ_SIM = ['uaibot.Ball', 'uaibot.Box', 'uaibot.SmoothBox', 'uaibot.Cylinder', 'uaibot.Cone', 'uaibot.Robot',
                   'uaibot.PointLight', 'uaibot.Frame', 'uaibot.PointCloud', 'uaibot.Vector',
-                  'uaibot.RigidObject', 'uaibot.Group', 'uaibot.HTMLDiv']
+                  'uaibot.RigidObject', 'uaibot.Group', 'uaibot.HTMLDiv', 'uaibot.Pedestrian']
 
     #######################################
     # Basic functions
