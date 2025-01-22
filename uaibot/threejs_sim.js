@@ -582,12 +582,15 @@ ambientLight.intensity = ambientLightIntensity;
 scene.add(ambientLight);
 
 const controls = new OrbitControls(camera, canvas);	//Instantiate orbit controls
-//controls.target.set(0, 0, 0);//Point camera at the origin
+controls.target.set(0, 0, 0);//Point camera at the origin
 
 camera.position.set(cameraStartPose[0], cameraStartPose[1], cameraStartPose[2]);
-camera.rotation.set(cameraStartPose[3], cameraStartPose[4], cameraStartPose[5]);
+//camera.rotation.set(cameraStartPose[3], cameraStartPose[4], cameraStartPose[5]);
+camera.lookAt(new Vector3(cameraStartPose[3], cameraStartPose[4], cameraStartPose[5]));
 camera.zoom = cameraStartPose[6];
 camera.updateProjectionMatrix();
+
+controls.target.set(0, 0, 0);//Point camera at the origin
 
 const renderer = new WebGLRenderer({canvas, antialias: true});//Instantiate renderer
 renderer.physicallyCorrectLights = true;//Enable physically Correct Lights
@@ -607,8 +610,6 @@ if (showGrid) {
 	scene.add(gridHelper);
 	gridHelper.rotation.x = 3.14 / 2;
 }
-
-
 
 
 
