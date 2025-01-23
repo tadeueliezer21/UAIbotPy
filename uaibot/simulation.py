@@ -185,8 +185,8 @@ class Simulation:
     # Constructor
     #######################################
 
-    def __init__(self, obj_list=[], ambient_light_intensity=12, ldr_urls=None, camera_type="perspective", width=800,
-                 height=600, show_world_frame = True, show_grid = True, load_screen_color="#19bd39", background_color="white",
+    def __init__(self, obj_list=[], ambient_light_intensity=4, ldr_urls=None, camera_type="perspective", width=800,
+                 height=600, show_world_frame = True, show_grid = True, load_screen_color="#19bd39", background_color="#F5F6FA",
                  camera_start_pose = None, grid_size=6, grid_divisions=12):
 
         if not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0:
