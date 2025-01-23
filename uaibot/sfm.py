@@ -22,7 +22,7 @@ class Pedestrian(Cylinder):
     radius : float, optional
         Radius of the agent. The default is 0.3.
     va : numpy array, optional
-        Initial velocity of the agent. The default is np.array([[0],[0]]).
+        Velocity of the agent. The default is np.array([[0],[0]]).
     va0 : float, optional
         Desired velocity magnitude. The default is 1.3.
     ta : float, optional
@@ -264,6 +264,129 @@ class Pedestrian(Cylinder):
         )
 
         return self._lambda_a + (1 - self._lambda_a) * (1 + np.cos(phi_aq)) / 2
+    
+    def d(self, rb, b_radius):
+        """
+        Compute the distance vector between two agents.
+        This function calculates the distance vector between two agents
+        based on their positions and radii.
+
+        Parameters
+        ----------
+        rb : numpy array
+            Position of the other agent.
+        b_radius : float
+            Radius of the other agent
+        """
+
+        d = (rb - self._ra) - (self._radius + b_radius) * (rb - self._ra) / np.linalg.norm(
+            rb - self._ra
+        )  # distance from obstacle to pedestrian
+        return d
+    
+
+class ObstacleColumn(Cylinder):
+    """
+    Initialize a pedestrian agent.
+
+    Parameters
+    ----------
+    ra : numpy array
+        Position of the agent.
+    name : str, optional
+        Name of the agent. The default is "ObstacleColumn".
+    color : str, optional
+        Color of the agent. The default is "DarkGrey".
+    height : float, optional
+        Height of the agent. The default is 1.7.
+    radius : float, optional
+        Radius of the agent. The default is 0.3.
+    va : numpy array, optional
+        Velocity of the agent. The default is np.array([[0],[0]]).
+    """
+
+    #######################################
+    # Attributes
+    #######################################
+
+    @property
+    def ra(self):
+        return self._ra
+
+    @ra.setter
+    def ra(self, value):
+        self._ra = value
+
+    @property
+    def name(self):
+        return self._name
+    
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def color(self):
+        return self._color
+    
+    @color.setter
+    def color(self, value):
+        self._color = value
+    
+    @property
+    def height(self):
+        return self._height
+    
+    @height.setter
+    def height(self, value):
+        self._height = value
+
+    @property
+    def radius(self):
+        return self._radius
+
+    @radius.setter
+    def radius(self, value):
+        self._radius = value
+
+    @property
+    def va(self):
+        return self._va
+
+    @va.setter
+    def va(self, value):
+        self._va = value
+
+    @property
+    def is_pedestrian(self):
+        return False
+    
+    #######################################
+    # Constructor
+    #######################################
+
+    def __init__(
+        self,
+        ra: np.array,
+        name: str = "ObstacleColumn",
+        color: str = "DarkGrey",
+        height: float = 2.4,
+        radius: float = 0.3,
+        va: np.array = np.array([[0], [0]])
+    ):
+        htm = np.eye(4)
+        htm[0][3] = ra[0]
+        htm[1][3] = ra[1]
+        htm[2][3] = height / 2
+
+        super().__init__(htm=htm, name=name, radius=radius, height=height, mass=1, color=color, opacity=1, mesh_material=None)
+        self._ra = ra
+        self._name = name
+        self._color = color
+        self._height = height
+        self._radius = radius
+        self._va = va
+
     
     def d(self, rb, b_radius):
         """
