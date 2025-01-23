@@ -287,22 +287,22 @@ class Pedestrian(Cylinder):
 
 class ObstacleColumn(Cylinder):
     """
-    Initialize a pedestrian agent.
+    Initialize an Obstacle Column.
 
     Parameters
     ----------
-    ra : numpy array
-        Position of the agent.
+    ro : numpy array
+        Position of the Obstacle.
     name : str, optional
-        Name of the agent. The default is "ObstacleColumn".
+        Name of the Obstacle. The default is "ObstacleColumn".
     color : str, optional
-        Color of the agent. The default is "DarkGrey".
+        Color of the Obstacle. The default is "DarkGrey".
     height : float, optional
-        Height of the agent. The default is 1.7.
+        Height of the Obstacle. The default is 2.4.
     radius : float, optional
-        Radius of the agent. The default is 0.3.
+        Radius of the Obstacle. The default is 0.5.
     va : numpy array, optional
-        Velocity of the agent. The default is np.array([[0],[0]]).
+        Velocity of the Obstacle. The default is np.array([[0],[0]]).
     """
 
     #######################################
@@ -310,11 +310,11 @@ class ObstacleColumn(Cylinder):
     #######################################
 
     @property
-    def ra(self):
+    def ro(self):
         return self._ra
 
-    @ra.setter
-    def ra(self, value):
+    @ro.setter
+    def ro(self, value):
         self._ra = value
 
     @property
@@ -367,20 +367,20 @@ class ObstacleColumn(Cylinder):
 
     def __init__(
         self,
-        ra: np.array,
+        ro: np.array,
         name: str = "ObstacleColumn",
         color: str = "DarkGrey",
         height: float = 2.4,
-        radius: float = 0.3,
+        radius: float = 0.5,
         va: np.array = np.array([[0], [0]])
     ):
         htm = np.eye(4)
-        htm[0][3] = ra[0]
-        htm[1][3] = ra[1]
+        htm[0][3] = ro[0]
+        htm[1][3] = ro[1]
         htm[2][3] = height / 2
 
         super().__init__(htm=htm, name=name, radius=radius, height=height, mass=1, color=color, opacity=1, mesh_material=None)
-        self._ra = ra
+        self._ra = ro
         self._name = name
         self._color = color
         self._height = height
