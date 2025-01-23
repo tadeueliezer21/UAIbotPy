@@ -606,7 +606,7 @@ if (showWorldFrame) {
 }
 
 if (showGrid) {
-	const gridHelper = new GridHelper(6, 12);
+	const gridHelper = new GridHelper(gridSize, gridDivisions);
 	scene.add(gridHelper);
 	gridHelper.rotation.x = 3.14 / 2;
 }

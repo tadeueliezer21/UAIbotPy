@@ -170,6 +170,16 @@ class Simulation:
         """The camera starting pose. The first three elements are the starting camera position, the next three ones
         is the starting point in which the camera is looking at and the last one is the zoom"""
         return self._camera_start_pose
+    
+    @property
+    def grid_size(self):
+        """Size of the grid"""
+        return self._grid_size
+    
+    @property
+    def grid_divisions(self):
+        """Number of divisions in the grid"""
+        return self._grid_divisions
 
     #######################################
     # Constructor
@@ -177,7 +187,7 @@ class Simulation:
 
     def __init__(self, obj_list=[], ambient_light_intensity=12, ldr_urls=None, camera_type="perspective", width=800,
                  height=600, show_world_frame = True, show_grid = True, load_screen_color="#19bd39", background_color="white",
-                 camera_start_pose = None):
+                 camera_start_pose = None, grid_size=6, grid_divisions=12):
 
         if not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0:
             raise Exception("The parameter 'ambient_light_intensity' should be a nonnegative float.")
@@ -234,6 +244,8 @@ class Simulation:
         self._load_screen_color = load_screen_color
         self._background_color = background_color
         self._camera_start_pose = np.array(camera_start_pose).tolist()
+        self._grid_size = grid_size
+        self._grid_divisions = grid_divisions
 
         if str(type(obj_list)) == "<class 'list'>":
             for obj in obj_list:
@@ -447,7 +459,7 @@ class Simulation:
 
     def set_parameters(self, ambient_light_intensity=None, ldr_urls=None, camera_type=None, width=None,
                  height=None, show_world_frame = None, show_grid = None, load_screen_color=None, background_color=None,
-                 camera_start_pose = None):
+                 camera_start_pose = None, grid_size=None, grid_divisions=None):
         """
       Change the simulation parameters.
 
@@ -623,6 +635,12 @@ class Simulation:
                         string)
         string = re.sub("//SIMULATION PARAMETERS GO HERE",
                         "const cameraStartPose = "+str(self.camera_start_pose)+";\n //SIMULATION PARAMETERS GO HERE",
+                        string)
+        string = re.sub("//SIMULATION PARAMETERS GO HERE",
+                        "const gridSize = "+str(self._grid_size)+";\n //SIMULATION PARAMETERS GO HERE",
+                        string)
+        string = re.sub("//SIMULATION PARAMETERS GO HERE",
+                        "const gridDivisions = "+str(self._grid_divisions)+";\n //SIMULATION PARAMETERS GO HERE",
                         string)
         string = re.sub("##WIDTH##", str(self.width), string)
         string = re.sub("##HEIGHT##", str(self.height), string)
