@@ -2,6 +2,7 @@ from utils import *
 import numpy as np
 from graphics.meshmaterial import *
 from uaibot.simobjects.cylinder import *
+from uaibot.simobjects.box import *
 
 class Pedestrian(Cylinder):
     """
@@ -369,7 +370,7 @@ class ObstacleColumn(Cylinder):
         self,
         ro: np.array,
         name: str = "ObstacleColumn",
-        color: str = "DarkGrey",
+        color: str = "DimGray",
         height: float = 2.4,
         radius: float = 0.5,
         va: np.array = np.array([[0], [0]])
@@ -406,3 +407,156 @@ class ObstacleColumn(Cylinder):
             rb - self._ra
         )  # distance from obstacle to pedestrian
         return d
+    
+class ObstacleThinWall(Box):
+    """
+    Initialize a thin wall obstacle.
+
+    Parameters
+    ----------
+    start : numpy array
+        Start position of the wall.
+    end : numpy array
+        End position of the wall.
+    height : float, optional
+        Height of the wall. The default is 2.4.
+    """
+
+    #######################################
+    # Attributes
+    #######################################
+
+    @property
+    def start(self):
+        return self._start
+
+    @start.setter
+    def start(self, value):
+        self._start = value
+
+    @property
+    def end(self):
+        return self._end
+
+    @end.setter
+    def end(self, value):
+        self._end = value
+
+    @property
+    def height(self):
+        return self._height
+    
+    @height.setter
+    def height(self, value):
+        self._height = value
+
+    @property
+    def color(self):
+        return self._color
+    
+    @color.setter
+    def color(self, value):
+        self._color = value
+
+    @property
+    def is_pedestrian(self):
+        return False
+    
+    #######################################
+    # Constructor
+    #######################################
+
+    def __init__(
+        self,
+        start: np.array,
+        end: np.array,
+        height: float = 2.4,
+        color: str = "DimGray"
+    ):
+        self._start = start
+        self._end = end
+        self._height = height
+        self._color = color
+
+        wall_middle = (start + end) / 2
+        wall_length = np.linalg.norm(end - start)
+        wall_angle = np.arctan2(end[1][0] - start[1][0], end[0][0] - start[0][0])
+        htm_trn = Utils.trn([wall_middle[0][0], wall_middle[1][0], height/2])
+        htm_angle = Utils.rot([0, 0, 1], wall_angle)
+        htm_total = htm_trn @ htm_angle
+        super().__init__(htm=htm_total, name="", width=wall_length, height=height, depth=0.05, mass=1, color=color, opacity=1, mesh_material=None)
+    
+    #######################################
+    # Methods
+    #######################################
+
+    def d(self, ra, ra_radius, retur_points=False):
+        """
+        computes (v, p0, c):
+        - v is the smallest vector pointing from the segment ab to the circle
+            with center o and radius r
+        - p0 is the closest point on the segment ab to the circle center o
+        - c is the corresponding closest point on the circle
+
+        assumes the segment and circle do not intersect (d > r).
+
+        parameters
+        ----------
+        ra : ndarray, shape (2,)
+            position of the circle center
+        ra_radius : float
+            radius of the circle
+
+        returns
+        -------
+        v : ndarray, shape (2,)
+            smallest vector from the segment to the circle.
+            if p0 is the point on the segment closest to o,
+            then v = c - p0, where c is the circle point closest to p0.
+        p0 : ndarray, shape (2,)
+            closest point on the segment ab to the circle center o
+        c : ndarray, shape (2,)
+            closest point on the circle to the point p0
+        """
+        a = self.start.flatten()
+        b = self.end.flatten()
+        o = ra.flatten()
+
+        ab = b - a
+        ao = o - a
+        norm_ab_sq = np.dot(ab, ab)
+
+        # handle degenerate case: a == b
+        if norm_ab_sq < 1e-15:
+            # the segment is effectively a single point
+            p0 = a
+        else:
+            # 1) parametric t_star for the infinite line that gives
+            #    the closest approach of o onto line ab
+            t_star = np.dot(ao, ab) / norm_ab_sq
+
+            # 2) clamp t_star to [0, 1] to stay on segment ab
+            t_0 = max(0.0, min(t_star, 1.0))
+
+            # 3) closest point on the segment
+            p0 = a + t_0 * ab
+
+        # distance from p0 to o
+        op0 = p0 - o
+        d = np.linalg.norm(op0)
+
+        # if truly no intersection, we expect d > r
+        if d < ra_radius:
+            # if intersection or numerical issues arise, handle gracefully
+            return np.zeros(2), p0, p0
+
+        # 4) closest point on the circle to p0 is on the ray o->p0
+        c = o + (ra_radius / d) * op0
+
+        # 5) smallest vector from p0 to c
+        d = c - p0
+
+        if retur_points:
+            return d.reshape(2,1), p0.reshape(2,1), c.reshape(2,1)
+        else:
+            return d.reshape(2,1)
