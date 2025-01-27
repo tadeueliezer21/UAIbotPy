@@ -186,9 +186,9 @@ class Pedestrian(Cylinder):
         va0: float = 1.3,
         ta: float = 1.0,
         ma: float = 1.0,
-        a_beta: float = 8.0,
-        b_beta: float = 0.2,
-        a_i: float = 5.0,
+        a_beta: float = 5.0,
+        b_beta: float = 0.4,
+        a_i: float = 7.0,
         b_i: float = 0.3,
         lambda_a: float = 0.3,
     ):
