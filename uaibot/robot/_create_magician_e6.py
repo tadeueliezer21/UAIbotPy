@@ -40,14 +40,22 @@ def _create_magician_e6(htm, name, color, opacity):
     col_model = [[], [], [], [], [], []]
 
 
-    col_model[0].append(Cylinder(htm=Utils.trn([0, 0, 0]),
-                                 name=name + "_C0_0", radius=0.05, height=0.1, color="red", opacity=0.3))
-    col_model[1].append(Box(htm=Utils.trn([-0.15, 0, -0.125]) @ Utils.rotz(3.14 / 2) @ Utils.rotx(-3.14 / 2 - c * 7.3),
-                            name=name + "_C1_0", width=0.18, depth=0.1, height=0.45, color="blue", opacity=0.3))
-    col_model[2].append(Box(htm=Utils.trn([0, -0.02, 0]),
-                            name=name + "_C2_0", width=0.17, depth=0.2, height=0.25, color="green", opacity=0.3))
-    col_model[3].append(Box(htm=Utils.trn([0, -0.08, 0]),
-                            name=name + "_C3_0", width=0.15, depth=0.27, height=0.13, color="orange", opacity=0.3))
+    col_model[0].append(Cylinder(htm=Utils.trn([0, 0.05, 0])*Utils.rotx(np.pi/2),
+                                 name=name + "_C0_0", radius=0.045, height=0.175, color="red", opacity=0.3))
+    col_model[0].append(Cylinder(htm=Utils.trn([0, 0, -0.04]),
+                                 name=name + "_C0_1", radius=0.045, height=0.175, color="red", opacity=0.3))
+    col_model[1].append(Box(htm=Utils.trn([-0.07, 0, -0.005]),
+                            name=name + "_C1_0", width=0.18, depth=0.09, height=0.06, color="blue", opacity=0.3))
+    col_model[1].append(Cylinder(htm=Utils.trn([0, 0, 0.05]),
+                                 name=name + "_C1_1", radius=0.045, height=0.175, color="blue", opacity=0.3))
+    col_model[2].append(Box(htm=Utils.trn([-0.07, 0, 0.01]),
+                            name=name + "_C2_0", width=0.18, depth=0.09, height=0.06, color="green", opacity=0.3))
+    col_model[2].append(Cylinder(htm=Utils.trn([0, 0, -0.04]),
+                                 name=name + "_C2_1", radius=0.04, height=0.175, color="green", opacity=0.3))
+    col_model[3].append(Cylinder(htm=Utils.trn([0, 0, 0.05]),
+                                 name=name + "_C3_0", radius=0.035, height=0.13, color="yellow", opacity=0.3))
+    col_model[4].append(Cylinder(htm=Utils.trn([0, 0, 0]),
+                                 name=name + "_C3_1", radius=0.035, height=0.14, color="cyan", opacity=0.3))
 
     # Create 3d objects
     
