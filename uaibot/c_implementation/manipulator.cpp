@@ -1,0 +1,1903 @@
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <vector>
+#include <thread>
+#include <mutex>
+#include "gjk.h"
+#include "nanoflann.hpp"
+
+#include "declarations.h"
+
+using namespace std;
+using namespace Eigen;
+
+////////////////////////////////////////////////////////////////
+// FORWARD KINEMATIC
+////////////////////////////////////////////////////////////////
+
+FKResult::FKResult(int _no_links) : no_links(_no_links)
+{
+    htm_dh = vector<Matrix4f>(no_links);
+    jac_v_dh = vector<MatrixXf>(no_links);
+    jac_w_dh = vector<MatrixXf>(no_links);
+};
+
+Vector3f FKResult::get_x_dh(int ind_link) const { return htm_dh[ind_link].block<3, 1>(0, 0); }
+
+Vector3f FKResult::get_y_dh(int ind_link) const { return htm_dh[ind_link].block<3, 1>(0, 1); }
+
+Vector3f FKResult::get_z_dh(int ind_link) const { return htm_dh[ind_link].block<3, 1>(0, 2); }
+
+Vector3f FKResult::get_p_dh(int ind_link) const { return htm_dh[ind_link].block<3, 1>(0, 3); }
+
+Matrix3f FKResult::get_Q_dh(int ind_link) const { return htm_dh[ind_link].block<3, 3>(0, 0); }
+
+Vector3f FKResult::get_x_ee() const { return htm_ee.block<3, 1>(0, 0); }
+
+Vector3f FKResult::get_y_ee() const { return htm_ee.block<3, 1>(0, 1); }
+
+Vector3f FKResult::get_z_ee() const { return htm_ee.block<3, 1>(0, 2); }
+
+Vector3f FKResult::get_p_ee() const { return htm_ee.block<3, 1>(0, 3); }
+
+Matrix3f FKResult::get_Q_ee() const { return htm_ee.block<3, 3>(0, 0); }
+
+FKResult::FKResult() {};
+
+string FKResult::toString() const
+{
+    std::ostringstream oss;
+    oss << "FORWARD KINEMATIC " << std::endl;
+    oss << "End effector htm: " << std::endl;
+    oss << print_matrix(htm_ee) << std::endl;
+    oss << "End effector Jacobian (linear): " << std::endl;
+    oss << print_matrix(jac_v_ee) << std::endl;
+    oss << "End effector Jacobian (angular): " << std::endl;
+    oss << print_matrix(jac_w_ee) << std::endl;
+
+    return oss.str();
+}
+
+////////////////////////////////////////////////////////////////
+// FORWARD KINEMATIC FOR PRIMITIVE
+////////////////////////////////////////////////////////////////
+
+FKPrimResult::FKPrimResult() {};
+
+string FKPrimResult::toString() const
+{
+    std::ostringstream oss;
+    oss << "FORWARD KINEMATIC FOR PRIMITIVES" << std::endl;
+    return oss.str();
+}
+
+////////////////////////////////////////////////////////////////
+// INVERSE KINEMATIC
+////////////////////////////////////////////////////////////////
+
+IKResult::IKResult() {};
+
+string IKResult::toString() const
+{
+    std::ostringstream oss;
+    oss << "INVERSE KINEMATIC RESULT" << std::endl;
+    oss << "qf =" << print_vector(qf) << std::endl;
+    oss << "Position error: " << print_number(error_pos) << " m" << std::endl;
+    oss << "Orientation error: " << print_number(error_ori) << " deg" << std::endl;
+    oss << "Success: " << success << std::endl;
+    return oss.str();
+}
+
+////////////////////////////////////////////////////////////////
+// TASK KINEMATIC
+////////////////////////////////////////////////////////////////
+
+TaskResult::TaskResult() {};
+
+string TaskResult::toString() const
+{
+    std::ostringstream oss;
+    oss << "TASK RESULT" << std::endl;
+    oss << "Maximum position error: " << print_number(max_error_pos) << " m " << std::endl;
+    oss << "Maximum orientation error: " << print_number(max_error_ori) << " deg " << std::endl;
+
+    return oss.str();
+}
+
+string remove_space(const string &input)
+{
+    string result;
+    for (char ch : input)
+        if (ch != ' ')
+            result += ch;
+
+    return result;
+}
+
+int extract_key(const string &str, const string &key_str)
+{
+    string key = "\"" + key_str + "\": ";
+    auto start_pos = str.find(key);
+    start_pos += key.length();
+    auto end_pos = str.find(',', start_pos);
+    if (end_pos == string::npos)
+        end_pos = str.length();
+
+    string number_str = str.substr(start_pos, end_pos - start_pos);
+    return std::stoi(number_str);
+}
+
+float extract_no(const string &str)
+{
+    std::istringstream iss(str);
+    float number = 0.0;
+    iss >> number;
+    return number;
+}
+
+////////////////////////////////////////////////////////////////
+// GEOMETRIC PRIMITIVES
+////////////////////////////////////////////////////////////////
+
+GeometricPrimitives::GeometricPrimitives() {};
+
+string GeometricPrimitives::toString() const
+{
+    std::ostringstream oss;
+    oss << "GEOMETRIC PRIMITIVE" << std::endl;
+    if (type == 0)
+        oss << "Sphere with radius " << print_number(lx) << " m" << std::endl;
+    if (type == 1)
+        oss << "Box with width " << print_number(lx) << " m, depth " << print_number(ly) << ", height " << print_number(lz) << " m" << std::endl;
+    if (type == 2)
+        oss << "Cylinder with radius " << print_number(lx) << " m,  height " << print_number(lz) << " m" << std::endl;
+    if (type == 3)
+        oss << "Point cloud with " << pointcloud_vec.size() << "points " << std::endl;
+
+    return oss.str();
+}
+
+GeometricPrimitives GeometricPrimitives::create_sphere(Matrix4f htm, float radius, bool subdivide)
+{
+    GeometricPrimitives gp = GeometricPrimitives();
+    gp.lx = radius;
+    gp.ly = radius;
+    gp.lz = radius;
+    gp.htm = htm;
+    gp.type = 0;
+
+
+    // Create subdivision objects
+    if (subdivide)
+    {
+        gp.subdivisions = {gp};
+        gp.radius_bb = {radius};
+    }
+    else
+    {
+        gp.subdivisions = {};
+        gp.radius_bb = {};
+    }
+
+    return gp;
+}
+
+GeometricPrimitives GeometricPrimitives::create_sphere(Matrix4f htm, float radius)
+{
+    return create_sphere(htm, radius, true);
+}
+
+GeometricPrimitives GeometricPrimitives::create_box(Matrix4f htm, float width, float depth, float height, bool subdivide)
+{
+    GeometricPrimitives gp = GeometricPrimitives();
+    gp.lx = width;
+    gp.ly = depth;
+    gp.lz = height;
+    gp.htm = htm;
+    gp.type = 1;
+
+
+    // Create subdivision objects
+
+    gp.subdivisions = {};
+    gp.radius_bb = {};
+
+    if (subdivide)
+    {
+
+        float lmin = min(min(gp.lx, gp.ly), gp.lz);
+        Vector3f p = gp.htm.block<3, 1>(0, 3);
+        Matrix3f Q = gp.htm.block<3, 3>(0, 0);
+
+        int nx = 2*std::ceil(gp.lx / lmin);
+        int ny = 2*std::ceil(gp.ly / lmin);
+        int nz = 2*std::ceil(gp.lz / lmin);
+
+        float lx_n = gp.lx / nx;
+        float ly_n = gp.ly / ny;
+        float lz_n = gp.lz / nz;
+
+        float xc = (lx_n - gp.lx) / 2;
+        float yc = (ly_n - gp.ly) / 2;
+        float zc = (lz_n - gp.lz) / 2;
+
+
+        for (int ix = 0; ix < nx; ix++)
+        {
+            yc = (ly_n - gp.ly) / 2;
+            for (int iy = 0; iy < ny; iy++)
+            {
+                zc = (lz_n - gp.lz) / 2;
+                for (int iz = 0; iz < nz; iz++)
+                {
+                    Vector3f p_n = Vector3f(xc, yc, zc);
+                    Eigen::Matrix4f htm_n = Eigen::Matrix4f::Identity();
+                    htm_n.block<3, 3>(0, 0) = Q;
+                    htm_n.block<3, 1>(0, 3) = Q*p_n+p;
+
+                    gp.subdivisions.push_back(GeometricPrimitives::create_box(htm_n, lx_n, ly_n, lz_n, false));
+                    gp.radius_bb.push_back(sqrtf(lx_n * lx_n + ly_n * ly_n + lz_n * lz_n) / 2);
+
+                    zc += lz_n;
+                }
+                yc += ly_n;
+            }
+            xc += lx_n;
+        }
+    }
+
+
+    return gp;
+}
+
+GeometricPrimitives GeometricPrimitives::create_box(Matrix4f htm, float width, float depth, float height)
+{
+    return GeometricPrimitives::create_box(htm, width, depth, height, true);
+}
+
+
+GeometricPrimitives GeometricPrimitives::create_cylinder(Matrix4f htm, float radius, float height, bool subdivide)
+{
+    GeometricPrimitives gp = GeometricPrimitives();
+    gp.lx = radius;
+    gp.ly = radius;
+    gp.lz = height;
+    gp.htm = htm;
+    gp.type = 2;
+
+
+    // Create subdivision objects
+
+
+    if (subdivide)
+    {
+        float lmin = min(2*gp.lx, gp.lz);
+        Vector3f p = gp.htm.block<3, 1>(0, 3);
+        Matrix3f Q = gp.htm.block<3, 3>(0, 0);
+
+        int nz = std::ceil(gp.lz / lmin);
+        float lz_n = gp.lz / nz;
+        float zc = (lz_n - gp.lz) / 2;
+
+        gp.subdivisions = {};
+        gp.radius_bb = {};
+
+        for (int iz = 0; iz < nz; iz++)
+        {
+            Vector3f p_n = Vector3f(0, 0, zc);
+            Eigen::Matrix4f htm_n = Eigen::Matrix4f::Identity();
+            htm_n.block<3, 3>(0, 0) = Q;
+            htm_n.block<3, 1>(0, 3) = Q*p_n+p;
+
+            gp.subdivisions.push_back(GeometricPrimitives::create_cylinder(htm_n, gp.lx, lz_n, false));
+            gp.radius_bb.push_back(sqrtf(2 * gp.lx * gp.lx + lz_n * lz_n / 4));
+
+            zc += lz_n;
+        }
+    }
+
+
+    return gp;
+}
+
+GeometricPrimitives GeometricPrimitives::create_cylinder(Matrix4f htm, float radius, float height)
+{
+    return GeometricPrimitives::create_cylinder(htm, radius, height, true);
+
+}
+
+GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &points)
+{
+    GeometricPrimitives gp = GeometricPrimitives();
+
+    gp.pointcloud = std::make_shared<nanoflann::PointCloud<float>>();
+    gp.pointcloud->pts.resize(points.size());
+
+    gp.pointcloud_vec = {};
+
+    float lx_min = 1e6;
+    float lx_max = -1e6;
+    float ly_min = 1e6;
+    float ly_max = -1e6;
+    float lz_min = 1e6;
+    float lz_max = -1e6;
+    float xc = 0;
+    float yc = 0;
+    float zc = 0;
+
+    for (int i = 0; i < points.size(); i++)
+    {
+        gp.pointcloud->pts[i].x = points[i][0];
+        gp.pointcloud->pts[i].y = points[i][1];
+        gp.pointcloud->pts[i].z = points[i][2];
+
+        lx_min = min(lx_min, gp.pointcloud->pts[i].x);
+        ly_min = min(ly_min, gp.pointcloud->pts[i].y);
+        lz_min = min(lz_min, gp.pointcloud->pts[i].z);
+        lx_max = max(lx_max, gp.pointcloud->pts[i].x);
+        ly_max = max(ly_max, gp.pointcloud->pts[i].y);
+        lz_max = max(lz_max, gp.pointcloud->pts[i].z);
+        xc += gp.pointcloud->pts[i].x;
+        yc += gp.pointcloud->pts[i].y;
+        zc += gp.pointcloud->pts[i].z;
+        gp.pointcloud_vec.push_back(points[i]);
+    }
+
+    xc = xc / points.size();
+    yc = yc / points.size();
+    zc = zc / points.size();
+
+    gp.lx = lx_max - lx_min;
+    gp.ly = ly_max - ly_min;
+    gp.lz = lz_max - lz_min;
+    gp.htm = trn(xc, yc, zc);
+
+    gp.kdtree = std::make_shared<nanoflann::KDTreeSingleIndexAdaptor<
+        nanoflann::L2_Simple_Adaptor<float, nanoflann::PointCloud<float>>,
+        nanoflann::PointCloud<float>, 3>>(3, *gp.pointcloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+
+    gp.type = 3;
+    gp.subdivisions = {};
+    gp.radius_bb = {};
+
+    return gp;
+}
+
+GeometricPrimitives generate_point_cloud_sphere(float radius, Matrix4f htm, float delta)
+{
+
+    vector<Vector3f> points;
+    Vector3f ptemp;
+    Vector3f p = htm.block<3, 1>(0, 3);
+
+    int N = ceil(radius / delta) + 2;
+    int M;
+
+    double x, y, z, phi, theta;
+
+    for (int n = 0; n < N; n++)
+    {
+        phi = M_PI * ((float)n) / ((float)N - 1);
+        M = (int)ceil(N * sin(phi)) + 2;
+        for (int m = 0; m < M; m++)
+        {
+            theta = 2 * M_PI * (((float)m) / ((float)M - 1));
+
+            x = radius * sin(phi) * cos(theta);
+            y = radius * sin(phi) * sin(theta);
+            z = radius * cos(phi);
+            ptemp << x, y, z;
+            points.push_back(ptemp + p);
+        }
+    }
+
+    return GeometricPrimitives::create_pointcloud(points);
+}
+
+GeometricPrimitives generate_point_cloud_box(float width, float depth, float height, Matrix4f htm, float delta)
+{
+
+    vector<Vector3f> points;
+    Vector3f ptemp;
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f p = htm.block<3, 1>(0, 3);
+
+    int W = ceil(width / delta) + 2;
+    int D = ceil(depth / delta) + 2;
+    int H = ceil(height / delta) + 2;
+    float x, y, z;
+
+    x = -width / 2;
+    for (int d = 0; d < D; d++)
+    {
+        y = -depth / 2 + (depth / (D - 1)) * d;
+        for (int h = 0; h < H; h++)
+        {
+            z = -height / 2 + (height / (H - 1)) * h;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    x = width / 2;
+    for (int d = 0; d < D; d++)
+    {
+        y = -depth / 2 + (depth / (D - 1)) * d;
+        for (int h = 0; h < H; h++)
+        {
+            z = -height / 2 + (height / (H - 1)) * h;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    y = -depth / 2;
+    for (int w = 0; w < W; w++)
+    {
+        x = -width / 2 + (width / (W - 1)) * w;
+        for (int h = 0; h < H; h++)
+        {
+            z = -height / 2 + (height / (H - 1)) * h;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    y = depth / 2;
+    for (int w = 0; w < W; w++)
+    {
+        x = -width / 2 + (width / (W - 1)) * w;
+        for (int h = 0; h < H; h++)
+        {
+            z = -height / 2 + (height / (H - 1)) * h;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    z = -height / 2;
+    for (int w = 0; w < W; w++)
+    {
+        x = -width / 2 + (width / (W - 1)) * w;
+        for (int d = 0; d < D; d++)
+        {
+            y = -depth / 2 + (depth / (D - 1)) * d;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    z = height / 2;
+    for (int w = 0; w < W; w++)
+    {
+        x = -width / 2 + (width / (W - 1)) * w;
+        for (int d = 0; d < D; d++)
+        {
+            y = -depth / 2 + (depth / (D - 1)) * d;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    return GeometricPrimitives::create_pointcloud(points);
+}
+
+GeometricPrimitives generate_point_cloud_cylinder(float radius, float height, Matrix4f htm, float delta)
+{
+
+    vector<Vector3f> points;
+    Vector3f ptemp;
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f p = htm.block<3, 1>(0, 3);
+
+    int T = ceil(2 * M_PI * radius / delta) + 2;
+    int R = ceil(radius / delta) + 2;
+    int H = ceil(height / delta) + 2;
+    float x, y, z, v, u;
+
+    for (int t = 0; t < T; t++)
+    {
+        u = 2 * M_PI * ((float)t) / ((float)T - 1);
+        for (int h = 0; h < H; h++)
+        {
+            v = ((float)h) / ((float)H - 1);
+
+            x = radius * cos(u);
+            y = radius * sin(u);
+            z = -height / 2 + v * (height);
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    for (int r = 0; r < R; r++)
+    {
+        v = radius * (((float)r) / ((float)R - 1));
+        T = ceil(2 * M_PI * v / delta) + 2;
+        for (int t = 0; t < T; t++)
+        {
+            u = 2 * M_PI * ((float)t) / ((float)T - 1);
+
+            x = v * cos(u);
+            y = v * sin(u);
+
+            z = -height / 2;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+
+            z = height / 2;
+            ptemp << x, y, z;
+            points.push_back(Q * ptemp + p);
+        }
+    }
+
+    return GeometricPrimitives::create_pointcloud(points);
+}
+
+inline double smf(double x, int order, double h)
+{
+    if (x < 0)
+    {
+        return 0.0;
+    }
+
+    if (h == 0)
+    {
+        switch (order)
+        {
+        case 2:
+            return 1;
+        case 1:
+            return x;
+        case 0:
+            return 0.5 * x * x;
+        default:
+            throw std::invalid_argument("Invalid order. Must be 0, 1, or 2.");
+        }
+    }
+    else
+    {
+        switch (order)
+        {
+        case 2:
+            return 1.0 - std::pow(x + 1, -1.0 / h);
+        case 1:
+            return x - (h / (h - 1)) * (std::pow(x + 1, 1.0 - 1.0 / h) - 1);
+        case 0:
+            return 0.5 * x * x - (h / (h - 1)) * ((h / (2 * h - 1)) * (std::pow(x + 1, 2.0 - 1.0 / h) - 1) - x);
+        default:
+            throw std::invalid_argument("Invalid order. Must be 0, 1, or 2.");
+        }
+    }
+}
+
+ProjResult projection_sphere(float radius, Matrix4f htm, Vector3f point, float h, float eps)
+{
+    Vector3f pc = htm.block<3, 1>(0, 3);
+    Vector3f deltap = point - pc;
+    float radius_xyz = deltap.norm();
+    float delta_radius = radius_xyz - radius;
+
+    float e_R = smf(delta_radius, 0, h);
+    float e_dR = smf(delta_radius, 1, h);
+
+    ProjResult pr;
+
+    pr.dist = sqrtf(2 * e_R);
+    pr.proj = point - e_dR * deltap / radius_xyz;
+
+    return pr;
+}
+
+ProjResult projection_box(float lx, float ly, float lz, Matrix4f htm, Vector3f point, float h, float eps)
+{
+    Vector3f pc = htm.block<3, 1>(0, 3);
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f point_transformed = Q.transpose() * (point - pc);
+    float x = point_transformed[0];
+    float y = point_transformed[1];
+    float z = point_transformed[2];
+
+    float G_x = (smf(x - lx / 2, 0, h) + smf(-x - lx / 2, 0, h));
+    float G_y = (smf(y - ly / 2, 0, h) + smf(-y - ly / 2, 0, h));
+    float G_z = (smf(z - lz / 2, 0, h) + smf(-z - lz / 2, 0, h));
+
+    float G = G_x + G_y + G_z;
+
+    float dG_x = (smf(x - lx / 2, 1, h) - smf(-x - lx / 2, 1, h));
+    float dG_y = (smf(y - ly / 2, 1, h) - smf(-y - ly / 2, 1, h));
+    float dG_z = (smf(z - lz / 2, 1, h) - smf(-z - lz / 2, 1, h));
+
+    float cr = 1.2 * (lx * lx / 4 + ly * ly / 4 + lz * lz / 4);
+    float R = 0.5 * (x * x + y * y + z * z - cr);
+
+    float alpha = eps;
+    float beta = 3 * eps;
+    float gamma = 1 - 2 * (alpha + beta);
+
+    float F = alpha * R + beta * G;
+
+    float dF_x = alpha * x + beta * dG_x;
+    float dF_y = alpha * y + beta * dG_y;
+    float dF_z = alpha * z + beta * dG_z;
+
+    float M = sqrtf(F * F + gamma * G * G);
+    float e_dx = dF_x + (F * dF_x + gamma * G * dG_x) / M;
+    float e_dy = dF_y + (F * dF_y + gamma * G * dG_y) / M;
+    float e_dz = dF_z + (F * dF_z + gamma * G * dG_z) / M;
+
+    Vector3f pi_transformed;
+    pi_transformed[0] = x - e_dx;
+    pi_transformed[1] = y - e_dy;
+    pi_transformed[2] = z - e_dz;
+
+    ProjResult pr;
+
+    pr.dist = sqrtf(2 * (F + M));
+    pr.proj = Q * pi_transformed + pc;
+
+    return pr;
+}
+
+ProjResult projection_cylinder(float radius, float height, Matrix4f htm, Vector3f point, float h, float eps)
+{
+    Vector3f pc = htm.block<3, 1>(0, 3);
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f point_transformed = Q.transpose() * (point - pc);
+    float x = point_transformed[0];
+    float y = point_transformed[1];
+    float z = point_transformed[2];
+
+    float radius_xy = sqrtf(x * x + y * y);
+    float delta_radius = radius_xy - radius;
+
+    float G_r = smf(delta_radius, 0, h);
+    float G_z = (smf(z - height / 2, 0, h) + smf(-z - height / 2, 0, h));
+    float G = G_r + G_z;
+
+    float dG_r = smf(delta_radius, 1, h);
+    float dG_z = (smf(z - height / 2, 1, h) - smf(-z - height / 2, 1, h));
+
+    float cr = 1.2 * (2 * radius * radius + height * height / 4);
+    float R = 0.5 * (x * x + y * y + z * z - cr);
+
+    float alpha = eps;
+    float beta = 3 * eps;
+    float gamma = 1 - 2 * (alpha + beta);
+
+    float F = alpha * R + beta * G;
+
+    float dF_x = alpha * x + beta * dG_r * (x / radius_xy);
+    float dF_y = alpha * y + beta * dG_r * (y / radius_xy);
+    float dF_z = alpha * z + beta * dG_z;
+
+    float M = sqrtf(F * F + gamma * G * G);
+    float e_dx = dF_x + (F * dF_x + gamma * G * dG_r * (x / radius_xy)) / M;
+    float e_dy = dF_y + (F * dF_y + gamma * G * dG_r * (y / radius_xy)) / M;
+    float e_dz = dF_z + (F * dF_z + gamma * G * dG_z) / M;
+
+    Vector3f pi_transformed;
+    pi_transformed[0] = x - e_dx;
+    pi_transformed[1] = y - e_dy;
+    pi_transformed[2] = z - e_dz;
+
+    ProjResult pr;
+
+    pr.dist = sqrtf(2 * (F + M));
+    pr.proj = Q * pi_transformed + pc;
+    return pr;
+}
+
+ProjResult projection_pointcloud(KDTree tree, PointCloud pc, Vector3f point, float h, float eps)
+{
+    float query_pt[3] = {point[0], point[1], point[2]};
+    const size_t num_results = 1;
+    size_t ret_index;
+    float out_dist_sqr;
+    nanoflann::KNNResultSet<float> resultSet(num_results);
+    resultSet.init(&ret_index, &out_dist_sqr);
+    tree->findNeighbors(resultSet, &query_pt[0]);
+
+    ProjResult pr;
+    pr.dist = sqrtf(out_dist_sqr);
+    pr.proj = Vector3f(pc->kdtree_get_pt(ret_index, 0), pc->kdtree_get_pt(ret_index, 1), pc->kdtree_get_pt(ret_index, 2));
+
+    return pr;
+}
+
+GeometricPrimitives GeometricPrimitives::to_pointcloud(float disc) const
+{
+    if (type == 0)
+        return generate_point_cloud_sphere(lx, htm, disc);
+    if (type == 1)
+        return generate_point_cloud_box(lx, ly, lz, htm, disc);
+    if (type == 2)
+        return generate_point_cloud_cylinder(lx, lz, htm, disc);
+    if (type == 3)
+        return this->copy();
+}
+
+ProjResult GeometricPrimitives::projection(Vector3f point, float h, float eps) const
+{
+    if (type == 0)
+        return projection_sphere(lx, htm, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
+    if (type == 1)
+        return projection_box(lx, ly, lz, htm, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
+    if (type == 2)
+        return projection_cylinder(lx, lz, htm, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
+    if (type == 3)
+        return projection_pointcloud(kdtree, pointcloud, point, h, eps);
+}
+
+Vector3f support_sphere(Vector3f direction, float radius, Matrix4f htm)
+{
+    Vector3f pc = htm.block<3, 1>(0, 3);
+
+    return pc + direction.normalized() * radius;
+}
+
+Vector3f support_box(Vector3f direction, float lx, float ly, float lz, Matrix4f htm)
+{
+    Vector3f pc = htm.block<3, 1>(0, 3);
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f halfExtents(lx / 2, ly / 2, lz / 2);
+
+    Eigen::Vector3f localDir = Q.transpose() * direction;
+    Eigen::Vector3f localSupport = halfExtents.cwiseProduct(localDir.array().sign().matrix());
+    return pc + Q * localSupport;
+}
+
+Vector3f support_cylinder(Vector3f direction, float radius, float height, Matrix4f htm)
+{
+    Vector3f pc = htm.block<3, 1>(0, 3);
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+
+    Eigen::Vector3f localDir = Q.transpose() * direction;
+
+    float dx = localDir[0];
+    float dy = localDir[1];
+    float dz = localDir[2];
+    float r = sqrtf(dx * dx + dy * dy);
+
+    Eigen::Vector3f localSupport;
+
+    if (r > 1e-6)
+    {
+        localSupport[0] = radius * dx / r;
+        localSupport[1] = radius * dy / r;
+    }
+    else
+    {
+        localSupport[0] = 0;
+        localSupport[1] = 0;
+    }
+
+    localSupport[2] = dz > 0 ? height / 2 : -height / 2;
+
+    return pc + Q * localSupport;
+}
+
+Vector3f GeometricPrimitives::support(Vector3f direction) const
+{
+    if (type == 0)
+        return support_sphere(direction, lx, htm);
+    if (type == 1)
+        return support_box(direction, lx, ly, lz, htm);
+    if (type == 2)
+        return support_cylinder(direction, lx, lz, htm);
+}
+
+float max4(float a1, float a2, float a3, float a4)
+{
+    return max(a1, max(a2, max(a3, a4)));
+}
+
+AABB::AABB() {}
+
+AABB GeometricPrimitives::get_aabb() const
+{
+
+    Vector3f x = htm.block(0, 0, 3, 1);
+    Vector3f y = htm.block(0, 1, 3, 1);
+    Vector3f z = htm.block(0, 2, 3, 1);
+
+    AABB aabb;
+
+    if (type == 0)
+    {
+        aabb.lx = this->lx;
+        aabb.ly = this->lx;
+        aabb.lz = this->lx;
+        aabb.htm = this->htm;
+
+        return aabb;
+    }
+
+    if (type == 1)
+    {
+
+        Vector3f p1 = this->lx * x + this->ly * y + this->lz * z;
+        Vector3f p2 = -this->lx * x + this->ly * y + this->lz * z;
+        Vector3f p3 = this->lx * x - this->ly * y + this->lz * z;
+        Vector3f p4 = this->lx * x + this->ly * y - this->lz * z;
+
+        float lx = max4(abs(p1[0]), abs(p2[0]), abs(p3[0]), abs(p4[0]));
+        float ly = max4(abs(p1[1]), abs(p2[1]), abs(p3[1]), abs(p4[1]));
+        float lz = max4(abs(p1[2]), abs(p2[2]), abs(p3[2]), abs(p4[2]));
+
+        aabb.lx = lx;
+        aabb.ly = ly;
+        aabb.lz = lz;
+        aabb.htm = this->htm;
+
+        return aabb;
+    }
+
+    if (type == 2)
+    {
+        Vector3f p1 = 2 * this->lx * x + 2 * this->lx * y + this->lz * z;
+        Vector3f p2 = -2 * this->lx * x + 2 * this->lx * y + this->lz * z;
+        Vector3f p3 = 2 * this->lx * x - 2 * this->lx * y + this->lz * z;
+        Vector3f p4 = 2 * this->lx * x + 2 * this->lx * y - this->lz * z;
+
+        float lx = max4(abs(p1[0]), abs(p2[0]), abs(p3[0]), abs(p4[0]));
+        float ly = max4(abs(p1[1]), abs(p2[1]), abs(p3[1]), abs(p4[1]));
+        float lz = max4(abs(p1[2]), abs(p2[2]), abs(p3[2]), abs(p4[2]));
+
+        aabb.lx = lx;
+        aabb.ly = ly;
+        aabb.lz = lz;
+        aabb.htm = this->htm;
+
+        return aabb;
+    }
+
+    if (type == 3)
+    {
+        aabb.lx = this->lx;
+        aabb.ly = this->ly;
+        aabb.lz = this->lz;
+        aabb.htm = this->htm;
+
+        return aabb;
+    }
+}
+
+void tvec(Vector3f v, float *vf)
+{
+
+    vf[0] = v[0];
+    vf[1] = v[1];
+    vf[2] = v[2];
+}
+
+string pmat(Matrix4f m)
+{
+    string s = "np.matrix([";
+
+    for(int i=0; i < 4; i++)
+    {
+        s+= "[";
+        for(int j=0; j < 4; j++)
+        {
+            s+= print_number(m(i, j), 8);
+            if(j<3)
+                s+=",";
+        }
+        if(i<3)
+            s+="],";
+        else
+            s+="]";
+    }
+    s+="])";
+
+    return s;
+        
+}
+
+PrimDistResult dist_to_kd(GeometricPrimitives prim, float h, float eps, KDTree kdtree, PointCloud pointcloud)
+{
+    PrimDistResult pdr;
+
+    pdr.dist = 1e6;
+    float closest_distance = 1e6;
+
+    int dbg_total_tested=0;
+
+    
+
+    bool use_index[pointcloud->kdtree_get_point_count()] = {};
+
+    for (int i = 0; i < prim.subdivisions.size(); i++)
+    {
+        Vector3f pc = prim.subdivisions[i].htm.block<3, 1>(0, 3);
+        Matrix3f Q = prim.subdivisions[i].htm.block<3, 3>(0, 0);
+
+        //cout << "pc = "<<print_vector(pc)<<std::endl;
+
+        // Get the point pstar at the pointcloud that is closest to the bounding ball
+        float query_pt[3] = {pc[0], pc[1], pc[2]};
+        const size_t num_results = 1;
+        size_t ret_index;
+        float out_dist_sqr;
+        nanoflann::KNNResultSet<float> resultSet(num_results);
+        resultSet.init(&ret_index, &out_dist_sqr);
+        kdtree->findNeighbors(resultSet, &query_pt[0]);
+
+
+        Vector3f pstar = Vector3f(pointcloud->kdtree_get_pt(ret_index, 0), pointcloud->kdtree_get_pt(ret_index, 1), pointcloud->kdtree_get_pt(ret_index, 2));
+
+        // Get distance d0 between pstar and the object
+        float d0 = prim.subdivisions[i].projection(pstar, 0.0, 0.0).dist;
+
+
+        // Query everything that is within d0+radius (plus a numerical error margin) of the bounding ball to the center of the bouding ball
+        float radius = d0 + prim.radius_bb[i]+1e-4;
+
+        // cout << "pstar = "<<print_vector(pstar)<<std::endl;
+        // cout << "out_dist = "<<sqrtf(out_dist_sqr)<<std::endl;
+        // cout << "d0 = "<<d0<<std::endl;
+        // cout << "prim.radius_bb[i] = "<<prim.radius_bb[i]<<std::endl;
+
+        float lx = prim.subdivisions[i].lx;
+        float ly = prim.subdivisions[i].ly;
+        float lz = prim.subdivisions[i].lz;
+
+        string color = "";
+        if(i%5 ==0)
+            color="blue";
+        if(i%5 ==1)
+            color="red";        
+        if(i%5 ==2)
+            color="green";  
+        if(i%5 ==3)
+            color="cyan";  
+        if(i%5 ==4)
+            color="yellow";  
+
+        if(prim.subdivisions[i].type == 1)
+            cout << "obj_sd_"<<i<<" = ub.Box(width="<<lx<<", depth="<<ly<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
+        if(prim.subdivisions[i].type == 2)
+            cout << "obj_sd_"<<i<<" = ub.Cylinder(radius="<<lx<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
+        
+        cout << "sim.add(obj_sd_"<<i<<")"<<std::endl;
+
+
+
+        std::vector<nanoflann::ResultItem<uint32_t, float>> ret_matches;
+        size_t nMatches =
+            kdtree->radiusSearch(&query_pt[0], radius * radius, ret_matches);
+
+        // Check all the points to see which one is the closest
+
+        for (size_t j = 0; j < nMatches; j++)
+            use_index[ret_matches[j].first] = true;
+
+    }
+
+
+    for(int i=0; i < pointcloud->kdtree_get_point_count(); i++)
+    {
+        if(use_index[i])
+        {
+            Vector3f p = Vector3f(pointcloud->kdtree_get_pt(i, 0), pointcloud->kdtree_get_pt(i, 1), pointcloud->kdtree_get_pt(i, 2));
+            ProjResult pr = prim.projection(p,0,0);
+
+            if(pr.dist < pdr.dist)
+            {
+                pdr.dist = pr.dist;
+                pdr.proj_A = p;
+                pdr.proj_B = pr.proj;
+            }
+            dbg_total_tested++;
+        }
+        
+    }
+    
+
+    cout << "Tested "<<dbg_total_tested<<" points!"<<std::endl;
+
+    return pdr;
+}
+
+PrimDistResult dist_to_gjk(const GeometricPrimitives &objA, const GeometricPrimitives &objB)
+{
+    // Implemented by https://gist.github.com/vurtun/29727217c269a2fbf4c0ed9a1d11cb40
+
+    /* initial guess */
+    bool cont = true;
+    struct gjk_support s;
+    struct gjk_simplex gsx;
+
+    while (cont)
+    {
+
+        Vector3f da = Vector3f::Random();
+        Vector3f db = Vector3f::Random();
+
+        s = {0};
+        tvec(objA.support(da), s.a);
+        tvec(objB.support(db), s.b);
+
+        /* run gjk algorithm */
+        int k = 0;
+        gsx = {0};
+        gsx.error = 0;
+        while (gjk(&gsx, &s) && gsx.error == 0)
+        {
+            da = Vector3f(s.da[0], s.da[1], s.da[2]);
+            db = Vector3f(s.db[0], s.db[1], s.db[2]);
+
+            tvec(objA.support(da), s.a);
+            tvec(objB.support(db), s.b);
+
+            // Just add some fake point indexes
+            s.aid = k;
+            s.bid = k + 1;
+            k += 2;
+        }
+
+        cont = gsx.error == 1;
+    }
+
+    /* check distance between closest points */
+    struct gjk_result res;
+    gjk_analyze(&res, &gsx);
+
+    PrimDistResult pdr;
+
+    pdr.proj_A = Vector3f(res.p0[0], res.p0[1], res.p0[2]);
+    pdr.proj_B = Vector3f(res.p1[0], res.p1[1], res.p1[2]);
+    pdr.dist = sqrtf(res.distance_squared);
+
+    return pdr;
+}
+
+PrimDistResult dist_to_gap(GeometricPrimitives objA, GeometricPrimitives objB, float h, float eps, float tol, int no_iter_max, Vector3f p_A0)
+{
+    Vector3f p_A = p_A0;
+    Vector3f p_B, p_A_old;
+
+    bool cont = true;
+    int iter = 0;
+
+    vector<float> hist_error = {};
+
+    while (cont)
+    {
+        p_B = objB.projection(p_A, h, eps).proj;
+        p_A_old = p_A;
+        p_A = objA.projection(p_B, h, eps).proj;
+        cont = ((p_A - p_A_old).norm() > tol) && (iter <= no_iter_max);
+
+        hist_error.push_back((p_A - p_A_old).norm());
+        iter++;
+    }
+
+    PrimDistResult pdr;
+    float dist_AB = objB.projection(p_A, h, eps).dist;
+    float dist_BA = objA.projection(p_B, h, eps).dist;
+    float dist_AB_sq = dist_AB * dist_AB;
+    float dist_BA_sq = dist_BA * dist_BA;
+
+    pdr.dist = sqrtf(maxf(dist_AB_sq + dist_BA_sq - (p_A - p_B).squaredNorm(), 0.0f));
+    pdr.proj_A = p_A;
+    pdr.proj_B = p_B;
+
+    pdr.hist_error = hist_error;
+
+    return pdr;
+}
+
+PrimDistResult GeometricPrimitives::dist_to(GeometricPrimitives prim, float h, float eps, float tol, int no_iter_max, Vector3f p_A0) const
+{
+    if (h < 1e-5 && eps < 1e-5)
+    {
+        if (type != 3 && prim.type != 3)
+            // Both are non-point cloud primitives, and no smoothing is required
+            // Call GJK
+            return dist_to_gjk(*this, prim);
+        else
+        {
+
+            if (type == 3 && prim.type == 3)
+            {
+                // Both are point clouds, and no smoothing is required
+                // Use brute force with one of the KD-Trees...
+                throw std::runtime_error("Not implemented yet (both point clouds with no smoothing)");
+            }
+            else
+            {
+                // One of them is a point cloud, and no smoothing is required
+                // Call the KDtree-based algorithm
+
+                if (type == 3)
+                    return dist_to_kd(prim, h, eps, kdtree, pointcloud);
+                else
+                    return dist_to_kd(*this, h, eps, prim.kdtree, prim.pointcloud);
+            }
+        }
+    }
+    else
+    {
+        if (type != 3 && prim.type != 3)
+            // Both are non-point cloud primitives, and smoothing is required
+            // Call the generalized alternating projection (gap)
+            return dist_to_gap(*this, prim, h, eps, tol, no_iter_max, p_A0);
+        else
+        {
+
+            if (type == 3 && prim.type == 3)
+            {
+                // Both are point clouds, and smoothing is required
+                throw std::runtime_error("Not implemented yet (both pointcloud with smoothing)");
+            }
+            else
+            {
+                // One of them is a point cloud, and smoothing is required
+                throw std::runtime_error("Not implemented yet (one of them pointcloud with smoothing)");
+            }
+        }
+    }
+}
+
+PrimDistResult GeometricPrimitives::dist_to(GeometricPrimitives prim, float h, float eps, float tol, int no_iter_max) const
+{
+    return dist_to(prim, h, eps, tol, no_iter_max, htm.block<3, 1>(0, 3));
+}
+
+GeometricPrimitives GeometricPrimitives::copy() const
+{
+    if (type == 0)
+        return GeometricPrimitives::create_sphere(htm, lx, true);
+    if (type == 1)
+        return GeometricPrimitives::create_box(htm, lx, ly, lz, true);
+    if (type == 2)
+        return GeometricPrimitives::create_cylinder(htm, lx, lz, true);
+    if (type == 3)
+    {
+        vector<Vector3f> points = pointcloud_vec;
+        return GeometricPrimitives::create_pointcloud(points);
+    }
+}
+
+string PrimDistResult::toString() const
+{
+    std::ostringstream oss;
+    oss << "PRIMITIVE DISTANCE RESULT" << std::endl;
+    oss << "Distance: " << print_number(dist) << " m" << std::endl;
+    oss << "Projection A: " << print_vector(proj_A) << " m" << std::endl;
+    oss << "Projection B: " << print_vector(proj_B) << " m" << std::endl;
+
+    return oss.str();
+}
+
+string ProjResult::toString() const
+{
+    std::ostringstream oss;
+    oss << "PROJECTION PRIMITIVE" << std::endl;
+    oss << "Distance: " << print_number(dist) << " m" << std::endl;
+    oss << "Projection: " << print_vector(proj) << " m" << std::endl;
+
+    return oss.str();
+}
+
+////////////////////////////////////////////////////////////////
+// MANIPULATOR
+////////////////////////////////////////////////////////////////
+
+string print_no_link(int ind_link)
+{
+    int dig_tot = 3;
+    int dig = (ind_link == 0) ? 1 : 1 + (int)floor(log10((float)ind_link));
+
+    string str = std::to_string(ind_link);
+    for (int i = 0; i < dig_tot - dig; i++)
+        str += " ";
+
+    return str;
+}
+
+string Manipulator::toString() const
+{
+    std::ostringstream oss;
+    oss << "MANIPULATOR" << std::endl;
+    oss << "Degrees of freedom : " << no_links << std::endl;
+    oss << "No primitives: " << geo_prim.size() << std::endl;
+    oss << "q_min: " << print_vector(q_min) << " rad" << std::endl;
+    oss << "q_max: " << print_vector(q_max) << " rad" << std::endl;
+
+    oss << "DH Table (Standard): " << std::endl;
+    oss << "          theta(rad)   d(m)    alpha(rad)    a(m)" << std::endl;
+    for (int ind_link = 0; ind_link < no_links; ind_link++)
+    {
+        oss << "Link " << print_no_link(ind_link) << ": ";
+        oss << (joint_type[ind_link] == 0 ? "   V   " : print_number(theta[ind_link])) << "   ";
+        oss << (joint_type[ind_link] == 1 ? "   V   " : print_number(dh_d[ind_link])) << "   ";
+        oss << print_number(alpha[ind_link]) << "   ";
+        oss << print_number(dh_a[ind_link]) << "  " << std::endl;
+    }
+
+    oss << "Transformation from world to first DH:" << std::endl;
+    oss << print_matrix(htm_world_to_dh0) << std::endl;
+    oss << "Transformation from last DH to EE:" << std::endl;
+    oss << print_matrix(htm_dhn_to_ee) << std::endl;
+
+    return oss.str();
+}
+
+Manipulator::Manipulator(int _no_links) : no_links(_no_links)
+{
+    for (int no_link = 0; no_link < no_links; no_link++)
+    {
+        theta.push_back(0);
+        dh_d.push_back(0);
+        alpha.push_back(0);
+        dh_a.push_back(0);
+        joint_type.push_back(0);
+        dh_cos_theta.push_back(1.0);
+        dh_sin_theta.push_back(0.0);
+        dh_cos_alpha.push_back(1.0);
+        dh_sin_alpha.push_back(0.0);
+    }
+
+    htm_world_to_dh0 = Matrix4f::Identity();
+    htm_dhn_to_ee = Matrix4f::Identity();
+
+    no_tube_points = 0;
+    for (int ind_link = 0; ind_link < no_links; ind_link++)
+        coord_tube.push_back({});
+
+    no_prim = 0;
+    for (int ind_link = 0; ind_link < no_links; ind_link++)
+        geo_prim.push_back({});
+
+    tube_radius = 0;
+
+    q_min = -M_PI * VectorXf::Ones(no_links);
+    q_max = M_PI * VectorXf::Ones(no_links);
+}
+
+void Manipulator::set_joint_param(int ind_link, float _theta, float _d, float _alpha, float _a, int _joint_type, float _q_min, float _q_max)
+{
+    if (ind_link < 0 || ind_link >= no_links)
+        throw std::runtime_error("The link index should be between 0 and " + std::to_string(no_links - 1) + "!");
+    if (_joint_type != 0 && _joint_type != 1)
+        throw std::runtime_error("The joint type should be 0 (rotative) or 1 (prismatic)!");
+    if (_q_min >= _q_max)
+        throw std::runtime_error("q_max should be strictly greater than q_min!");
+
+    theta[ind_link] = _theta;
+    dh_d[ind_link] = _d;
+    alpha[ind_link] = _alpha;
+    dh_a[ind_link] = _a;
+    joint_type[ind_link] = _joint_type;
+    dh_cos_theta[ind_link] = cosf(_theta);
+    dh_sin_theta[ind_link] = sinf(_theta);
+    dh_cos_alpha[ind_link] = cosf(_alpha);
+    dh_sin_alpha[ind_link] = sin(_alpha);
+    q_min[ind_link] = _q_min;
+    q_max[ind_link] = _q_max;
+}
+
+void Manipulator::add_tube_coord(int ind_link, Vector3f coord)
+{
+    if (ind_link < 0 || ind_link >= no_links)
+        throw std::runtime_error("The link index should be between 0 and " + std::to_string(no_links - 1) + "!");
+
+    int last_ind_link = -1;
+
+    for (int ind_link = 0; ind_link < no_links; ind_link++)
+        if (coord_tube[ind_link].size() > 0)
+            last_ind_link = ind_link;
+
+    if (last_ind_link >= 0)
+    {
+        if (ind_link < last_ind_link)
+            throw std::runtime_error("A point in the tube has link index " + std::to_string(ind_link) + ", but the previous point has link index " + std::to_string(last_ind_link) + ". Subsequent points should be either in the same link or subsequent links in the kinematic chain!");
+
+        if (ind_link - last_ind_link > 1)
+            cout << "WARNING!!! A point in the tube has link index " << ind_link << ", but the previous point has link index " << last_ind_link << ". Gradient computation is not supported when this index difference is greater than 1!" << std::endl;
+        else
+        {
+            if (ind_link - last_ind_link == 1)
+            {
+                Vector3f last_coord = coord_tube[last_ind_link][coord_tube[last_ind_link].size() - 1];
+                if ((abs(last_coord[0]) > 1.0 / VERYBIGNUMBER || abs(last_coord[1]) > 1.0 / VERYBIGNUMBER))
+                    cout << "WARNING!!! The previous tube has point has local coordinates that have non-zero x and y coordinates, while the current point is in a different link. Gradient computation is not supported in this case!" << std::endl;
+            }
+        }
+    }
+
+    if (no_tube_points == 0)
+        no_tube_points = 2;
+    else
+        no_tube_points++;
+
+    coord_tube[ind_link].push_back(coord);
+}
+
+void Manipulator::add_geo_prim(int ind_link, GeometricPrimitives prim)
+{
+    if (ind_link < 0 || ind_link >= no_links)
+        throw std::runtime_error("The link index should be between 0 and " + std::to_string(no_links - 1) + "!");
+
+    no_prim++;
+
+    geo_prim[ind_link].push_back(prim);
+}
+
+void Manipulator::set_htm_extra(Matrix4f _htm_world_to_dh0, Matrix4f _htm_dhn_to_ee)
+{
+    htm_world_to_dh0 = _htm_world_to_dh0;
+    htm_dhn_to_ee = _htm_dhn_to_ee;
+}
+
+Manipulator::Manipulator() {};
+
+vector<FKResult> Manipulator::fk(const vector<VectorXf> &q, const vector<Matrix4f> &htm_world_base, bool compute_jac) const
+{
+    int no_q = q.size();
+    vector<FKResult> fkres_all(no_q);
+
+    for (int ind_q = 0; ind_q < no_q; ind_q++)
+    {
+        // Manipulator manip = *this;
+        Matrix4f htm_0 = htm_world_base[ind_q] * htm_world_to_dh0;
+        Matrix4f htm = htm_0;
+        FKResult fkres(no_links);
+
+        if (q[ind_q].rows() != no_links)
+            throw std::runtime_error("The configuration vector q should have " + std::to_string(no_links) + " rows!");
+
+        // Compute the forward kinematic
+        for (int ind_links = 0; ind_links < no_links; ind_links++)
+        {
+
+            Matrix4f trns = Matrix4f::Identity();
+            float c_theta = (joint_type[ind_links] == 0) ? cosf(q[ind_q][ind_links]) : dh_cos_theta[ind_links];
+            float s_theta = (joint_type[ind_links] == 0) ? sinf(q[ind_q][ind_links]) : dh_sin_theta[ind_links];
+            float d = (joint_type[ind_links] == 1) ? q[ind_q][ind_links] : dh_d[ind_links];
+            float c_alpha = dh_cos_alpha[ind_links];
+            float s_alpha = dh_sin_alpha[ind_links];
+            float a = dh_a[ind_links];
+
+            trns(0, 0) = c_theta;
+            trns(0, 1) = -c_alpha * s_theta;
+            trns(0, 2) = s_alpha * s_theta;
+            trns(0, 3) = a * c_theta;
+            trns(1, 0) = s_theta;
+            trns(1, 1) = c_alpha * c_theta;
+            trns(1, 2) = -c_theta * s_alpha;
+            trns(1, 3) = a * s_theta;
+            trns(2, 0) = 0;
+            trns(2, 1) = s_alpha;
+            trns(2, 2) = c_alpha;
+            trns(2, 3) = d;
+
+            htm = htm * trns;
+            fkres.htm_dh[ind_links] = htm;
+        }
+
+        fkres.htm_ee = fkres.htm_dh[no_links - 1] * htm_dhn_to_ee;
+
+        if (compute_jac)
+        {
+            // Compute the differential kinematics
+            for (int ind_links = 0; ind_links < no_links; ind_links++)
+            {
+                fkres.jac_v_dh[ind_links] = MatrixXf::Zero(3, no_links);
+                fkres.jac_w_dh[ind_links] = MatrixXf::Zero(3, no_links);
+
+                Vector3f p_i = fkres.get_p_dh(ind_links);
+
+                for (int ind_cols = 0; ind_cols <= ind_links; ind_cols++)
+                {
+                    Vector3f p_j_ant;
+                    Vector3f z_j_ant;
+                    Vector3f v;
+                    Vector3f w;
+
+                    p_j_ant = (ind_cols > 0) ? fkres.get_p_dh(ind_cols - 1) : htm_0.block<3, 1>(0, 3);
+                    z_j_ant = (ind_cols > 0) ? fkres.get_z_dh(ind_cols - 1) : htm_0.block<3, 1>(0, 2);
+
+                    v = (joint_type[ind_links] == 0) ? z_j_ant.cross(p_i - p_j_ant) : z_j_ant;
+                    w = (joint_type[ind_links] == 0) ? z_j_ant : Vector3f::Zero();
+
+                    for (int ind_rows = 0; ind_rows < 3; ind_rows++)
+                    {
+                        fkres.jac_v_dh[ind_links](ind_rows, ind_cols) = v[ind_rows];
+                        fkres.jac_w_dh[ind_links](ind_rows, ind_cols) = w[ind_rows];
+                    }
+                }
+            }
+
+            fkres.jac_v_ee = fkres.jac_v_dh[no_links - 1] + s_mat(fkres.get_p_dh(no_links - 1) - fkres.get_p_ee()) * fkres.jac_w_dh[no_links - 1];
+            fkres.jac_w_ee = fkres.jac_w_dh[no_links - 1];
+        }
+
+        fkres_all[ind_q] = fkres;
+    }
+
+    return fkres_all;
+}
+
+FKResult Manipulator::fk(VectorXf q, Matrix4f htm_world_base, bool compute_jac) const
+{
+    vector<VectorXf> vec_q = {q};
+    vector<Matrix4f> vec_htm_world_base = {htm_world_base};
+    vector<FKResult> fk_res = fk(vec_q, vec_htm_world_base, compute_jac);
+    return fk_res[0];
+}
+
+vector<FKPrimResult> Manipulator::fk_prim(const vector<VectorXf> &q, const vector<FKResult> &fk_res_all) const
+{
+
+    int no_q = q.size();
+    vector<FKPrimResult> fkres_prim_all(no_q);
+
+    for (int ind_q = 0; ind_q < no_q; ind_q++)
+    {
+        FKPrimResult fkres_prim;
+        for (int ind_links = 0; ind_links < no_links; ind_links++)
+            for (int ind_prim = 0; ind_prim < geo_prim[ind_links].size(); ind_prim++)
+            {
+                Matrix4f htm_prim = fk_res_all[ind_q].htm_dh[ind_links] * geo_prim[ind_links][ind_prim].htm;
+                Vector3f p_prim = htm_prim.block<3, 1>(0, 3);
+                Vector3f pc = p_prim - fk_res_all[ind_q].get_p_dh(ind_links);
+
+                fkres_prim.htm_prim.push_back(htm_prim);
+                fkres_prim.jac_v_prim.push_back(fk_res_all[ind_q].jac_v_dh[ind_links] - s_mat(pc) * fk_res_all[ind_q].jac_w_dh[ind_links]);
+                fkres_prim.jac_w_prim.push_back(fk_res_all[ind_q].jac_w_dh[ind_links]);
+            }
+
+        fkres_prim_all[ind_q] = fkres_prim;
+    }
+
+    return fkres_prim_all;
+}
+
+FKPrimResult Manipulator::fk_prim(VectorXf q, Matrix4f htm_world_base) const
+{
+    return fk_prim({q}, {fk(q, htm_world_base)})[0];
+}
+
+TaskResult Manipulator::fk_task(VectorXf q, Matrix4f htm_world_base, Matrix4f tg_htm) const
+{
+    int n = no_links;
+    FKResult fkres = fk(q, htm_world_base);
+
+    Vector3f p_ee = fkres.get_p_ee();
+    Vector3f x_ee = fkres.get_x_ee();
+    Vector3f y_ee = fkres.get_y_ee();
+    Vector3f z_ee = fkres.get_z_ee();
+
+    Vector3f p_des = tg_htm.block<3, 1>(0, 3);
+    Vector3f x_des = tg_htm.block<3, 1>(0, 0);
+    Vector3f y_des = tg_htm.block<3, 1>(0, 1);
+    Vector3f z_des = tg_htm.block<3, 1>(0, 2);
+
+    Vector3f r_p = p_ee - p_des;
+    Vector3f r_o;
+
+    const float EPS = 1e-8;
+
+    float e_x = maxf(minf(1.0 - x_des.transpose() * x_ee, 2.0 - EPS), EPS);
+    float e_y = maxf(minf(1.0 - y_des.transpose() * y_ee, 2.0 - EPS), EPS);
+    float e_z = maxf(minf(1.0 - z_des.transpose() * z_ee, 2.0 - EPS), EPS);
+
+    r_o << e_x, e_y, e_z;
+
+    VectorXf r(6, 1);
+    r << r_p, r_o;
+
+    MatrixXf jac_v = fkres.jac_v_ee;
+    MatrixXf jac_w = fkres.jac_w_ee;
+    MatrixXf jacr_o_x = x_des.transpose() * s_mat(x_ee) * jac_w;
+    MatrixXf jacr_o_y = y_des.transpose() * s_mat(y_ee) * jac_w;
+    MatrixXf jacr_o_z = z_des.transpose() * s_mat(z_ee) * jac_w;
+
+    MatrixXf jac_task(6, n);
+    jac_task << jac_v, jacr_o_x, jacr_o_y, jacr_o_z;
+
+    float max_error_pos = maxf(abs(r[0]), maxf(abs(r[1]), abs(r[2])));
+    float max_error_ori = (180 / M_PI) * maxf(acos(1.0 - r[3]), maxf(acos(1.0 - r[4]), acos(1.0 - r[5])));
+
+    TaskResult tr;
+
+    tr.task = r;
+    tr.jac_task = jac_task;
+    tr.max_error_pos = max_error_pos;
+    tr.max_error_ori = max_error_ori;
+
+    return tr;
+}
+
+IKResult Manipulator::ik(Matrix4f tg_htm, VectorXf q0, float p_tol, float a_tol, int no_iter_max, bool ignore_orientation) const
+{
+    float eta = 0.03;
+    float eps = 0.001;
+    bool cont = true;
+    VectorXf q = q0;
+    int no_iter = 0;
+    float error_p;
+    float error_a;
+
+    const int n = q0.rows();
+    TaskResult tr;
+
+    while (cont)
+    {
+        tr = this->fk_task(q, Matrix4f::Identity(), tg_htm);
+
+        if (!ignore_orientation)
+        {
+            VectorXf task = tr.task;
+            q += dp_inv_solve(tr.jac_task, -eta * sqrt_sign(task), eps);
+        }
+        else
+        {
+            q += dp_inv_solve(tr.jac_task.block(0, 0, 3, n), -eta * sqrt_sign(tr.task.block(0, 0, 3, 1)), eps);
+            tr.max_error_ori = 0;
+        }
+
+        no_iter++;
+        cont = (no_iter < no_iter_max) && ((tr.max_error_pos > p_tol) || (tr.max_error_ori > a_tol));
+    }
+
+    IKResult ikr;
+
+    ikr.error_pos = tr.max_error_pos;
+    ikr.error_ori = tr.max_error_ori;
+    ikr.qf = q;
+    ikr.success = (tr.max_error_pos <= p_tol) && (tr.max_error_ori <= a_tol);
+
+    return ikr;
+}
+
+float dist_aabb(AABB aabb1, AABB aabb2)
+{
+    Vector3f delta = aabb1.htm.block(0, 3, 3, 1) - aabb2.htm.block(0, 3, 3, 1);
+
+    float dx = max(abs(delta[0]) - (aabb1.lx + aabb2.lx) / 2, 0.0f);
+    float dy = max(abs(delta[1]) - (aabb1.ly + aabb2.ly) / 2, 0.0f);
+    float dz = max(abs(delta[2]) - (aabb1.lz + aabb2.lz) / 2, 0.0f);
+
+    return max(max(dx, dy), dz);
+}
+
+CheckFreeConfigResult Manipulator::check_free_configuration(VectorXf q, Matrix4f htm, vector<GeometricPrimitives> obstacles, bool check_joint,
+                                                            bool check_auto, float tol, float dist_tol, int no_iter_max) const
+{
+    CheckFreeConfigResult cfcr;
+
+    // Check joint limit
+    if (check_joint)
+    {
+        for (int ind_links = 0; ind_links < no_links; ind_links++)
+        {
+            if (q[ind_links] < q_min[ind_links])
+            {
+                cfcr.isfree = false;
+                cfcr.message = "Joint number " + std::to_string(ind_links) + " is below minimum limit.";
+                cfcr.info.push_back(0);
+                cfcr.info.push_back(ind_links);
+                return cfcr;
+            }
+            if (q[ind_links] > q_max[ind_links])
+            {
+                cfcr.isfree = false;
+                cfcr.message = "Joint number " + std::to_string(ind_links) + " is above maximum limit.";
+                cfcr.info.push_back(1);
+                cfcr.info.push_back(ind_links);
+                return cfcr;
+            }
+        }
+    }
+
+    FKResult fkres = fk(q, htm, false);
+
+    vector<GeometricPrimitives> objects_links;
+    vector<AABB> objects_links_aabb;
+    vector<int> list_ind_links;
+    vector<int> list_ind_obj_links;
+
+    for (int ind_links = 0; ind_links < no_links; ind_links++)
+        for (int ind_obj_link = 0; ind_obj_link < geo_prim[ind_links].size(); ind_obj_link++)
+        {
+            GeometricPrimitives obj_copy = geo_prim[ind_links][ind_obj_link].copy();
+            obj_copy.htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].htm;
+            objects_links.push_back(obj_copy);
+            list_ind_links.push_back(ind_links);
+            list_ind_obj_links.push_back(ind_obj_link);
+            objects_links_aabb.push_back(obj_copy.get_aabb());
+        }
+
+    // Check collision with obstacles
+    for (int ind_tot = 0; ind_tot < objects_links.size(); ind_tot++)
+        for (int ind_obst = 0; ind_obst < obstacles.size(); ind_obst++)
+        {
+            AABB aabb_obs = obstacles[ind_obst].get_aabb();
+            int ind_link = list_ind_links[ind_tot];
+            int ind_obj_links = list_ind_obj_links[ind_tot];
+
+            if (dist_aabb(aabb_obs, objects_links_aabb[ind_tot]) == 0)
+                if (objects_links[ind_tot].dist_to(obstacles[ind_obst], 1e-6, 1e-6, tol, no_iter_max).dist < dist_tol)
+                {
+
+                    cfcr.isfree = false;
+                    cfcr.message = "Collision between link " + std::to_string(ind_link) + " (col object " + std::to_string(ind_obj_links) + ") and obstacle " + std::to_string(ind_obst) + ".";
+                    cfcr.info.push_back(2);
+                    cfcr.info.push_back(ind_link);
+                    cfcr.info.push_back(ind_obj_links);
+                    cfcr.info.push_back(ind_obst);
+                    return cfcr;
+                }
+        }
+
+    // Check auto collision
+    if (check_auto)
+    {
+        for (int ind_tot_A = 0; ind_tot_A < objects_links.size(); ind_tot_A++)
+            for (int ind_tot_B = 0; ind_tot_B < objects_links.size(); ind_tot_B++)
+            {
+                int ind_link_A = list_ind_links[ind_tot_A];
+                int ind_obj_links_A = list_ind_obj_links[ind_tot_A];
+                int ind_link_B = list_ind_links[ind_tot_B];
+                int ind_obj_links_B = list_ind_obj_links[ind_tot_B];
+
+                if (ind_link_B > ind_link_A + 1)
+                {
+
+                    if (dist_aabb(objects_links_aabb[ind_tot_A], objects_links_aabb[ind_tot_B]) == 0)
+                    {
+
+                        if (objects_links[ind_tot_A].dist_to(objects_links[ind_tot_B], 1e-6, 1e-6, tol, no_iter_max).dist < dist_tol)
+                        {
+                            cfcr.isfree = false;
+                            cfcr.message = "Collision between link " + std::to_string(ind_link_A) + " (col object " + std::to_string(ind_obj_links_A) + ") and link " + std::to_string(ind_link_B) + " (col object " + std::to_string(ind_obj_links_B) + ").";
+                            cfcr.info.push_back(3);
+                            cfcr.info.push_back(ind_link_A);
+                            cfcr.info.push_back(ind_obj_links_A);
+                            cfcr.info.push_back(ind_link_B);
+                            cfcr.info.push_back(ind_obj_links_B);
+                            return cfcr;
+                        }
+                    }
+                }
+            }
+    }
+
+    // Everything is ok!
+    cfcr.isfree = true;
+    cfcr.message = "Ok!";
+    cfcr.info = {};
+
+    return cfcr;
+}
+
+DistStructLinkObj DistStructRobotObj::get_item(int ind_link, int ind_obj_link)
+{
+    for (int ind_info = 0; ind_info < list_info.size(); ind_info++)
+    {
+        if ((list_info[ind_info].link_number == ind_link) && (list_info[ind_info].link_col_obj_number == ind_obj_link))
+            return list_info[ind_info];
+    }
+
+    DistStructLinkObj dslo;
+    dslo.is_null = true;
+
+    return dslo;
+}
+
+DistStructRobotObj::DistStructRobotObj() {};
+
+DistStructRobotObj Manipulator::compute_dist(GeometricPrimitives obj, VectorXf q, Matrix4f htm, DistStructRobotObj old_dist_struct,
+                                             float tol, int no_iter_max, float max_dist, float h, float eps) const
+{
+    FKResult fkres = fk(q, htm, true);
+
+    AABB obj_aabb = obj.get_aabb();
+
+    DistStructRobotObj dsro;
+    dsro.is_null = false;
+    dsro.list_info = {};
+
+    MatrixXf jac_tot = MatrixXf::Zero(0, q.rows());
+    VectorXf dist_tot = VectorXf::Zero(0);
+    int old_rows;
+
+    for (int ind_links = 0; ind_links < no_links; ind_links++)
+    {
+        MatrixXf Jv = fkres.jac_v_dh[ind_links];
+        MatrixXf Jw = fkres.jac_w_dh[ind_links];
+        Vector3f pc = fkres.get_p_dh(ind_links);
+        MatrixXf Jvv = Jv + s_mat(pc) * Jw;
+
+        for (int ind_obj_link = 0; ind_obj_link < geo_prim[ind_links].size(); ind_obj_link++)
+        {
+
+            GeometricPrimitives obj_copy = geo_prim[ind_links][ind_obj_link].copy();
+            obj_copy.htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].htm;
+
+            if (dist_aabb(obj_copy.get_aabb(), obj_aabb) < max_dist)
+            {
+                Vector3f p_obj_0;
+                if (!old_dist_struct.is_null)
+                    p_obj_0 = obj.htm.block(0, 0, 3, 1);
+                else
+                {
+                    try
+                    {
+                        DistStructLinkObj dslo = old_dist_struct.get_item(ind_links, ind_obj_link);
+                        if (!dslo.is_null)
+                            p_obj_0 = dslo.point_object;
+                        else
+                            p_obj_0 = obj.htm.block(0, 0, 3, 1);
+                    }
+                    catch (const std::exception &e)
+                    {
+                        p_obj_0 = obj.htm.block(0, 0, 3, 1);
+                    }
+                }
+
+                PrimDistResult pdr = obj.dist_to(obj_copy, h, eps, tol, no_iter_max, p_obj_0);
+
+                DistStructLinkObj dslo_new;
+
+                dslo_new.is_null = false;
+                dslo_new.distance = pdr.dist;
+                dslo_new.link_number = ind_links;
+                dslo_new.link_col_obj_number = ind_obj_link;
+                dslo_new.point_object = pdr.proj_A;
+                dslo_new.point_link = pdr.proj_B;
+                MatrixXf dv = (pdr.proj_B - pdr.proj_A).transpose();
+                dslo_new.jac_distance = (dv * Jvv - (dv * s_mat(pdr.proj_A)) * Jw) / (pdr.dist + 1e-6);
+
+                old_rows = jac_tot.rows();
+                jac_tot.conservativeResize(old_rows + 1, Eigen::NoChange);
+                jac_tot.block(old_rows, 0, 1, dslo_new.jac_distance.cols()) = dslo_new.jac_distance;
+
+                old_rows = dist_tot.rows();
+                dist_tot.conservativeResize(old_rows + 1, Eigen::NoChange);
+                dist_tot[old_rows] = pdr.dist;
+
+                dsro.list_info.push_back(dslo_new);
+            }
+        }
+    }
+
+    dsro.jac_dist_mat = jac_tot;
+    dsro.dist_vect = dist_tot;
+
+    return dsro;
+}
+
+DistStructLinkLink DistStructRobotAuto::get_item(int ind_link_1, int ind_link_2, int ind_obj_link_1, int ind_obj_link_2)
+{
+    for (int ind_info = 0; ind_info < list_info.size(); ind_info++)
+    {
+        if ((list_info[ind_info].link_number_1 == ind_link_1) &&
+            (list_info[ind_info].link_number_2 == ind_link_2) &&
+            (list_info[ind_info].link_col_obj_number_1 == ind_obj_link_1) &&
+            (list_info[ind_info].link_col_obj_number_2 == ind_obj_link_2))
+            return list_info[ind_info];
+    }
+
+    DistStructLinkLink dsll;
+    dsll.is_null = true;
+
+    return dsll;
+}
+
+DistStructRobotAuto::DistStructRobotAuto() {};
+
+DistStructRobotAuto Manipulator::compute_dist_auto(VectorXf q, DistStructRobotAuto old_dist_struct,
+                                                   float tol, int no_iter_max, float max_dist, float h, float eps) const
+{
+    FKResult fkres = fk(q, this->htm_world_to_dh0, true);
+
+    DistStructRobotAuto dsra;
+    dsra.is_null = false;
+    dsra.list_info = {};
+
+    MatrixXf jac_tot = MatrixXf::Zero(0, q.rows());
+    VectorXf dist_tot = VectorXf::Zero(0);
+    int old_rows;
+
+    vector<MatrixXf> Jvv = vector<MatrixXf>();
+
+    for (int ind_links = 0; ind_links < no_links; ind_links++)
+    {
+        MatrixXf Jv = fkres.jac_v_dh[ind_links];
+        MatrixXf Jw = fkres.jac_w_dh[ind_links];
+        Vector3f pc = fkres.get_p_dh(ind_links);
+        Jvv.push_back(Jv + s_mat(pc) * Jw);
+    }
+
+    for (int ind_links_1 = 0; ind_links_1 < no_links; ind_links_1++)
+    {
+        MatrixXf Jv1 = fkres.jac_v_dh[ind_links_1];
+        MatrixXf Jw1 = fkres.jac_w_dh[ind_links_1];
+        Vector3f pc1 = fkres.get_p_dh(ind_links_1);
+        MatrixXf Jvv1 = Jvv[ind_links_1];
+
+        for (int ind_links_2 = ind_links_1 + 2; ind_links_2 < no_links; ind_links_2++)
+        {
+            MatrixXf Jv2 = fkres.jac_v_dh[ind_links_2];
+            MatrixXf Jw2 = fkres.jac_w_dh[ind_links_2];
+            Vector3f pc2 = fkres.get_p_dh(ind_links_2);
+            MatrixXf Jvv2 = Jvv[ind_links_2];
+
+            for (int ind_obj_link_1 = 0; ind_obj_link_1 < geo_prim[ind_links_1].size(); ind_obj_link_1++)
+                for (int ind_obj_link_2 = 0; ind_obj_link_2 < geo_prim[ind_links_2].size(); ind_obj_link_2++)
+                {
+
+                    GeometricPrimitives obj_copy_1 = geo_prim[ind_links_1][ind_obj_link_1].copy();
+                    obj_copy_1.htm = fkres.htm_dh[ind_links_1] * geo_prim[ind_links_1][ind_obj_link_1].htm;
+
+                    GeometricPrimitives obj_copy_2 = geo_prim[ind_links_2][ind_obj_link_2].copy();
+                    obj_copy_2.htm = fkres.htm_dh[ind_links_2] * geo_prim[ind_links_2][ind_obj_link_2].htm;
+
+                    if (dist_aabb(obj_copy_1.get_aabb(), obj_copy_2.get_aabb()) < max_dist)
+                    {
+                        Vector3f p_obj_1;
+                        if (!old_dist_struct.is_null)
+                            p_obj_1 = obj_copy_1.htm.block(0, 0, 3, 1);
+                        else
+                        {
+                            try
+                            {
+                                DistStructLinkLink dsll = old_dist_struct.get_item(ind_links_1, ind_links_2, ind_obj_link_1, ind_obj_link_2);
+                                if (!dsll.is_null)
+                                    p_obj_1 = dsll.point_link_1;
+                                else
+                                    p_obj_1 = obj_copy_1.htm.block(0, 0, 3, 1);
+                            }
+                            catch (const std::exception &e)
+                            {
+                                p_obj_1 = obj_copy_1.htm.block(0, 0, 3, 1);
+                            }
+                        }
+
+                        PrimDistResult pdr = obj_copy_1.dist_to(obj_copy_2, h, eps, tol, no_iter_max, p_obj_1);
+
+                        DistStructLinkLink dsll_new;
+
+                        dsll_new.is_null = false;
+                        dsll_new.distance = pdr.dist;
+                        dsll_new.link_number_1 = ind_links_1;
+                        dsll_new.link_number_2 = ind_links_2;
+                        dsll_new.link_col_obj_number_1 = ind_obj_link_1;
+                        dsll_new.link_col_obj_number_2 = ind_obj_link_2;
+                        dsll_new.point_link_1 = pdr.proj_A;
+                        dsll_new.point_link_2 = pdr.proj_B;
+
+                        MatrixXf dv = (pdr.proj_A - pdr.proj_B).transpose();
+                        dsll_new.jac_distance = (dv * Jvv1 - (dv * s_mat(pdr.proj_A)) * Jw1) / (pdr.dist + 1e-6);
+                        dsll_new.jac_distance += -(dv * Jvv2 - (dv * s_mat(pdr.proj_B)) * Jw2) / (pdr.dist + 1e-6);
+
+                        old_rows = jac_tot.rows();
+                        jac_tot.conservativeResize(old_rows + 1, Eigen::NoChange);
+                        jac_tot.block(old_rows, 0, 1, dsll_new.jac_distance.cols()) = dsll_new.jac_distance;
+
+                        old_rows = dist_tot.rows();
+                        dist_tot.conservativeResize(old_rows + 1, Eigen::NoChange);
+                        dist_tot[old_rows] = pdr.dist;
+
+                        dsra.list_info.push_back(dsll_new);
+                    }
+                }
+        }
+    }
+
+    dsra.jac_dist_mat = jac_tot;
+    dsra.dist_vect = dist_tot;
+
+    return dsra;
+}
+
+
