@@ -78,8 +78,8 @@ def _compute_dist(self, obj, q=None, htm=None, old_dist_struct=None, tol=0.0005,
     if not Utils.is_a_matrix(htm, 4, 4):
         raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
 
-    if not Utils.is_a_simple_object(obj):
-        raise Exception("The parameter 'obj' should be one of the following types: " + str(Utils.IS_SIMPLE) + ".")
+    if not Utils.is_a_metric_object(obj):
+        raise Exception("The parameter 'obj' should be one of the following types: " + str(Utils.IS_METRIC) + ".")
 
     if not Utils.is_a_number(tol) or tol <= 0:
         raise Exception("The parameter 'tol' should be a positive number.")

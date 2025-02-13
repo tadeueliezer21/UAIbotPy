@@ -8,11 +8,15 @@
 #include <mutex>
 #include "gjk.h"
 #include "nanoflann.hpp"
+#include <queue>
+#include <chrono>
+
 
 #include "declarations.h"
 
 using namespace std;
 using namespace Eigen;
+using namespace std::chrono;
 
 ////////////////////////////////////////////////////////////////
 // FORWARD KINEMATIC
@@ -362,6 +366,10 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
     gp.type = 3;
     gp.subdivisions = {};
     gp.radius_bb = {};
+
+    gp.bvh = BVH(points);
+
+    cout << "Created BVH with "<<gp.bvh.aabb.size()<<" bvhs"<<std::endl;
 
     return gp;
 }
@@ -795,7 +803,29 @@ float max4(float a1, float a2, float a3, float a4)
     return max(a1, max(a2, max(a3, a4)));
 }
 
+//AABB
+
 AABB::AABB() {}
+
+AABB AABB::get_aabb_pointcloud(const vector<Vector3f>& points, int start, int end)
+{
+    Vector3f minPoint = points[start];
+    Vector3f maxPoint = points[start];
+
+    for (int i = start; i < end; i++)
+    {
+        minPoint = minPoint.cwiseMin(points[i]);
+        maxPoint = maxPoint.cwiseMax(points[i]);
+    }
+
+    AABB box;
+    box.p = (minPoint + maxPoint) / 2.0f;  
+    box.lx = (maxPoint.x() - minPoint.x()) / 2.0f;
+    box.ly = (maxPoint.y() - minPoint.y()) / 2.0f;
+    box.lz = (maxPoint.z() - minPoint.z()) / 2.0f;
+
+    return box;
+}
 
 AABB GeometricPrimitives::get_aabb() const
 {
@@ -811,7 +841,7 @@ AABB GeometricPrimitives::get_aabb() const
         aabb.lx = this->lx;
         aabb.ly = this->lx;
         aabb.lz = this->lx;
-        aabb.htm = this->htm;
+        aabb.p = htm.block(0, 3, 3, 1);
 
         return aabb;
     }
@@ -831,7 +861,7 @@ AABB GeometricPrimitives::get_aabb() const
         aabb.lx = lx;
         aabb.ly = ly;
         aabb.lz = lz;
-        aabb.htm = this->htm;
+        aabb.p = htm.block(0, 3, 3, 1);
 
         return aabb;
     }
@@ -850,7 +880,7 @@ AABB GeometricPrimitives::get_aabb() const
         aabb.lx = lx;
         aabb.ly = ly;
         aabb.lz = lz;
-        aabb.htm = this->htm;
+        aabb.p = htm.block(0, 3, 3, 1);
 
         return aabb;
     }
@@ -860,11 +890,100 @@ AABB GeometricPrimitives::get_aabb() const
         aabb.lx = this->lx;
         aabb.ly = this->ly;
         aabb.lz = this->lz;
-        aabb.htm = this->htm;
+        aabb.p = htm.block(0, 3, 3, 1);
 
         return aabb;
     }
 }
+
+// Vector3f projection_aabb(const AABB& aabb, const Vector3f& point)
+// {
+//     Vector3f half_lengths(aabb.lx / 2, aabb.ly / 2, aabb.lz / 2);
+
+//     Vector3f min_bound = aabb.p - half_lengths;
+//     Vector3f max_bound = aabb.p + half_lengths;
+
+//     // Clamp point to AABB bounds
+//     return point.cwiseMax(min_bound).cwiseMin(max_bound);
+// }
+
+// PrimDistResult AABB::dist_aabb(AABB aabb1, AABB aabb2)
+// {
+//     PrimDistResult result;
+
+//     result.proj_A = projection_aabb(aabb1, aabb2.p);
+//     result.proj_B = projection_aabb(aabb2, aabb1.p);
+
+//     result.dist = (result.proj_A - result.proj_B).norm();
+
+//     return result;
+// }
+
+
+float AABB::dist_aabb(AABB aabb1, AABB aabb2)
+{
+    Vector3f hl1(aabb1.lx / 2, aabb1.ly / 2, aabb1.lz / 2);
+    Vector3f hl2(aabb2.lx / 2, aabb2.ly / 2, aabb2.lz / 2);
+
+    Vector3f p1_inf = aabb1.p - hl1;
+    Vector3f p1_sup = aabb1.p + hl1;
+    Vector3f p2_inf = aabb2.p - hl2;
+    Vector3f p2_sup = aabb2.p + hl2;
+
+    return Vector3f(0,0,0).cwiseMax(p2_inf-p1_sup).cwiseMax(p1_inf-p2_sup).norm();
+
+}
+
+//BVH
+
+BVH::BVH(){}
+
+int BVH::build_bvh(BVH &bvh, vector<Vector3f>& points, int start, int end, int parentIndex)
+{
+    AABB nodeAABB = AABB::get_aabb_pointcloud(points, start, end);
+
+    int nodeIndex = bvh.aabb.size();
+
+    bvh.aabb.push_back(nodeAABB);
+    bvh.parent.push_back(parentIndex);
+    bvh.left_child.push_back(-1);  
+    bvh.right_child.push_back(-1);
+
+    if (end - start == 1)
+    {
+        bvh.aabb[nodeIndex].p = points[start]; 
+        return nodeIndex;
+    }
+
+    Vector3f size(bvh.aabb[nodeIndex].lx, bvh.aabb[nodeIndex].ly, bvh.aabb[nodeIndex].lz);
+    int axis = 0; 
+    if (size.y() > size.x()) axis = 1;
+    if (size.z() > size[axis]) axis = 2;
+
+    sort(points.begin() + start, points.begin() + end,
+        [axis](const Vector3f& a, const Vector3f& b) {
+            return a[axis] < b[axis];
+        });
+
+    int mid = (start + end) / 2;
+
+    int leftChild = build_bvh(bvh, points, start, mid, nodeIndex);
+    int rightChild = build_bvh(bvh, points, mid, end, nodeIndex);
+
+    bvh.left_child[nodeIndex] = leftChild;
+    bvh.right_child[nodeIndex] = rightChild;
+
+    return nodeIndex; 
+}
+
+BVH::BVH(vector<Vector3f>& points)
+{
+    if (points.empty()) return; 
+    build_bvh(*this, points, 0, points.size(), -1); 
+}
+
+
+
 
 void tvec(Vector3f v, float *vf)
 {
@@ -896,6 +1015,95 @@ string pmat(Matrix4f m)
 
     return s;
         
+}
+
+PrimDistResult dist_to_bvh(const GeometricPrimitives& prim, const BVH& bvh)
+{
+    // Min priority queue (min-heap) for best-first traversal
+    priority_queue<QueueElement, vector<QueueElement>, greater<QueueElement>> pq;
+
+    // Initialize best distance
+    PrimDistResult bestResult;
+    bestResult.dist = VERYBIGNUMBER;
+
+    // Start with the root node
+    if (bvh.aabb.empty()) return bestResult;
+    
+    pq.push({0, 0.0f, Vector3f::Zero(), Vector3f::Zero()}); // Root node
+
+    int count = 0;
+
+    auto start = high_resolution_clock::now();
+    float max_dur=0;
+
+    while (!pq.empty())
+    {
+        // Get the closest node from the queue
+        QueueElement current = pq.top();
+        pq.pop();
+
+        int nodeIndex = current.nodeIndex;
+        const AABB& currentAABB = bvh.aabb[nodeIndex];
+
+        // Compute the distance to the current AABB
+        PrimDistResult aabbResult;
+
+        if (bvh.left_child[nodeIndex] == -1 && bvh.right_child[nodeIndex] == -1)
+        {
+            ProjResult pr = prim.projection(currentAABB.p,0,0);
+            aabbResult.dist = pr.dist;
+            aabbResult.proj_A = currentAABB.p;
+            aabbResult.proj_B = pr.proj;
+        }
+        else
+        {
+            // float lx = currentAABB.lx;
+            // float ly = currentAABB.ly;
+            // float lz = currentAABB.lz;
+            // Matrix4f htm = trn(currentAABB.p[0],currentAABB.p[1],currentAABB.p[2]);
+            // GeometricPrimitives box = GeometricPrimitives::create_box(htm,lx,ly,lz);
+
+            auto start_in = high_resolution_clock::now();
+
+            aabbResult.dist = AABB::dist_aabb(currentAABB, prim.get_aabb());
+
+            // aabbResult = prim.dist_to(box, 0, 0, 0, 0);
+
+            auto stop_in = high_resolution_clock::now();
+            auto duration_in = duration_cast<milliseconds>(stop_in - start_in);
+            max_dur = maxf(max_dur, duration_in.count());
+        }
+
+        // If this AABB cannot improve our result, prune it
+        if (aabbResult.dist >= bestResult.dist) continue;
+
+        // Update best result if this is a leaf node (actual point)
+        if (bvh.left_child[nodeIndex] == -1 && bvh.right_child[nodeIndex] == -1)
+        {
+            bestResult = aabbResult;
+        }
+
+        // Enqueue child nodes if they might provide a better result
+        if (bvh.left_child[nodeIndex] != -1)
+        {
+            pq.push({bvh.left_child[nodeIndex], aabbResult.dist, aabbResult.proj_A, aabbResult.proj_B});
+        }
+        if (bvh.right_child[nodeIndex] != -1)
+        {
+            pq.push({bvh.right_child[nodeIndex], aabbResult.dist, aabbResult.proj_A, aabbResult.proj_B});
+        }
+
+        count++;
+    }
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+
+    cout << "Visited "<<count<<" nodes!"<<std::endl;
+    cout << "Max GJK: " << max_dur << " ms" << endl;
+    cout << "Time taken: " << duration.count() << " ms" << endl;
+
+    return bestResult;
 }
 
 PrimDistResult dist_to_kd(GeometricPrimitives prim, float h, float eps, KDTree kdtree, PointCloud pointcloud)
@@ -946,24 +1154,24 @@ PrimDistResult dist_to_kd(GeometricPrimitives prim, float h, float eps, KDTree k
         float ly = prim.subdivisions[i].ly;
         float lz = prim.subdivisions[i].lz;
 
-        string color = "";
-        if(i%5 ==0)
-            color="blue";
-        if(i%5 ==1)
-            color="red";        
-        if(i%5 ==2)
-            color="green";  
-        if(i%5 ==3)
-            color="cyan";  
-        if(i%5 ==4)
-            color="yellow";  
+        // string color = "";
+        // if(i%5 ==0)
+        //     color="blue";
+        // if(i%5 ==1)
+        //     color="red";        
+        // if(i%5 ==2)
+        //     color="green";  
+        // if(i%5 ==3)
+        //     color="cyan";  
+        // if(i%5 ==4)
+        //     color="yellow";  
 
-        if(prim.subdivisions[i].type == 1)
-            cout << "obj_sd_"<<i<<" = ub.Box(width="<<lx<<", depth="<<ly<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
-        if(prim.subdivisions[i].type == 2)
-            cout << "obj_sd_"<<i<<" = ub.Cylinder(radius="<<lx<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
+        // if(prim.subdivisions[i].type == 1)
+        //     cout << "obj_sd_"<<i<<" = ub.Box(width="<<lx<<", depth="<<ly<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
+        // if(prim.subdivisions[i].type == 2)
+        //     cout << "obj_sd_"<<i<<" = ub.Cylinder(radius="<<lx<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
         
-        cout << "sim.add(obj_sd_"<<i<<")"<<std::endl;
+        // cout << "sim.add(obj_sd_"<<i<<")"<<std::endl;
 
 
 
@@ -998,7 +1206,7 @@ PrimDistResult dist_to_kd(GeometricPrimitives prim, float h, float eps, KDTree k
     }
     
 
-    cout << "Tested "<<dbg_total_tested<<" points!"<<std::endl;
+    // cout << "Tested "<<dbg_total_tested<<" points!"<<std::endl;
 
     return pdr;
 }
@@ -1114,10 +1322,15 @@ PrimDistResult GeometricPrimitives::dist_to(GeometricPrimitives prim, float h, f
                 // One of them is a point cloud, and no smoothing is required
                 // Call the KDtree-based algorithm
 
+                // if (type == 3)
+                //     return dist_to_kd(prim, h, eps, kdtree, pointcloud);
+                // else
+                //     return dist_to_kd(*this, h, eps, prim.kdtree, prim.pointcloud);
+
                 if (type == 3)
-                    return dist_to_kd(prim, h, eps, kdtree, pointcloud);
-                else
-                    return dist_to_kd(*this, h, eps, prim.kdtree, prim.pointcloud);
+                return dist_to_bvh(prim, bvh);
+                    else
+                return dist_to_bvh(*this, prim.bvh);           
             }
         }
     }
@@ -1558,16 +1771,11 @@ IKResult Manipulator::ik(Matrix4f tg_htm, VectorXf q0, float p_tol, float a_tol,
     return ikr;
 }
 
-float dist_aabb(AABB aabb1, AABB aabb2)
-{
-    Vector3f delta = aabb1.htm.block(0, 3, 3, 1) - aabb2.htm.block(0, 3, 3, 1);
 
-    float dx = max(abs(delta[0]) - (aabb1.lx + aabb2.lx) / 2, 0.0f);
-    float dy = max(abs(delta[1]) - (aabb1.ly + aabb2.ly) / 2, 0.0f);
-    float dz = max(abs(delta[2]) - (aabb1.lz + aabb2.lz) / 2, 0.0f);
 
-    return max(max(dx, dy), dz);
-}
+
+//Check distances
+
 
 CheckFreeConfigResult Manipulator::check_free_configuration(VectorXf q, Matrix4f htm, vector<GeometricPrimitives> obstacles, bool check_joint,
                                                             bool check_auto, float tol, float dist_tol, int no_iter_max) const
@@ -1610,6 +1818,12 @@ CheckFreeConfigResult Manipulator::check_free_configuration(VectorXf q, Matrix4f
         {
             GeometricPrimitives obj_copy = geo_prim[ind_links][ind_obj_link].copy();
             obj_copy.htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].htm;
+
+            //Modify the subprimitives as well
+            for(int ind_obj_sub = 0; ind_obj_sub < obj_copy.subdivisions.size(); ind_obj_sub++)
+                obj_copy.subdivisions[ind_obj_sub].htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].subdivisions[ind_obj_sub].htm;
+            //
+
             objects_links.push_back(obj_copy);
             list_ind_links.push_back(ind_links);
             list_ind_obj_links.push_back(ind_obj_link);
@@ -1624,7 +1838,7 @@ CheckFreeConfigResult Manipulator::check_free_configuration(VectorXf q, Matrix4f
             int ind_link = list_ind_links[ind_tot];
             int ind_obj_links = list_ind_obj_links[ind_tot];
 
-            if (dist_aabb(aabb_obs, objects_links_aabb[ind_tot]) == 0)
+            if (AABB::dist_aabb(aabb_obs, objects_links_aabb[ind_tot]) == 0)
                 if (objects_links[ind_tot].dist_to(obstacles[ind_obst], 1e-6, 1e-6, tol, no_iter_max).dist < dist_tol)
                 {
 
@@ -1652,7 +1866,7 @@ CheckFreeConfigResult Manipulator::check_free_configuration(VectorXf q, Matrix4f
                 if (ind_link_B > ind_link_A + 1)
                 {
 
-                    if (dist_aabb(objects_links_aabb[ind_tot_A], objects_links_aabb[ind_tot_B]) == 0)
+                    if (AABB::dist_aabb(objects_links_aabb[ind_tot_A], objects_links_aabb[ind_tot_B]) == 0)
                     {
 
                         if (objects_links[ind_tot_A].dist_to(objects_links[ind_tot_B], 1e-6, 1e-6, tol, no_iter_max).dist < dist_tol)
@@ -1723,7 +1937,12 @@ DistStructRobotObj Manipulator::compute_dist(GeometricPrimitives obj, VectorXf q
             GeometricPrimitives obj_copy = geo_prim[ind_links][ind_obj_link].copy();
             obj_copy.htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].htm;
 
-            if (dist_aabb(obj_copy.get_aabb(), obj_aabb) < max_dist)
+            //Modify the subprimitives as well
+            //for(int ind_obj_sub = 0; ind_obj_sub < obj_copy.subdivisions.size(); ind_obj_sub++)
+            //    obj_copy.subdivisions[ind_obj_sub].htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].subdivisions[ind_obj_sub].htm;
+            //
+
+            if (AABB::dist_aabb(obj_copy.get_aabb(), obj_aabb) < max_dist)
             {
                 Vector3f p_obj_0;
                 if (!old_dist_struct.is_null)
@@ -1842,7 +2061,7 @@ DistStructRobotAuto Manipulator::compute_dist_auto(VectorXf q, DistStructRobotAu
                     GeometricPrimitives obj_copy_2 = geo_prim[ind_links_2][ind_obj_link_2].copy();
                     obj_copy_2.htm = fkres.htm_dh[ind_links_2] * geo_prim[ind_links_2][ind_obj_link_2].htm;
 
-                    if (dist_aabb(obj_copy_1.get_aabb(), obj_copy_2.get_aabb()) < max_dist)
+                    if (AABB::dist_aabb(obj_copy_1.get_aabb(), obj_copy_2.get_aabb()) < max_dist)
                     {
                         Vector3f p_obj_1;
                         if (!old_dist_struct.is_null)

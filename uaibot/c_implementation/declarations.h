@@ -118,6 +118,19 @@ struct PrimDistResult
     string toString() const;
 };
 
+struct QueueElement
+{
+    int nodeIndex;
+    float dist;
+    Vector3f proj_A;
+    Vector3f proj_B;
+
+    bool operator>(const QueueElement& other) const
+    {
+        return dist > other.dist;
+    }
+};
+
 struct ProjResult
 {
     float dist;
@@ -131,9 +144,24 @@ struct AABB
     float lx;
     float ly;
     float lz;
-    Matrix4f htm;
+    Vector3f p;
 
     AABB();
+    static AABB get_aabb_pointcloud(const vector<Vector3f>& points, int start, int end);
+    static float dist_aabb(AABB aabb1, AABB aabb2);
+};
+
+
+struct BVH
+{
+    vector<AABB> aabb;
+    vector<int> parent;
+    vector<int> left_child;
+    vector<int> right_child;
+
+    static int build_bvh(BVH &bvh, vector<Vector3f>& points, int start, int end, int parentIndex);
+    BVH();
+    BVH(vector<Vector3f>& points);
 };
 
 struct CheckFreeConfigResult
@@ -212,6 +240,7 @@ struct GeometricPrimitives
     KDTree kdtree; 
     PointCloud pointcloud;
     vector<Vector3f> pointcloud_vec;
+    BVH bvh;
     vector<GeometricPrimitives> subdivisions;
     vector<float> radius_bb;
 

@@ -26,8 +26,8 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
         raise Exception("The parameter 'list' should be a list of simple objects.")
 
     for obs in obstacles:
-        if not Utils.is_a_simple_object(obs):
-            raise Exception("The parameter 'list' should be a list of simple objects.")
+        if not Utils.is_a_metric_object(obs):
+            raise Exception("The parameter 'list' should be a list of metric objects : " + str(Utils.IS_METRIC) + ".")
 
     if not str(type(check_joint)) == "<class 'bool'>":
         raise Exception("The parameter 'check_joint' should be a boolean.")
