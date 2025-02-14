@@ -164,7 +164,7 @@ string GeometricPrimitives::toString() const
     return oss.str();
 }
 
-GeometricPrimitives GeometricPrimitives::create_sphere(Matrix4f htm, float radius, bool subdivide)
+GeometricPrimitives GeometricPrimitives::create_sphere(Matrix4f htm, float radius)
 {
     GeometricPrimitives gp = GeometricPrimitives();
     gp.lx = radius;
@@ -174,27 +174,10 @@ GeometricPrimitives GeometricPrimitives::create_sphere(Matrix4f htm, float radiu
     gp.type = 0;
 
 
-    // Create subdivision objects
-    if (subdivide)
-    {
-        gp.subdivisions = {gp};
-        gp.radius_bb = {radius};
-    }
-    else
-    {
-        gp.subdivisions = {};
-        gp.radius_bb = {};
-    }
-
     return gp;
 }
 
-GeometricPrimitives GeometricPrimitives::create_sphere(Matrix4f htm, float radius)
-{
-    return create_sphere(htm, radius, true);
-}
-
-GeometricPrimitives GeometricPrimitives::create_box(Matrix4f htm, float width, float depth, float height, bool subdivide)
+GeometricPrimitives GeometricPrimitives::create_box(Matrix4f htm, float width, float depth, float height)
 {
     GeometricPrimitives gp = GeometricPrimitives();
     gp.lx = width;
@@ -204,66 +187,11 @@ GeometricPrimitives GeometricPrimitives::create_box(Matrix4f htm, float width, f
     gp.type = 1;
 
 
-    // Create subdivision objects
-
-    gp.subdivisions = {};
-    gp.radius_bb = {};
-
-    if (subdivide)
-    {
-
-        float lmin = min(min(gp.lx, gp.ly), gp.lz);
-        Vector3f p = gp.htm.block<3, 1>(0, 3);
-        Matrix3f Q = gp.htm.block<3, 3>(0, 0);
-
-        int nx = 2*std::ceil(gp.lx / lmin);
-        int ny = 2*std::ceil(gp.ly / lmin);
-        int nz = 2*std::ceil(gp.lz / lmin);
-
-        float lx_n = gp.lx / nx;
-        float ly_n = gp.ly / ny;
-        float lz_n = gp.lz / nz;
-
-        float xc = (lx_n - gp.lx) / 2;
-        float yc = (ly_n - gp.ly) / 2;
-        float zc = (lz_n - gp.lz) / 2;
-
-
-        for (int ix = 0; ix < nx; ix++)
-        {
-            yc = (ly_n - gp.ly) / 2;
-            for (int iy = 0; iy < ny; iy++)
-            {
-                zc = (lz_n - gp.lz) / 2;
-                for (int iz = 0; iz < nz; iz++)
-                {
-                    Vector3f p_n = Vector3f(xc, yc, zc);
-                    Eigen::Matrix4f htm_n = Eigen::Matrix4f::Identity();
-                    htm_n.block<3, 3>(0, 0) = Q;
-                    htm_n.block<3, 1>(0, 3) = Q*p_n+p;
-
-                    gp.subdivisions.push_back(GeometricPrimitives::create_box(htm_n, lx_n, ly_n, lz_n, false));
-                    gp.radius_bb.push_back(sqrtf(lx_n * lx_n + ly_n * ly_n + lz_n * lz_n) / 2);
-
-                    zc += lz_n;
-                }
-                yc += ly_n;
-            }
-            xc += lx_n;
-        }
-    }
-
-
     return gp;
 }
 
-GeometricPrimitives GeometricPrimitives::create_box(Matrix4f htm, float width, float depth, float height)
-{
-    return GeometricPrimitives::create_box(htm, width, depth, height, true);
-}
 
-
-GeometricPrimitives GeometricPrimitives::create_cylinder(Matrix4f htm, float radius, float height, bool subdivide)
+GeometricPrimitives GeometricPrimitives::create_cylinder(Matrix4f htm, float radius, float height)
 {
     GeometricPrimitives gp = GeometricPrimitives();
     gp.lx = radius;
@@ -273,44 +201,7 @@ GeometricPrimitives GeometricPrimitives::create_cylinder(Matrix4f htm, float rad
     gp.type = 2;
 
 
-    // Create subdivision objects
-
-
-    if (subdivide)
-    {
-        float lmin = min(2*gp.lx, gp.lz);
-        Vector3f p = gp.htm.block<3, 1>(0, 3);
-        Matrix3f Q = gp.htm.block<3, 3>(0, 0);
-
-        int nz = std::ceil(gp.lz / lmin);
-        float lz_n = gp.lz / nz;
-        float zc = (lz_n - gp.lz) / 2;
-
-        gp.subdivisions = {};
-        gp.radius_bb = {};
-
-        for (int iz = 0; iz < nz; iz++)
-        {
-            Vector3f p_n = Vector3f(0, 0, zc);
-            Eigen::Matrix4f htm_n = Eigen::Matrix4f::Identity();
-            htm_n.block<3, 3>(0, 0) = Q;
-            htm_n.block<3, 1>(0, 3) = Q*p_n+p;
-
-            gp.subdivisions.push_back(GeometricPrimitives::create_cylinder(htm_n, gp.lx, lz_n, false));
-            gp.radius_bb.push_back(sqrtf(2 * gp.lx * gp.lx + lz_n * lz_n / 4));
-
-            zc += lz_n;
-        }
-    }
-
-
     return gp;
-}
-
-GeometricPrimitives GeometricPrimitives::create_cylinder(Matrix4f htm, float radius, float height)
-{
-    return GeometricPrimitives::create_cylinder(htm, radius, height, true);
-
 }
 
 GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &points)
@@ -364,12 +255,8 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
         nanoflann::PointCloud<float>, 3>>(3, *gp.pointcloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
     gp.type = 3;
-    gp.subdivisions = {};
-    gp.radius_bb = {};
 
     gp.bvh = BVH(points);
-
-    cout << "Created BVH with "<<gp.bvh.aabb.size()<<" bvhs"<<std::endl;
 
     return gp;
 }
@@ -820,9 +707,9 @@ AABB AABB::get_aabb_pointcloud(const vector<Vector3f>& points, int start, int en
 
     AABB box;
     box.p = (minPoint + maxPoint) / 2.0f;  
-    box.lx = (maxPoint.x() - minPoint.x()) / 2.0f;
-    box.ly = (maxPoint.y() - minPoint.y()) / 2.0f;
-    box.lz = (maxPoint.z() - minPoint.z()) / 2.0f;
+    box.lx = (maxPoint.x() - minPoint.x());
+    box.ly = (maxPoint.y() - minPoint.y());
+    box.lz = (maxPoint.z() - minPoint.z());
 
     return box;
 }
@@ -896,28 +783,6 @@ AABB GeometricPrimitives::get_aabb() const
     }
 }
 
-// Vector3f projection_aabb(const AABB& aabb, const Vector3f& point)
-// {
-//     Vector3f half_lengths(aabb.lx / 2, aabb.ly / 2, aabb.lz / 2);
-
-//     Vector3f min_bound = aabb.p - half_lengths;
-//     Vector3f max_bound = aabb.p + half_lengths;
-
-//     // Clamp point to AABB bounds
-//     return point.cwiseMax(min_bound).cwiseMin(max_bound);
-// }
-
-// PrimDistResult AABB::dist_aabb(AABB aabb1, AABB aabb2)
-// {
-//     PrimDistResult result;
-
-//     result.proj_A = projection_aabb(aabb1, aabb2.p);
-//     result.proj_B = projection_aabb(aabb2, aabb1.p);
-
-//     result.dist = (result.proj_A - result.proj_B).norm();
-
-//     return result;
-// }
 
 
 float AABB::dist_aabb(AABB aabb1, AABB aabb2)
@@ -973,6 +838,11 @@ int BVH::build_bvh(BVH &bvh, vector<Vector3f>& points, int start, int end, int p
     bvh.left_child[nodeIndex] = leftChild;
     bvh.right_child[nodeIndex] = rightChild;
 
+    //
+
+
+    //
+
     return nodeIndex; 
 }
 
@@ -980,6 +850,12 @@ BVH::BVH(vector<Vector3f>& points)
 {
     if (points.empty()) return; 
     build_bvh(*this, points, 0, points.size(), -1); 
+
+    for(int i=0; i<aabb.size();i++)
+    {
+        cout << "Box "<<i<<": "<<aabb[i].lx<<", "<<aabb[i].ly<<", "<<aabb[i].lz<<", "<<print_vector(aabb[i].p)<<" cl"<<left_child[i]<<", cr"<<right_child[i]<<std::endl;
+
+    }
 }
 
 
@@ -1017,6 +893,35 @@ string pmat(Matrix4f m)
         
 }
 
+QueueElement eval_node(int index, const GeometricPrimitives& prim, const BVH& bvh, PrimDistResult &bestResult)
+{
+    QueueElement qe;
+    qe.nodeIndex = index;
+
+    if (bvh.left_child[index] == -1 && bvh.right_child[index] == -1)
+    {
+        ProjResult pr = prim.projection(bvh.aabb[index].p,0,0);
+        qe.dist = pr.dist;
+        qe.proj_A =  bvh.aabb[index].p;
+        qe.proj_B =  pr.proj;
+
+        if(pr.dist < bestResult.dist)
+        {
+            bestResult.dist = pr.dist;
+            bestResult.proj_A = bvh.aabb[index].p;
+            bestResult.proj_B = pr.proj;
+        }
+        return qe;
+    }
+    else
+    {
+        qe.dist = AABB::dist_aabb(bvh.aabb[index], prim.get_aabb());
+        qe.proj_A =  Vector3f(0,0,0);
+        qe.proj_B =  Vector3f(0,0,0);
+        return qe;      
+    }
+}
+
 PrimDistResult dist_to_bvh(const GeometricPrimitives& prim, const BVH& bvh)
 {
     // Min priority queue (min-heap) for best-first traversal
@@ -1028,13 +933,10 @@ PrimDistResult dist_to_bvh(const GeometricPrimitives& prim, const BVH& bvh)
 
     // Start with the root node
     if (bvh.aabb.empty()) return bestResult;
+
     
-    pq.push({0, 0.0f, Vector3f::Zero(), Vector3f::Zero()}); // Root node
+    pq.push(eval_node(0, prim, bvh, bestResult)); // Root node
 
-    int count = 0;
-
-    auto start = high_resolution_clock::now();
-    float max_dur=0;
 
     while (!pq.empty())
     {
@@ -1043,173 +945,161 @@ PrimDistResult dist_to_bvh(const GeometricPrimitives& prim, const BVH& bvh)
         pq.pop();
 
         int nodeIndex = current.nodeIndex;
-        const AABB& currentAABB = bvh.aabb[nodeIndex];
 
-        // Compute the distance to the current AABB
-        PrimDistResult aabbResult;
+        cout << "Current min dist = "<<bestResult.dist<<std::endl;
+        cout << "Exploring node "<<nodeIndex<<" with  children "<<bvh.left_child[nodeIndex]<<" and "<<bvh.right_child[nodeIndex]<< ", aabb_dist = "<<current.dist<<std::endl;
 
-        if (bvh.left_child[nodeIndex] == -1 && bvh.right_child[nodeIndex] == -1)
-        {
-            ProjResult pr = prim.projection(currentAABB.p,0,0);
-            aabbResult.dist = pr.dist;
-            aabbResult.proj_A = currentAABB.p;
-            aabbResult.proj_B = pr.proj;
-        }
-        else
-        {
-            // float lx = currentAABB.lx;
-            // float ly = currentAABB.ly;
-            // float lz = currentAABB.lz;
-            // Matrix4f htm = trn(currentAABB.p[0],currentAABB.p[1],currentAABB.p[2]);
-            // GeometricPrimitives box = GeometricPrimitives::create_box(htm,lx,ly,lz);
+        //Prune
+        if (current.dist >= bestResult.dist) continue;
 
-            auto start_in = high_resolution_clock::now();
-
-            aabbResult.dist = AABB::dist_aabb(currentAABB, prim.get_aabb());
-
-            // aabbResult = prim.dist_to(box, 0, 0, 0, 0);
-
-            auto stop_in = high_resolution_clock::now();
-            auto duration_in = duration_cast<milliseconds>(stop_in - start_in);
-            max_dur = maxf(max_dur, duration_in.count());
-        }
-
-        // If this AABB cannot improve our result, prune it
-        if (aabbResult.dist >= bestResult.dist) continue;
-
-        // Update best result if this is a leaf node (actual point)
-        if (bvh.left_child[nodeIndex] == -1 && bvh.right_child[nodeIndex] == -1)
-        {
-            bestResult = aabbResult;
-        }
-
-        // Enqueue child nodes if they might provide a better result
+        cout << "Creating descendants..."<<std::endl;
+        //Otherwise
         if (bvh.left_child[nodeIndex] != -1)
-        {
-            pq.push({bvh.left_child[nodeIndex], aabbResult.dist, aabbResult.proj_A, aabbResult.proj_B});
-        }
+            pq.push(eval_node(bvh.left_child[nodeIndex], prim, bvh, bestResult));
         if (bvh.right_child[nodeIndex] != -1)
-        {
-            pq.push({bvh.right_child[nodeIndex], aabbResult.dist, aabbResult.proj_A, aabbResult.proj_B});
-        }
+            pq.push(eval_node(bvh.right_child[nodeIndex], prim, bvh, bestResult));
 
-        count++;
+
     }
-
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-
-    cout << "Visited "<<count<<" nodes!"<<std::endl;
-    cout << "Max GJK: " << max_dur << " ms" << endl;
-    cout << "Time taken: " << duration.count() << " ms" << endl;
 
     return bestResult;
 }
 
-PrimDistResult dist_to_kd(GeometricPrimitives prim, float h, float eps, KDTree kdtree, PointCloud pointcloud)
+QueueElement eval_node_range(int index, const GeometricPrimitives& prim, const BVH& bvh, vector<Vector3f> &result, float threshold)
+{
+    QueueElement qe;
+    qe.nodeIndex = index;
+
+    if (bvh.left_child[index] == -1 && bvh.right_child[index] == -1)
+    {
+        ProjResult pr = prim.projection(bvh.aabb[index].p,0,0);
+        qe.dist = pr.dist;
+        qe.proj_A =  bvh.aabb[index].p;
+        qe.proj_B =  pr.proj;
+
+        if(pr.dist <= threshold)
+            result.push_back(bvh.aabb[index].p);
+        
+        return qe;
+    }
+    else
+    {
+        qe.dist = AABB::dist_aabb(bvh.aabb[index], prim.get_aabb());
+        qe.proj_A =  Vector3f(0,0,0);
+        qe.proj_B =  Vector3f(0,0,0);
+        return qe;      
+    }
+}
+
+vector<Vector3f> dist_to_bvh_range(const GeometricPrimitives& prim, const BVH& bvh, float threshold)
+{
+    vector<Vector3f> result = {};  // Stores the points in leaf nodes that satisfy the condition
+
+    // Min priority queue (min-heap) for best-first traversal
+    priority_queue<QueueElement, vector<QueueElement>, greater<QueueElement>> pq;
+
+    // Initialize best distance
+    PrimDistResult bestResult;
+    bestResult.dist = VERYBIGNUMBER;
+
+    // Start with the root node
+    if (bvh.aabb.empty()) return result;
+
+    
+    pq.push(eval_node_range(0, prim, bvh, result, threshold)); // Root node
+
+
+    while (!pq.empty())
+    {
+        // Get the closest node from the queue
+        QueueElement current = pq.top();
+        pq.pop();
+
+        int nodeIndex = current.nodeIndex;
+
+        // cout << "Current min dist = "<<bestResult.dist<<std::endl;
+        // cout << "Exploring node "<<nodeIndex<<" with  children "<<bvh.left_child[nodeIndex]<<" and "<<bvh.right_child[nodeIndex]<< ", aabb_dist = "<<current.dist<<std::endl;
+
+        //Prune
+        if (current.dist > threshold) continue;
+
+        // cout << "Creating descendants..."<<std::endl;
+        //Otherwise
+        if (bvh.left_child[nodeIndex] != -1)
+            pq.push(eval_node_range(bvh.left_child[nodeIndex], prim, bvh, result, threshold));
+        if (bvh.right_child[nodeIndex] != -1)
+            pq.push(eval_node_range(bvh.right_child[nodeIndex], prim, bvh, result, threshold));
+
+
+    }
+
+    cout << "Found "<<result.size()<<" points!"<<std::endl;
+
+    return result;
+}
+
+PrimDistResult dist_to_bvh_smooth(const GeometricPrimitives& prim, int pc_size, const BVH& bvh, float h, float eps)
 {
     PrimDistResult pdr;
 
-    pdr.dist = 1e6;
-    float closest_distance = 1e6;
+    cout << "dist_to_bvh"<<std::endl;
+    float min_dist = dist_to_bvh(prim, bvh).dist;
 
-    int dbg_total_tested=0;
+    float tol = 1e-3;
+    float threshold = min_dist/pow(tol,h);
 
+    cout << "dist_to_bvh_range"<<std::endl;
+    vector<Vector3f> all_points = dist_to_bvh_range(prim, bvh, threshold);
+    vector<ProjResult> all_dist;
     
+    float min_dist_smooth = VERYBIGNUMBER;
+    float aux_dist;
 
-    bool use_index[pointcloud->kdtree_get_point_count()] = {};
-
-    for (int i = 0; i < prim.subdivisions.size(); i++)
+    for(int i=0; i < all_points.size(); i++)
     {
-        Vector3f pc = prim.subdivisions[i].htm.block<3, 1>(0, 3);
-        Matrix3f Q = prim.subdivisions[i].htm.block<3, 3>(0, 0);
-
-        //cout << "pc = "<<print_vector(pc)<<std::endl;
-
-        // Get the point pstar at the pointcloud that is closest to the bounding ball
-        float query_pt[3] = {pc[0], pc[1], pc[2]};
-        const size_t num_results = 1;
-        size_t ret_index;
-        float out_dist_sqr;
-        nanoflann::KNNResultSet<float> resultSet(num_results);
-        resultSet.init(&ret_index, &out_dist_sqr);
-        kdtree->findNeighbors(resultSet, &query_pt[0]);
-
-
-        Vector3f pstar = Vector3f(pointcloud->kdtree_get_pt(ret_index, 0), pointcloud->kdtree_get_pt(ret_index, 1), pointcloud->kdtree_get_pt(ret_index, 2));
-
-        // Get distance d0 between pstar and the object
-        float d0 = prim.subdivisions[i].projection(pstar, 0.0, 0.0).dist;
-
-
-        // Query everything that is within d0+radius (plus a numerical error margin) of the bounding ball to the center of the bouding ball
-        float radius = d0 + prim.radius_bb[i]+1e-4;
-
-        // cout << "pstar = "<<print_vector(pstar)<<std::endl;
-        // cout << "out_dist = "<<sqrtf(out_dist_sqr)<<std::endl;
-        // cout << "d0 = "<<d0<<std::endl;
-        // cout << "prim.radius_bb[i] = "<<prim.radius_bb[i]<<std::endl;
-
-        float lx = prim.subdivisions[i].lx;
-        float ly = prim.subdivisions[i].ly;
-        float lz = prim.subdivisions[i].lz;
-
-        // string color = "";
-        // if(i%5 ==0)
-        //     color="blue";
-        // if(i%5 ==1)
-        //     color="red";        
-        // if(i%5 ==2)
-        //     color="green";  
-        // if(i%5 ==3)
-        //     color="cyan";  
-        // if(i%5 ==4)
-        //     color="yellow";  
-
-        // if(prim.subdivisions[i].type == 1)
-        //     cout << "obj_sd_"<<i<<" = ub.Box(width="<<lx<<", depth="<<ly<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
-        // if(prim.subdivisions[i].type == 2)
-        //     cout << "obj_sd_"<<i<<" = ub.Cylinder(radius="<<lx<<", height="<<lz<<", htm = "<<pmat(prim.subdivisions[i].htm)<<", color = '"<<color<<"')"<<std::endl;
-        
-        // cout << "sim.add(obj_sd_"<<i<<")"<<std::endl;
-
-
-
-        std::vector<nanoflann::ResultItem<uint32_t, float>> ret_matches;
-        size_t nMatches =
-            kdtree->radiusSearch(&query_pt[0], radius * radius, ret_matches);
-
-        // Check all the points to see which one is the closest
-
-        for (size_t j = 0; j < nMatches; j++)
-            use_index[ret_matches[j].first] = true;
-
+        ProjResult proj_aux = prim.projection(all_points[i],h,eps);
+        all_dist.push_back(proj_aux);
+        min_dist_smooth = minf(min_dist_smooth,proj_aux.dist);
     }
 
-
-    for(int i=0; i < pointcloud->kdtree_get_point_count(); i++)
-    {
-        if(use_index[i])
-        {
-            Vector3f p = Vector3f(pointcloud->kdtree_get_pt(i, 0), pointcloud->kdtree_get_pt(i, 1), pointcloud->kdtree_get_pt(i, 2));
-            ProjResult pr = prim.projection(p,0,0);
-
-            if(pr.dist < pdr.dist)
-            {
-                pdr.dist = pr.dist;
-                pdr.proj_A = p;
-                pdr.proj_B = pr.proj;
-            }
-            dbg_total_tested++;
-        }
-        
-    }
+    cout << "Found for BVH smooth: "<<all_points.size()<<std::endl;
+    cout << "min_dist = "<<min_dist<<", min_smooth = "<<min_dist_smooth<<", threshold "<<threshold<<std::endl;
     
 
-    // cout << "Tested "<<dbg_total_tested<<" points!"<<std::endl;
+    float sum_weight = 0;
+    float weight;
+    pdr.proj_A = Vector3f(0,0,0);
+    pdr.proj_B = Vector3f(0,0,0);
+    pdr.aux = Vector3f(0,0,0);
+    pdr.dist = 0;
+    float h_inv = 1.0/h;
+
+
+    for(int i=0; i < all_points.size(); i++)
+    {
+        weight = pow(min_dist_smooth/(VERYSMALLNUMBER+all_dist[i].dist),h_inv);
+        sum_weight+= weight;
+        cout << "sum_weight "<<sum_weight<<std::endl;
+        pdr.proj_A += weight*all_dist[i].proj;
+        pdr.proj_B += weight*all_points[i];
+        pdr.aux +=  weight*all_dist[i].proj.cross(all_points[i]);
+    }
+
+    float normalization = pow(sum_weight,1+h);
+    pdr.proj_A = pdr.proj_A/normalization;
+    pdr.proj_B = pdr.proj_B/normalization;
+    pdr.aux = pdr.aux/normalization;
+
+    cout <<  "pc_size "<<pc_size<<std::endl;
+    cout << "aaa = "<<pow(sum_weight/pc_size,h)<<std::endl;
+    pdr.dist = min_dist_smooth/ pow(sum_weight/pc_size,h);
+    cout <<  pdr.dist<<std::endl;
 
     return pdr;
 }
+
+
+
 
 PrimDistResult dist_to_gjk(const GeometricPrimitives &objA, const GeometricPrimitives &objB)
 {
@@ -1322,11 +1212,6 @@ PrimDistResult GeometricPrimitives::dist_to(GeometricPrimitives prim, float h, f
                 // One of them is a point cloud, and no smoothing is required
                 // Call the KDtree-based algorithm
 
-                // if (type == 3)
-                //     return dist_to_kd(prim, h, eps, kdtree, pointcloud);
-                // else
-                //     return dist_to_kd(*this, h, eps, prim.kdtree, prim.pointcloud);
-
                 if (type == 3)
                 return dist_to_bvh(prim, bvh);
                     else
@@ -1350,8 +1235,10 @@ PrimDistResult GeometricPrimitives::dist_to(GeometricPrimitives prim, float h, f
             }
             else
             {
-                // One of them is a point cloud, and smoothing is required
-                throw std::runtime_error("Not implemented yet (one of them pointcloud with smoothing)");
+                if (type == 3)
+                return dist_to_bvh_smooth(prim, pointcloud_vec.size(), bvh, h, eps);
+                    else
+                return dist_to_bvh_smooth(*this, prim.pointcloud_vec.size(), prim.bvh, h, eps); 
             }
         }
     }
@@ -1365,11 +1252,11 @@ PrimDistResult GeometricPrimitives::dist_to(GeometricPrimitives prim, float h, f
 GeometricPrimitives GeometricPrimitives::copy() const
 {
     if (type == 0)
-        return GeometricPrimitives::create_sphere(htm, lx, true);
+        return GeometricPrimitives::create_sphere(htm, lx);
     if (type == 1)
-        return GeometricPrimitives::create_box(htm, lx, ly, lz, true);
+        return GeometricPrimitives::create_box(htm, lx, ly, lz);
     if (type == 2)
-        return GeometricPrimitives::create_cylinder(htm, lx, lz, true);
+        return GeometricPrimitives::create_cylinder(htm, lx, lz);
     if (type == 3)
     {
         vector<Vector3f> points = pointcloud_vec;
@@ -1819,11 +1706,6 @@ CheckFreeConfigResult Manipulator::check_free_configuration(VectorXf q, Matrix4f
             GeometricPrimitives obj_copy = geo_prim[ind_links][ind_obj_link].copy();
             obj_copy.htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].htm;
 
-            //Modify the subprimitives as well
-            for(int ind_obj_sub = 0; ind_obj_sub < obj_copy.subdivisions.size(); ind_obj_sub++)
-                obj_copy.subdivisions[ind_obj_sub].htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].subdivisions[ind_obj_sub].htm;
-            //
-
             objects_links.push_back(obj_copy);
             list_ind_links.push_back(ind_links);
             list_ind_obj_links.push_back(ind_obj_link);
@@ -1936,11 +1818,6 @@ DistStructRobotObj Manipulator::compute_dist(GeometricPrimitives obj, VectorXf q
 
             GeometricPrimitives obj_copy = geo_prim[ind_links][ind_obj_link].copy();
             obj_copy.htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].htm;
-
-            //Modify the subprimitives as well
-            //for(int ind_obj_sub = 0; ind_obj_sub < obj_copy.subdivisions.size(); ind_obj_sub++)
-            //    obj_copy.subdivisions[ind_obj_sub].htm = fkres.htm_dh[ind_links] * geo_prim[ind_links][ind_obj_link].subdivisions[ind_obj_sub].htm;
-            //
 
             if (AABB::dist_aabb(obj_copy.get_aabb(), obj_aabb) < max_dist)
             {

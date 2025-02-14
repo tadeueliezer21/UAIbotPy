@@ -9,7 +9,8 @@
 using namespace std;
 using namespace Eigen;
 
-const float VERYBIGNUMBER = 10000000;
+const float VERYBIGNUMBER = 10000000.0;
+const float VERYSMALLNUMBER = 1/VERYBIGNUMBER;
 
 struct DistResult
 {
@@ -110,6 +111,7 @@ struct PrimDistResult
     float dist;
     Vector3f proj_A;
     Vector3f proj_B;
+    Vector3f aux;
 
     //
     vector<float> hist_error;
@@ -241,15 +243,11 @@ struct GeometricPrimitives
     PointCloud pointcloud;
     vector<Vector3f> pointcloud_vec;
     BVH bvh;
-    vector<GeometricPrimitives> subdivisions;
-    vector<float> radius_bb;
 
     GeometricPrimitives();
-    static GeometricPrimitives create_sphere(Matrix4f htm, float radius, bool subdivide);
+
     static GeometricPrimitives create_sphere(Matrix4f htm, float radius);
-    static GeometricPrimitives create_box(Matrix4f htm, float width, float depth, float height, bool subdivide);
     static GeometricPrimitives create_box(Matrix4f htm, float width, float depth, float height);
-    static GeometricPrimitives create_cylinder(Matrix4f htm, float radius, float height, bool subdivide);
     static GeometricPrimitives create_cylinder(Matrix4f htm, float radius, float height);
     static GeometricPrimitives create_pointcloud(vector<Vector3f> &points);
 
