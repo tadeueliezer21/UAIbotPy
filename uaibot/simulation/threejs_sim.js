@@ -15,8 +15,6 @@ import {GUI} from 'https://cdn.skypack.dev/dat.gui';
 import {ParametricGeometry} from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/geometries/ParametricGeometry.js'
 
 
-//0.126.1 0.137.5
-
 //--------------------SIMULATION ELEMENTS---------------------
 
 //SIMULATION PARAMETERS GO HERE

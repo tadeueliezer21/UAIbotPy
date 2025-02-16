@@ -892,22 +892,7 @@ class Utils:
         except:
             return " : not able to access '" + url + "'."
 
-    @staticmethod
-    def get_environment():
-        try:
-            import google.colab
-            return "Colab"
-        except ImportError:
-            try:
-                from IPython import get_ipython
-                if "google.colab" in sys.modules:
-                    return "Colab"
-                elif get_ipython() is not None:
-                    return "Jupyter"
-            except ImportError:
-                return "Not in Jupyter/Colab"
-        return "None"
-    
+
     #######################################
     # Distance computation functions
     #######################################
@@ -986,6 +971,7 @@ class Utils:
             
             if Utils.get_uaibot_type(obj) != 'uaibot.PointCloud' and htm is None:
                 htm = obj.htm
+
             if Utils.get_uaibot_type(obj) == 'uaibot.Ball':
                 return ub_cpp.CPP_GeometricPrimitives.create_sphere(htm, obj.radius)
             if Utils.get_uaibot_type(obj) == 'uaibot.Box':
@@ -1067,7 +1053,21 @@ class Utils:
             return np.matrix(dist_res.proj_A).reshape((3,1)), np.matrix(dist_res.proj_B).reshape((3,1)), dist_res.dist, dist_res.hist_error
 
 
-
+    @staticmethod
+    def get_environment():
+        try:
+            import google.colab
+            return "Colab"
+        except ImportError:
+            try:
+                from IPython import get_ipython
+                if "google.colab" in sys.modules:
+                    return "Colab"
+                elif get_ipython() is not None:
+                    return "Jupyter"
+            except ImportError:
+                return "Not in Jupyter/Colab"
+        return "None"
 
 
 

@@ -525,7 +525,39 @@ class Simulation:
 
         return sim
             
+    @staticmethod
+    def create_sim_lesson(objects=[]):
+        """
+    Create an environment for embedding into the lessons slides.
 
+    Parameters
+    ----------
+    objects: list of objects that can be simulated (see Utils.IS_OBJ_SIM)
+        The objects to be added to the scenario.
+
+    Returns
+    -------
+    sim: 'Simulation' object
+        Simulation object.
+    """
+
+
+                            
+        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.0]))
+        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.0]))
+        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.0]))
+        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.0]))
+        light5 = PointLight(name="light5", color="white", intensity=10, htm=Utils.trn([ 0,0,5]))
+
+
+        sim = Simulation(objects, ambient_light_intensity=0, show_grid=False)
+        sim.add(light1)
+        sim.add(light2)
+        sim.add(light3)
+        sim.add(light4)
+        sim.add(light5)
+
+        return sim
 
     def set_parameters(self, ambient_light_intensity=None, ldr_urls=None, camera_type=None, width=None,
                  height=None, show_world_frame = None, show_grid = None, load_screen_color=None, background_color=None,
