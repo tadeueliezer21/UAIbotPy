@@ -73,7 +73,7 @@ def _create_magician_e6(htm, name, color, opacity):
         scale,
         np.identity(4),
         MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
-                     color=color, opacity=1))]
+                     color=color, opacity=opacity))]
 
     link_3d_obj = []
 
@@ -83,7 +83,7 @@ def _create_magician_e6(htm, name, color, opacity):
             scale,
             htm1,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=1))
+                         opacity=opacity))
          ]
     )
 
@@ -93,7 +93,7 @@ def _create_magician_e6(htm, name, color, opacity):
             scale,
             htm2,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=1))
+                         opacity=opacity))
          ]
     )
 
@@ -103,7 +103,7 @@ def _create_magician_e6(htm, name, color, opacity):
             scale,
             htm3,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=1))
+                         opacity=opacity))
          ]
     )
 
@@ -113,7 +113,7 @@ def _create_magician_e6(htm, name, color, opacity):
             scale,
             htm4,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=1))
+                         opacity=opacity))
          ]
     )
 
@@ -123,7 +123,7 @@ def _create_magician_e6(htm, name, color, opacity):
             scale,
             htm5,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#C0C0C0",
-                         opacity=1))
+                         opacity=opacity))
          ]
     )
     link_3d_obj.append(
@@ -132,7 +132,7 @@ def _create_magician_e6(htm, name, color, opacity):
             scale,
             htm6,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="black",
-                         opacity=1))
+                         opacity=opacity))
          ]
     )
 

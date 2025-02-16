@@ -239,6 +239,7 @@ class Robot:
         self._htm_base_0 = htm_base_0
         self._htm_n_eef = htm_n_eef
         self._eef_frame_visible = eef_frame_visible
+
         
         if eef_frame_visible:
             self._eef_frame = Frame(size=0.1)

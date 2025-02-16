@@ -582,7 +582,8 @@ const controls = new OrbitControls(camera, canvas);	//Instantiate orbit controls
 //controls.target.set(0, 0, 0);//Point camera at the origin
 
 camera.position.set(cameraStartPose[0], cameraStartPose[1], cameraStartPose[2]);
-camera.rotation.set(cameraStartPose[3], cameraStartPose[4], cameraStartPose[5]);
+//camera.rotation.set(cameraStartPose[3], cameraStartPose[4], cameraStartPose[5]);
+camera.lookAt(cameraStartPose[3], cameraStartPose[4], cameraStartPose[5]);
 camera.zoom = cameraStartPose[6];
 camera.updateProjectionMatrix();
 

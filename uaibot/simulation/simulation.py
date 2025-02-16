@@ -210,12 +210,12 @@ class Simulation:
 
         if camera_start_pose is None:
             if camera_type=="perspective":
-                camera_start_pose = [1.76, 1.10, 1.45, -0.64, 0.76, 2.39, 1]
+                camera_start_pose = [1.76, 1.10, 1.45, 0, 0, 0, 1]
             else:
-                camera_start_pose = [1.3, 1.8, 2.7, -0.58, 0.38, 2.63, 4]
+                camera_start_pose = [1.3, 1.8, 2.7, 0, 0, 0, 4]
 
         if not Utils.is_a_vector(camera_start_pose,7):
-            raise Exception("The parameter 'camera_start_pose' should be either None or a 6 element vector.")
+            raise Exception("The parameter 'camera_start_pose' should be either None or a 7 element vector.")
 
         self._list_of_objects = []
         self._list_of_names = []
@@ -223,10 +223,10 @@ class Simulation:
         self._camera_type = camera_type
         self._ldr_urls = ldr_urls
         
-        if width==[] or depth==[]:
+        if width==[] or height==[]:
             if Utils.get_environment() == 'None':
-                self._width = 1.2*800 #1400
-                self._height = 1.2*600 #900
+                self._width = 960 
+                self._height = 720 
             else:
                 self._width = 800
                 self._height = 600                
@@ -241,7 +241,8 @@ class Simulation:
         self._camera_start_pose = np.array(camera_start_pose).tolist()
         
         #Add reference frame
-        self.add(Frame(htm=Utils.trn([0,0,0]),size=0.5))
+        if self._show_world_frame:
+            self.add(Frame(name='w0_frame', htm=Utils.trn([0,0,0]),size=0.5))
         
         self.add(obj_list)
 
@@ -657,7 +658,7 @@ class Simulation:
 
 
         if (not camera_start_pose is None) and (not Utils.is_a_vector(camera_start_pose,7)):
-            raise Exception("The parameter 'camera_start_pose' should be either None or a 6 element vector.")
+            raise Exception("The parameter 'camera_start_pose' should be either None or a 7 element vector.")
 
         if not ambient_light_intensity is None:
             self._ambient_light_intensity = ambient_light_intensity
@@ -675,6 +676,16 @@ class Simulation:
             self._height = height
 
         if not show_world_frame is None:
+            if show_world_frame and (not self._show_world_frame):
+                self.add(Frame(name='w0_frame', htm=Utils.trn([0,0,0]),size=0.5))
+            if (not show_world_frame) and self._show_world_frame:
+                for j in range(len(self._list_of_names)):
+                    if self._list_of_names[j] == 'w0_frame':
+                        j_remove=j
+                    
+                del self._list_of_names[j_remove]
+                del self._list_of_objects[j_remove]
+                    
             self._show_world_frame = show_world_frame
 
         if not show_grid is None:
@@ -780,7 +791,7 @@ class Simulation:
 
     def scan_group(self, group):
         for obj in group.list_of_objects:
-            if Utils.get_uaibot_type(obj) == 'uaibot.Robot':
+            if Utils.get_uaibot_type(obj) == 'uaibot.Robot' and obj.eef_frame_visible:
                 self.add(obj._eef_frame)
             if Utils.get_uaibot_type(obj) == 'uaibot.Group':
                 self.scan_group(obj)
@@ -813,7 +824,7 @@ class Simulation:
             self._list_of_names.append(obj_sim.name)
             self._list_of_objects.append(obj_sim)
             
-            if Utils.get_uaibot_type(obj_sim) == 'uaibot.Robot':
+            if Utils.get_uaibot_type(obj_sim) == 'uaibot.Robot' and obj_sim.eef_frame_visible:
                 self.add(obj_sim._eef_frame)
             if Utils.get_uaibot_type(obj_sim) == 'uaibot.Group':
                 self.scan_group(obj_sim)

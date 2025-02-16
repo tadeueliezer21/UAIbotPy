@@ -23,6 +23,8 @@ from robot import *
 from demo import *
 from utils import *
 from simulation import *
+from graphics import *
+from simobjects import *
 
 import numpy as np
 np.set_printoptions(
