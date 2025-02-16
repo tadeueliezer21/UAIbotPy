@@ -178,9 +178,9 @@ def _create_franka_emika_3(htm, name, color, opacity):
             links[i].attach_col_object(col_model[i][j], col_model[i][j].htm)
 
     # Define initial configuration
-    q0 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    q0 = [0.0, 0.0, 0.0, -np.pi*4/180, 0.0, 0.0, 0.0]
 
     #Create joint limits
-    joint_limits = (np.pi/180)*np.matrix([[-170,170],[-120,120],[-170,170],[-120,120],[-170,170],[-120,120],[-175,175]])
+    joint_limits = (np.pi/180)*np.matrix([[-166,166],[-101,101],[-166,166],[-176,-4],[-166,166],[-1,215],[-166,166]])
     
     return base_3d_obj, links, np.identity(4), np.identity(4), q0, joint_limits

@@ -93,7 +93,9 @@ setup(
         "ipython==8.0.1",
         "numpy==1.24", 
         "scipy>=1.10",  
-        "setuptools>=58.0.4"
+        "setuptools>=58.0.4",
+        "quadprog>=0.1.13",
+        "matplotlib >= 3.10.0"
     ],
     setup_requires=["pybind11>=2.10"],
 )

@@ -6,6 +6,7 @@ import string as st
 from scipy.linalg import null_space
 from httplib2 import *
 import sys
+import quadprog
 
 import os
 if os.environ['CPP_SO_FOUND']=="1":
@@ -555,6 +556,21 @@ class Utils:
 
         return lambda t: aux_interpolate_multiple(points, t)
 
+    @staticmethod
+    def solve_qp(H, f, A, b):
+        H = 0.5 * (H + H.T)  
+
+        m = H.shape[0]
+        n = A.shape[0]
+
+        f = np.asarray(f).reshape((m,))   
+        b = np.asarray(b).reshape((n,))   
+
+        C = A.T  
+
+        result = quadprog.solve_qp(H, -f, C, b, 0)
+
+        return np.matrix(result[0].reshape((m,1)))
 
     #######################################
     # Type check functions
