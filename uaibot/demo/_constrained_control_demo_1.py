@@ -114,7 +114,7 @@ def _constrained_control_demo_1():
         dmin_obj = 1000*dr_obj_0.get_closest_item().distance
         dmin_auto = 1000*dr_auto_0.get_closest_item().distance
         
-        str_msg = "t = "+str(round(t,2))+" s, epx = "+str(epx)+" mm, epy = "+str(epy)+" mm, epz = "+str(epz)+" mm, "
+        str_msg = "\rt = "+str(round(t,2))+" s, epx = "+str(epx)+" mm, epy = "+str(epy)+" mm, epz = "+str(epz)+" mm, "
         str_msg += "eox = "+str(epx)+" deg, eoy = "+str(epy)+" deg, eoz = "+str(epz)+" deg"
         
         prox_joints = (180/np.pi) * min((qr-q_min).min(), (q_max - qr).min())
