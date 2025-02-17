@@ -82,9 +82,13 @@ setup(
         "install": CustomInstall,
         "develop": CustomDevelop,
     },
+    # package_data={
+    #     "simulation": ["**/*.js"], 
+    # },
     package_data={
-        "simulation": ["**/*.js"], 
-    },
+        "uaibot.simulation": ["*.js"], 
+    },    
+     
     zip_safe=False,
     python_requires=">=3.6",
     install_requires=[
