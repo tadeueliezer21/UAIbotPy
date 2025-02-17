@@ -1534,7 +1534,9 @@ vector<FKPrimResult> Manipulator::fk_prim(const vector<VectorXf> &q, const vecto
 
 FKPrimResult Manipulator::fk_prim(VectorXf q, Matrix4f htm_world_base) const
 {
-    return fk_prim({q}, {fk(q, htm_world_base)})[0];
+    //return fk_prim({q}, {fk(q, htm_world_base)})[0];
+    //
+    return fk_prim(vector<VectorXf>{q}, vector<FKResult>{fk(q, htm_world_base)})[0];
 }
 
 TaskResult Manipulator::fk_task(VectorXf q, Matrix4f htm_world_base, Matrix4f tg_htm) const

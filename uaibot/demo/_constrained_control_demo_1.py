@@ -3,6 +3,7 @@ import numpy as np
 import requests
 from io import BytesIO
 import matplotlib.pyplot as plt
+import sys
 
 
 def _constrained_control_demo_1():
@@ -122,7 +123,8 @@ def _constrained_control_demo_1():
         hist_data.append([t, epx, epy, epz, eox, eoy, eoz, dmin_obj, dmin_auto, prox_joints])
 
         
-        print(str_msg)
+        sys.stdout.write(str_msg)
+        sys.stdout.flush()
         
         #Update animation frames and time
         robot.add_ani_frame(t,qr)

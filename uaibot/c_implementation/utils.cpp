@@ -482,3 +482,48 @@ VectorXf sqrt_sign(VectorXf v)
 
     return w;
 }
+
+vector<VectorXf> get_vertex(const MatrixXf& A, const VectorXf& b) {
+    vector<VectorXf> vertices;
+    int num_constraints = A.rows();
+    int dim = A.cols();
+
+    if (num_constraints < 3 || dim != 3) {
+        cerr << "Error: A must have at least 3 constraints and be in 3D." << endl;
+        return vertices;
+    }
+
+    vector<int> indices(num_constraints);
+    iota(indices.begin(), indices.end(), 0); 
+
+    for (size_t i = 0; i < num_constraints; ++i) {
+        for (size_t j = i + 1; j < num_constraints; ++j) {
+            for (size_t k = j + 1; k < num_constraints; ++k) {
+                MatrixXf A_sub(3, 3);
+                VectorXf b_sub(3);
+
+                A_sub.row(0) = A.row(i);
+                A_sub.row(1) = A.row(j);
+                A_sub.row(2) = A.row(k);
+
+                b_sub(0) = b(i);
+                b_sub(1) = b(j);
+                b_sub(2) = b(k);
+
+                FullPivLU<MatrixXf> lu(A_sub);
+                if (!lu.isInvertible()) continue; 
+
+                VectorXf p = lu.solve(b_sub);
+
+                VectorXf check = A * p;
+                if ((check.array() <= b.array()).all()) {
+                    vertices.push_back(p);
+                }
+            }
+        }
+    }
+
+    return vertices;
+}
+
+

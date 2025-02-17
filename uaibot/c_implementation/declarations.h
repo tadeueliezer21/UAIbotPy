@@ -239,6 +239,8 @@ struct GeometricPrimitives
     float lz;
     Matrix4f htm;
     int type;
+
+    //For point cloud
     KDTree kdtree; 
     PointCloud pointcloud;
     vector<Vector3f> pointcloud_vec;
