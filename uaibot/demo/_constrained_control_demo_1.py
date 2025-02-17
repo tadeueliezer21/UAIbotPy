@@ -5,7 +5,7 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 
 
-def constrained_control_demo_1():
+def _constrained_control_demo_1():
     # Get the point cloud data
     url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/PointCloud/data_wall_with_hole.npy"
     wallpoints = np.load(BytesIO(requests.get(url).content))
@@ -17,7 +17,7 @@ def constrained_control_demo_1():
     robot = ub.Robot.create_franka_emika_3()
     htm_des = ub.Utils.trn([0.45,0.31,0.7])*ub.Utils.rotx(-np.pi/2)
     frame_des = ub.Frame(htm_des, size=0.1)
-    sim = ub.Simulation.create_sim_lesson([pc, robot, point_link, point_obj, frame_des])
+    sim = ub.Simulation.create_sim_grid([pc, robot, point_link, point_obj, frame_des])
     sim.set_parameters(width=500,height=500,load_screen_color='#191919',background_color='#191919')
 
     #Define F function for control

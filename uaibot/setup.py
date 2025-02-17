@@ -62,6 +62,7 @@ class CustomDevelop(develop):
         self.run_command("build_ext")
         develop.run(self)
 
+#Setup the installation
 setup(
     name="uaibot",
     version="0.1.0",
