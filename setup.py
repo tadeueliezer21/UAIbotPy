@@ -62,6 +62,7 @@ class CustomDevelop(develop):
         self.run_command("build_ext")
         develop.run(self)
 
+#Setup the installation
 setup(
     name="uaibot",
     version="0.1.0",
@@ -82,7 +83,7 @@ setup(
         "develop": CustomDevelop,
     },
     package_data={
-        "uaibot.simulation": ["**/*.js"], 
+        "simulation": ["**/*.js"], 
     },
     zip_safe=False,
     python_requires=">=3.6",
@@ -94,7 +95,8 @@ setup(
         "numpy==1.24", 
         "scipy>=1.10",  
         "setuptools>=58.0.4",
-        "matplotlib"
+        "quadprog>=0.1.13",
+        "matplotlib >= 3.10.0"
     ],
     setup_requires=["pybind11>=2.10"],
 )
