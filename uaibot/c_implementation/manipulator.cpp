@@ -246,6 +246,7 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
     gp.ly = ly_max - ly_min;
     gp.lz = lz_max - lz_min;
     gp.htm = trn(xc, yc, zc);
+    gp.center = Vector3f(xc, yc, zc);
 
     gp.kdtree = std::make_shared<nanoflann::KDTreeSingleIndexAdaptor<
         nanoflann::L2_Simple_Adaptor<float, nanoflann::PointCloud<float>>,
@@ -258,32 +259,31 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
     return gp;
 }
 
-GeometricPrimitives GeometricPrimitives::create_polytope(MatrixXf A, VectorXf b)
+GeometricPrimitives GeometricPrimitives::create_convexpolytope(Matrix4f htm, MatrixXf A, VectorXf b)
 {
     GeometricPrimitives gp = GeometricPrimitives();
-    //Check if the polytope is empty
+    // Check if the polytope is empty
     gp.points_gp = get_vertex(A, b);
 
-    if(gp.points_gp.size()==0)
+    if (gp.points_gp.size() == 0)
         throw std::runtime_error("Polytope is empty!");
 
-    //Check if the polytope is unbounded
-    VectorXf ex_p = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(1,0,0),-A, -b);
-    VectorXf ex_n = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(-1,0,0),-A, -b);
-    VectorXf ey_p = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,1,0),-A, -b);
-    VectorXf ey_n = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,-1,0),-A, -b);
-    VectorXf ez_p = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,0,1),-A, -b);
-    VectorXf ez_n = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,0,-1),-A, -b);
+    // Check if the polytope is unbounded
+    VectorXf ex_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(1, 0, 0), -A, -b);
+    VectorXf ex_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(-1, 0, 0), -A, -b);
+    VectorXf ey_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 1, 0), -A, -b);
+    VectorXf ey_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, -1, 0), -A, -b);
+    VectorXf ez_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 0, 1), -A, -b);
+    VectorXf ez_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 0, -1), -A, -b);
 
-    float dx = abs(ex_p[0]-ex_n[0]);
-    float dy = abs(ey_p[1]-ey_n[1]);
-    float dz = abs(ez_p[2]-ez_n[2]);
+    float dx = abs(ex_p[0] - ex_n[0]);
+    float dy = abs(ey_p[1] - ey_n[1]);
+    float dz = abs(ez_p[2] - ez_n[2]);
 
-    if(dx > 1e3 || dy > 1e3 || dz > 1e3)
+    if (dx > 1e3 || dy > 1e3 || dz > 1e3)
         throw std::runtime_error("Polytope is unbounded!");
 
     //
-
 
     int num_constraints = A.rows();
     int dim = A.cols();
@@ -307,12 +307,10 @@ GeometricPrimitives GeometricPrimitives::create_polytope(MatrixXf A, VectorXf b)
         }
     }
 
-    
-
     gp.type = 4;
+    gp.htm = htm;
     gp.A = A_norm;
     gp.b = b_norm;
-
 
     float x_min = VERYBIGNUMBER;
     float x_max = -VERYBIGNUMBER;
@@ -320,24 +318,28 @@ GeometricPrimitives GeometricPrimitives::create_polytope(MatrixXf A, VectorXf b)
     float y_max = -VERYBIGNUMBER;
     float z_min = VERYBIGNUMBER;
     float z_max = -VERYBIGNUMBER;
-    Vector3f pc = Vector3f(0, 0, 0);
+    gp.center = Vector3f(0,0,0);
+
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f p = htm.block<3, 1>(0, 3);
+    Vector3f tr_point;
 
     for (int i = 0; i < gp.points_gp.size(); i++)
     {
-        x_min = minf(x_min, gp.points_gp[i][0]);
-        x_max = maxf(x_max, gp.points_gp[i][0]);
-        y_min = minf(y_min, gp.points_gp[i][1]);
-        y_max = maxf(y_max, gp.points_gp[i][1]);
-        z_min = minf(z_min, gp.points_gp[i][2]);
-        z_max = maxf(z_max, gp.points_gp[i][2]);
-        pc += gp.points_gp[i];
+        tr_point =  Q.transpose()*(gp.points_gp[i]-p);
+        x_min = minf(x_min, tr_point[0]);
+        x_max = maxf(x_max, tr_point[0]);
+        y_min = minf(y_min, tr_point[1]);
+        y_max = maxf(y_max, tr_point[1]);
+        z_min = minf(z_min, tr_point[2]);
+        z_max = maxf(z_max, tr_point[2]);
+        gp.center += tr_point;
     }
-    pc = pc / gp.points_gp.size();
-
+    gp.center = gp.center / gp.points_gp.size();
     gp.lx = x_max - x_min;
     gp.ly = y_max - y_min;
     gp.lz = z_max - z_min;
-    gp.htm = trn(pc[0], pc[1], pc[2]);
+    gp.htm = htm;
 
     return gp;
 }
@@ -737,17 +739,25 @@ ProjResult projection_pointcloud(KDTree tree, PointCloud pc, Vector3f point, flo
     }
 }
 
-ProjResult projection_polytope(MatrixXf A, VectorXf b, Vector3f point, float h, float eps)
+ProjResult projection_convexpolytope(MatrixXf A, VectorXf b, Matrix4f htm, Vector3f point, float h, float eps)
 {
     if (h < 1e-5 && eps < 1e-5)
     {
         ProjResult pr;
-        return pr;
+        Vector3f pc = htm.block<3, 1>(0, 3);
+        Matrix3f Q = htm.block<3, 3>(0, 0);
+        Vector3f point_transformed = Q.transpose() * (point - pc);
 
-        pr.proj =  solveQP(Matrix3f::Identity(), -point,-A, -b);
-        pr.dist = (pr.proj-point).norm();
+        Vector3f pi_transformed = solveQP(Matrix3f::Identity(), -point_transformed, -A, -b);
+
+        pr.proj = Q * pi_transformed + pc;
+        pr.dist = (pr.proj - point).norm();
 
         return pr;
+    }
+    else
+    {
+        cout << "ERRO!" << std::endl;
     }
 }
 
@@ -763,7 +773,6 @@ GeometricPrimitives GeometricPrimitives::to_pointcloud(float disc) const
         return this->copy();
     if (type == 4)
         throw std::runtime_error("Not implemented yet!");
-
 }
 
 ProjResult GeometricPrimitives::projection(Vector3f point, float h, float eps) const
@@ -776,8 +785,8 @@ ProjResult GeometricPrimitives::projection(Vector3f point, float h, float eps) c
         return projection_cylinder(lx, lz, htm, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
     if (type == 3)
         return projection_pointcloud(kdtree, pointcloud, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
-    if (type == 3)
-        return projection_polytope(A, b, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
+    if (type == 4)
+        return projection_convexpolytope(A, b, htm, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
 }
 
 Vector3f support_sphere(Vector3f direction, float radius, Matrix4f htm)
@@ -834,10 +843,10 @@ Vector3f support_points_gp(Vector3f direction, vector<Vector3f> points)
     Vector3f point_selected;
     float aux;
 
-    for(int i=0; i < points.size(); i++)
+    for (int i = 0; i < points.size(); i++)
     {
         aux = direction.dot(points[i]);
-        if(aux > max_value)
+        if (aux > max_value)
         {
             max_value = aux;
             point_selected = points[i];
@@ -857,7 +866,6 @@ Vector3f GeometricPrimitives::support(Vector3f direction) const
         return support_cylinder(direction, lx, lz, htm);
     if (type == 3 || type == 4)
         return support_points_gp(direction, points_gp);
-    
 }
 
 float max4(float a1, float a2, float a3, float a4)
@@ -947,16 +955,38 @@ AABB GeometricPrimitives::get_aabb() const
         return aabb;
     }
 
-    if (type == 3 || type == 4)
+    if (type == 3)
     {
         aabb.lx = this->lx;
         aabb.ly = this->ly;
         aabb.lz = this->lz;
-        aabb.p = htm.block(0, 3, 3, 1);
+        aabb.p = this->center;
 
         return aabb;
     }
 
+    if (type == 4)
+    {
+        Vector3f p1 = 2 * this->lx * x + 2 * this->lx * y + this->lz * z;
+        Vector3f p2 = -2 * this->lx * x + 2 * this->lx * y + this->lz * z;
+        Vector3f p3 = 2 * this->lx * x - 2 * this->lx * y + this->lz * z;
+        Vector3f p4 = 2 * this->lx * x + 2 * this->lx * y - this->lz * z;
+
+        float lx = max4(abs(p1[0]), abs(p2[0]), abs(p3[0]), abs(p4[0]));
+        float ly = max4(abs(p1[1]), abs(p2[1]), abs(p3[1]), abs(p4[1]));
+        float lz = max4(abs(p1[2]), abs(p2[2]), abs(p3[2]), abs(p4[2]));
+
+        aabb.lx = lx;
+        aabb.ly = ly;
+        aabb.lz = lz;
+
+        Matrix3f Q = htm.block<3, 3>(0, 0);
+        Vector3f p = htm.block<3, 1>(0, 3);
+    
+        aabb.p = Q * this->center + p;
+
+        return aabb;
+    }
 }
 
 float AABB::dist_aabb(AABB aabb1, AABB aabb2)
@@ -1415,9 +1445,8 @@ GeometricPrimitives GeometricPrimitives::copy() const
         vector<Vector3f> points = points_gp;
         return GeometricPrimitives::create_pointcloud(points);
     }
-    if(type == 4)
-        return GeometricPrimitives::create_polytope(A, b);
-    
+    if (type == 4)
+        return GeometricPrimitives::create_convexpolytope(htm, A, b);
 }
 
 string PrimDistResult::toString() const

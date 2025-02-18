@@ -400,7 +400,7 @@ class Cylinder:
         # end error handling
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             tpoint = self._htm[0:3, 0:3].T * (point - self._htm[0:3, 3])
-            tpoint = self._htm[0:3, 0:3].T * (point - self._htm[0:3, 3])
+            
 
 
             r = sqrt(tpoint[0,0] ** 2 + tpoint[1,0] ** 2)

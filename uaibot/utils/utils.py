@@ -557,6 +557,8 @@ class Utils:
 
     @staticmethod
     def solve_qp(H, f, A, b):
+        #Solves u^THu/2 + f^Tu subject to Au>=b
+    
         H = 0.5 * (H + H.T)  
 
         m = H.shape[0]
@@ -1001,6 +1003,8 @@ class Utils:
             
             if Utils.get_uaibot_type(obj) != 'uaibot.PointCloud' and htm is None:
                 htm = obj.htm
+                
+                
             if Utils.get_uaibot_type(obj) == 'uaibot.Ball':
                 return ub_cpp.CPP_GeometricPrimitives.create_sphere(htm, obj.radius)
             if Utils.get_uaibot_type(obj) == 'uaibot.Box':
@@ -1008,8 +1012,10 @@ class Utils:
             if Utils.get_uaibot_type(obj) == 'uaibot.Cylinder':
                 return ub_cpp.CPP_GeometricPrimitives.create_cylinder(htm, obj.radius, obj.height)
             if Utils.get_uaibot_type(obj) == 'uaibot.PointCloud':
-                return obj.cpp_pointcloud 
-
+                return obj.obj.cpp_pointcloud 
+            if Utils.get_uaibot_type(obj) == 'uaibot.ConvexPolytope':
+                return ub_cpp.CPP_GeometricPrimitives.create_convexpolytope(htm, obj.A, obj.b)
+            
     @staticmethod
     def compute_dist(obj_a, obj_b, p_a_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
         # Error handling

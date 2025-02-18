@@ -334,74 +334,7 @@ class ConvexPolytope:
         """Return a deep copy of the object, without copying the animation frames."""
         return Cylinder(self.htm, self.name + "_copy", self.radius, self.height, self.mass, self.color)
 
-    def aabb(self):
-        """
-    Compute the width, depth and height of an axis aligned bounding box (aabb) that
-    covers the object. It also considers the current orientation.
 
-    Returns
-    -------
-     width : positive float
-        The width of the box, in meters.
-
-     depth : positive float
-        The depth of the box, in meters.
-
-     height : positive float
-        The depth of the box, in meters.
-    """
-
-        p1 = 2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
-        p2 = -2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
-        p3 = 2*self.radius * self.htm[:, 0] - 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
-        p4 = 2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] - self.height * self.htm[:, 2]
-
-        w = np.max([abs(p1[0, 0]), abs(p2[0, 0]), abs(p3[0, 0]), abs(p4[0, 0])])
-        d = np.max([abs(p1[1, 0]), abs(p2[1, 0]), abs(p3[1, 0]), abs(p4[1, 0])])
-        h = np.max([abs(p1[2, 0]), abs(p2[2, 0]), abs(p3[2, 0]), abs(p4[2, 0])])
-
-        return w, d, h
-
-    def to_point_cloud(self, delta=0.025):
-
-        P = np.matrix(np.zeros((3, 0)))
-
-        T = round(2*np.pi*self.radius / delta)+1
-        R = round(self.radius/delta)+1
-        H = round(self.height / delta)+1
-
-
-        for i in range(T):
-            u = (2*np.pi)*i/(T-1)
-            for j in range(H):
-                v = j/(H-1)
-
-                x = self.radius*np.cos(u)
-                y = self.radius*np.sin(u)
-                z = (-self.height/2 + v*self.height)
-                P = np.block([P, np.matrix([x,y,z]).transpose()])
-
-
-        for i in range(R):
-            v = self.radius * (i/(R-1))
-            T = round(2 * np.pi * v / delta)
-            for j in range(T):
-                u = (2*np.pi)*j/(T-1)
-
-                x = v * np.cos(u)
-                y = v * np.sin(u)
-                z = -self.height / 2
-                P = np.block([P, np.matrix([x, y, z]).transpose()])
-
-                x = v * np.cos(u)
-                y = v * np.sin(u)
-                z = self.height / 2
-                P = np.block([P, np.matrix([x, y, z]).transpose()])
-
-        for i in range(np.shape(P)[1]):
-            P[:,i] = self.htm[0:3,0:3]*P[:,i]+self.htm[0:3,-1]
-
-        return P
 
 
     # Compute distance to an object
@@ -459,30 +392,10 @@ class ConvexPolytope:
         # end error handling
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             tpoint = self._htm[0:3, 0:3].T * (point - self._htm[0:3, 3])
-            tpoint = self._htm[0:3, 0:3].T * (point - self._htm[0:3, 3])
-
-
-            r = sqrt(tpoint[0,0] ** 2 + tpoint[1,0] ** 2)
-
-            if r < self.radius:
-                x = tpoint[0,0]
-                y = tpoint[1,0]
-                dr2=0
-            else:
-                x = self.radius * tpoint[0,0] / r
-                y = self.radius * tpoint[1,0] / r
-                dr2 = (r-self.radius)**2
-
-            if abs(tpoint[2,0]) < self.height/2:
-                z = tpoint[2,0]
-                dz2 = 0
-            else:
-                z = self.height/2 if tpoint[2,0] > 0 else -self.height/2
-                dz2 = (abs(tpoint[2,0]) - self.height/2)**2
-
-            d = sqrt(dr2+dz2)
-
-            return self._htm[0:3, 0:3] * np.matrix([[x], [y], [z]]) + self._htm[0:3, 3], d
+            
+            tpi = Utils.solve_qp(np.identity(3), -tpoint, -self.A, -self.b)
+            d = np.linalg.norm(tpoint-tpi)
+            return self._htm[0:3, 0:3] * tpi + self._htm[0:3, 3], d
         else:
             pr = obj_cpp.projection(np.matrix(point).reshape((3,1)), h, eps)
             return np.matrix(pr.proj).transpose(), pr.dist            

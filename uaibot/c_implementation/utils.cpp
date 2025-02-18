@@ -522,8 +522,10 @@ vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b) {
 
                 Vector3f p = lu.solve(b_sub);
 
-                VectorXf check = A * p;
-                if ((check.array() <= b.array()).all()) {
+                VectorXf check = A * p - b;
+
+                
+                if (check.maxCoeff()<=1e-5) {
                     vertices.push_back(p);
                 }
             }
@@ -544,6 +546,7 @@ VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const Vec
     int n = H.rows();
     int meq = Aeq.rows();
     int mineq = A.rows();
+
 
     quadprogpp::Matrix<double> H_aux, Aeq_aux, A_aux;
     quadprogpp::Vector<double> f_aux, beq_aux, b_aux, u_aux;

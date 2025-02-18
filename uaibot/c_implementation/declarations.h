@@ -243,7 +243,6 @@ struct GeometricPrimitives
     //For point cloud
     KDTree kdtree; 
     PointCloud pointcloud;
-    
     BVH bvh;
 
     //For convex polytopes
@@ -252,6 +251,7 @@ struct GeometricPrimitives
 
     //For point cloud and convex polytopes
     vector<Vector3f> points_gp;
+    Vector3f center;
 
 
     GeometricPrimitives();
@@ -260,7 +260,7 @@ struct GeometricPrimitives
     static GeometricPrimitives create_box(Matrix4f htm, float width, float depth, float height);
     static GeometricPrimitives create_cylinder(Matrix4f htm, float radius, float height);
     static GeometricPrimitives create_pointcloud(vector<Vector3f> &points);
-    static GeometricPrimitives create_polytope(MatrixXf A, VectorXf b);
+    static GeometricPrimitives create_convexpolytope(Matrix4f htm, MatrixXf A, VectorXf b);
 
   
     GeometricPrimitives to_pointcloud(float disc) const;

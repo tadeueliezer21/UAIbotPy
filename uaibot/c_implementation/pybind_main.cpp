@@ -28,7 +28,6 @@ namespace py = pybind11;
 
 // Define your custom type casters in the `pybind11::detail` namespace
 
-
 PYBIND11_MODULE(uaibot_cpp_bind, m)
 {
      m.doc() = "UAIBot C++ interface";
@@ -153,7 +152,10 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
                      py::arg("htm"), py::arg("radius"))
          .def_static("create_pointcloud",
                      static_cast<GeometricPrimitives (*)(vector<Vector3f> &)>(&GeometricPrimitives::create_pointcloud),
-                     py::arg("points"))            
+                     py::arg("points"))
+         .def_static("create_convexpolytope",
+                     static_cast<GeometricPrimitives (*)(Matrix4f, MatrixXf, VectorXf)>(&GeometricPrimitives::create_convexpolytope),
+                     py::arg("htm"),py::arg("A"),py::arg("b"))
          .def("to_pointcloud",
               static_cast<GeometricPrimitives (GeometricPrimitives::*)(float) const>(&GeometricPrimitives::to_pointcloud),
               py::arg("disc"))
@@ -205,12 +207,10 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
          .def("compute_dist_auto",
               static_cast<DistStructRobotAuto (Manipulator::*)(VectorXf, DistStructRobotAuto, float, int, float, float, float) const>(&Manipulator::compute_dist_auto),
               py::arg("q"), py::arg("old_dist_struct"), py::arg("tol"), py::arg("no_iter_max"), py::arg("max_dist"), py::arg("h"), py::arg("eps"))
-                 
+
          .def("__str__", &Manipulator::toString)
          .def("__repr__", &Manipulator::toString);
 
      m.def("vectorfield_rn", &vectorfield_rn, py::arg("q"), py::arg("q_path"), py::arg("alpha"), py::arg("const_velocity"));
      m.def("dp_inv_solve", &dp_inv_solve, py::arg("A"), py::arg("b"), py::arg("eps"));
-
-
 }
