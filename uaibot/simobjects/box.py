@@ -15,7 +15,7 @@ class Box:
 
   name : string
       The object's name.
-      (default: 'genBox').
+      (default: '' (automatic)).
 
   width : positive float
       The object's width, in meters.

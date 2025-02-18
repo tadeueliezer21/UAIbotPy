@@ -16,7 +16,7 @@ class PointCloud:
 
    name : string
        The object's name.
-       (default: 'genPointCloud').
+       (default: '' (automatic)).
 
    size : positive float
        The size of each point in the point cloud.
@@ -66,7 +66,6 @@ class PointCloud:
     @staticmethod
     def try_conversion(vector_list):
         if not isinstance(vector_list, list):
-            print("A")
             raise Exception("Error")
 
         stacked_vectors = [] 

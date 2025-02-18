@@ -2,9 +2,16 @@
 #include <iostream>
 #include <sstream>
 #include <chrono>
+
+#include "quadprogpp/src/QuadProg++.hh"
+#include "quadprogpp/src/QuadProg++.cc"
+
+#undef solve
+
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <random>
+
 
 // #include "utils.cuh"
 #include "declarations.h"
@@ -483,8 +490,8 @@ VectorXf sqrt_sign(VectorXf v)
     return w;
 }
 
-vector<VectorXf> get_vertex(const MatrixXf& A, const VectorXf& b) {
-    vector<VectorXf> vertices;
+vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b) {
+    vector<Vector3f> vertices;
     int num_constraints = A.rows();
     int dim = A.cols();
 
@@ -513,7 +520,7 @@ vector<VectorXf> get_vertex(const MatrixXf& A, const VectorXf& b) {
                 FullPivLU<MatrixXf> lu(A_sub);
                 if (!lu.isInvertible()) continue; 
 
-                VectorXf p = lu.solve(b_sub);
+                Vector3f p = lu.solve(b_sub);
 
                 VectorXf check = A * p;
                 if ((check.array() <= b.array()).all()) {
@@ -526,4 +533,73 @@ vector<VectorXf> get_vertex(const MatrixXf& A, const VectorXf& b) {
     return vertices;
 }
 
+VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b,const MatrixXf& Aeq,const VectorXf& beq) 
+{
+    // Solve min_u (u'*H*u)/2 + f'*u
+    // such that:
+    // A*u >= b
+    // Aeq*u = beq
+    // The function assumes that H is a positive definite function (the problem is strictly convex)
+
+    int n = H.rows();
+    int meq = Aeq.rows();
+    int mineq = A.rows();
+
+    quadprogpp::Matrix<double> H_aux, Aeq_aux, A_aux;
+    quadprogpp::Vector<double> f_aux, beq_aux, b_aux, u_aux;
+
+    H_aux.resize(n, n);
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            H_aux[i][j] = H(i, j);
+
+    f_aux.resize(n);
+    for (int i = 0; i < n; i++)
+        f_aux[i] = f[i];
+
+    Aeq_aux.resize(n, meq);
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < meq; j++)
+            Aeq_aux[i][j] = Aeq(j, i);
+
+    beq_aux.resize(meq);
+    for (int j = 0; j < meq; j++)
+        beq_aux[j] = -beq[j];
+
+    A_aux.resize(n, mineq);
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < mineq; j++)
+            A_aux[i][j] = A(j, i);
+
+    b_aux.resize(mineq);
+    for (int j = 0; j < mineq; j++)
+        b_aux[j] = -b[j];
+
+    u_aux.resize(n);
+
+    double val = solve_quadprog(H_aux, f_aux, Aeq_aux, beq_aux, A_aux, b_aux, u_aux);
+
+    if (val > 1.0E50)
+    {
+        // Problem is unfeasible
+        VectorXf u(0);
+        return u;
+    }
+    else
+    {
+        // Problem is feasible
+        VectorXf u(n);
+
+        for (int i = 0; i < n; i++)
+            u[i] = u_aux[i];
+
+        return u;
+    }
+}
+
+VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b) 
+{
+    int n = H.rows();
+    return solveQP(H,f,A,b,MatrixXf::Zero(0, n),VectorXf::Zero(0));
+}
 

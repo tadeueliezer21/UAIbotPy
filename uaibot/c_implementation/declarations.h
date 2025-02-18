@@ -243,8 +243,16 @@ struct GeometricPrimitives
     //For point cloud
     KDTree kdtree; 
     PointCloud pointcloud;
-    vector<Vector3f> pointcloud_vec;
+    
     BVH bvh;
+
+    //For convex polytopes
+    MatrixXf A;
+    VectorXf b;
+
+    //For point cloud and convex polytopes
+    vector<Vector3f> points_gp;
+
 
     GeometricPrimitives();
 
@@ -252,6 +260,7 @@ struct GeometricPrimitives
     static GeometricPrimitives create_box(Matrix4f htm, float width, float depth, float height);
     static GeometricPrimitives create_cylinder(Matrix4f htm, float radius, float height);
     static GeometricPrimitives create_pointcloud(vector<Vector3f> &points);
+    static GeometricPrimitives create_polytope(MatrixXf A, VectorXf b);
 
   
     GeometricPrimitives to_pointcloud(float disc) const;
@@ -390,3 +399,9 @@ VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alp
 VectorXf dp_inv_solve(const MatrixXf& A, const VectorXf& b, float eps);
 
 VectorXf sqrt_sign(VectorXf v);
+
+vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b);
+
+VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b,const MatrixXf& Aeq,const VectorXf& beq);
+
+VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b);

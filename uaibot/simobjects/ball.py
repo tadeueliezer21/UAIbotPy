@@ -15,7 +15,7 @@ class Ball:
 
   name : string
       The object's name.
-      (default: 'genBall').
+      (default: '' (automatic)).
 
   radius : positive float
       The object's radius, in meters.

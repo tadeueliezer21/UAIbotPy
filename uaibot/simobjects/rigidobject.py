@@ -12,7 +12,7 @@ class RigidObject:
 
    name : string
        The object's name.
-       (default: 'genRigidObject').
+       (default: '' (automatic)).
 
    list_model_3d : list of 'Model3D' objects
        The 3d model that compose the object.

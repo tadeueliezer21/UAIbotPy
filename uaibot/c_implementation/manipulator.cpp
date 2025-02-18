@@ -158,7 +158,9 @@ string GeometricPrimitives::toString() const
     if (type == 2)
         oss << "Cylinder with radius " << print_number(lx) << " m,  height " << print_number(lz) << " m" << std::endl;
     if (type == 3)
-        oss << "Point cloud with " << pointcloud_vec.size() << "points " << std::endl;
+        oss << "Point cloud with " << points_gp.size() << " points " << std::endl;
+    if (type == 4)
+        oss << "Polytope with " << points_gp.size() << " vertexes " << std::endl;
 
     return oss.str();
 }
@@ -206,7 +208,7 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
     gp.pointcloud = std::make_shared<nanoflann::PointCloud<float>>();
     gp.pointcloud->pts.resize(points.size());
 
-    gp.pointcloud_vec = {};
+    gp.points_gp = {};
 
     float lx_min = 1e6;
     float lx_max = -1e6;
@@ -233,7 +235,7 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
         xc += gp.pointcloud->pts[i].x;
         yc += gp.pointcloud->pts[i].y;
         zc += gp.pointcloud->pts[i].z;
-        gp.pointcloud_vec.push_back(points[i]);
+        gp.points_gp.push_back(points[i]);
     }
 
     xc = xc / points.size();
@@ -252,6 +254,90 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
     gp.type = 3;
 
     gp.bvh = BVH(points);
+
+    return gp;
+}
+
+GeometricPrimitives GeometricPrimitives::create_polytope(MatrixXf A, VectorXf b)
+{
+    GeometricPrimitives gp = GeometricPrimitives();
+    //Check if the polytope is empty
+    gp.points_gp = get_vertex(A, b);
+
+    if(gp.points_gp.size()==0)
+        throw std::runtime_error("Polytope is empty!");
+
+    //Check if the polytope is unbounded
+    VectorXf ex_p = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(1,0,0),-A, -b);
+    VectorXf ex_n = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(-1,0,0),-A, -b);
+    VectorXf ey_p = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,1,0),-A, -b);
+    VectorXf ey_n = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,-1,0),-A, -b);
+    VectorXf ez_p = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,0,1),-A, -b);
+    VectorXf ez_n = solveQP(Matrix3f::Identity()/VERYBIGNUMBER, Vector3f(0,0,-1),-A, -b);
+
+    float dx = abs(ex_p[0]-ex_n[0]);
+    float dy = abs(ey_p[1]-ey_n[1]);
+    float dz = abs(ez_p[2]-ez_n[2]);
+
+    if(dx > 1e3 || dy > 1e3 || dz > 1e3)
+        throw std::runtime_error("Polytope is unbounded!");
+
+    //
+
+
+    int num_constraints = A.rows();
+    int dim = A.cols();
+
+    MatrixXf A_norm = MatrixXf(num_constraints, dim);
+    VectorXf b_norm = VectorXf(num_constraints);
+
+    for (int i = 0; i < num_constraints; ++i)
+    {
+        float row_norm = A.row(i).norm();
+
+        if (row_norm > 1e-6)
+        {
+            A_norm.row(i) = A.row(i) / row_norm;
+            b_norm(i) = b(i) / row_norm;
+        }
+        else
+        {
+            A_norm.row(i) = A.row(i);
+            b_norm(i) = b(i);
+        }
+    }
+
+    
+
+    gp.type = 4;
+    gp.A = A_norm;
+    gp.b = b_norm;
+
+
+    float x_min = VERYBIGNUMBER;
+    float x_max = -VERYBIGNUMBER;
+    float y_min = VERYBIGNUMBER;
+    float y_max = -VERYBIGNUMBER;
+    float z_min = VERYBIGNUMBER;
+    float z_max = -VERYBIGNUMBER;
+    Vector3f pc = Vector3f(0, 0, 0);
+
+    for (int i = 0; i < gp.points_gp.size(); i++)
+    {
+        x_min = minf(x_min, gp.points_gp[i][0]);
+        x_max = maxf(x_max, gp.points_gp[i][0]);
+        y_min = minf(y_min, gp.points_gp[i][1]);
+        y_max = maxf(y_max, gp.points_gp[i][1]);
+        z_min = minf(z_min, gp.points_gp[i][2]);
+        z_max = maxf(z_max, gp.points_gp[i][2]);
+        pc += gp.points_gp[i];
+    }
+    pc = pc / gp.points_gp.size();
+
+    gp.lx = x_max - x_min;
+    gp.ly = y_max - y_min;
+    gp.lz = z_max - z_min;
+    gp.htm = trn(pc[0], pc[1], pc[2]);
 
     return gp;
 }
@@ -583,19 +669,86 @@ ProjResult projection_cylinder(float radius, float height, Matrix4f htm, Vector3
 
 ProjResult projection_pointcloud(KDTree tree, PointCloud pc, Vector3f point, float h, float eps)
 {
-    float query_pt[3] = {point[0], point[1], point[2]};
-    const size_t num_results = 1;
-    size_t ret_index;
-    float out_dist_sqr;
-    nanoflann::KNNResultSet<float> resultSet(num_results);
-    resultSet.init(&ret_index, &out_dist_sqr);
-    tree->findNeighbors(resultSet, &query_pt[0]);
+    if (h < 1e-5 && eps < 1e-5)
+    {
+        float query_pt[3] = {point[0], point[1], point[2]};
+        const size_t num_results = 1;
+        size_t ret_index;
+        float out_dist_sqr;
+        nanoflann::KNNResultSet<float> resultSet(num_results);
+        resultSet.init(&ret_index, &out_dist_sqr);
+        tree->findNeighbors(resultSet, &query_pt[0]);
 
-    ProjResult pr;
-    pr.dist = sqrtf(out_dist_sqr);
-    pr.proj = Vector3f(pc->kdtree_get_pt(ret_index, 0), pc->kdtree_get_pt(ret_index, 1), pc->kdtree_get_pt(ret_index, 2));
+        ProjResult pr;
+        pr.dist = sqrtf(out_dist_sqr);
+        pr.proj = Vector3f(pc->kdtree_get_pt(ret_index, 0), pc->kdtree_get_pt(ret_index, 1), pc->kdtree_get_pt(ret_index, 2));
 
-    return pr;
+        return pr;
+    }
+    else
+    {
+
+        float min_dist = projection_pointcloud(tree, pc, point, 0, 0).dist;
+        float tol = 1e-3;
+        float threshold = min_dist / pow(tol, h);
+
+        float query_pt[3] = {point[0], point[1], point[2]};
+        float sq_radius = threshold * threshold;
+        std::vector<nanoflann::ResultItem<size_t, float>> indices_dists;
+        nanoflann::RadiusResultSet<float, size_t> resultSet(sq_radius, indices_dists);
+        tree->findNeighbors(resultSet, query_pt);
+
+        float x, y, z, dist;
+        vector<Vector3f> all_points;
+        vector<float> all_dist;
+        min_dist = VERYBIGNUMBER;
+        for (int i = 0; i < indices_dists.size(); i++)
+        {
+            x = pc->kdtree_get_pt(indices_dists[i].first, 0);
+            y = pc->kdtree_get_pt(indices_dists[i].first, 1);
+            z = pc->kdtree_get_pt(indices_dists[i].first, 2);
+            Vector3f new_point = Vector3f(x, y, z);
+            dist = (new_point - point).norm();
+            min_dist = minf(min_dist, dist);
+            all_dist.push_back(dist);
+            all_points.push_back(new_point);
+        }
+
+        ProjResult pr;
+        float sum_weight = 0;
+        float weight0, weight1, weight2;
+        pr.proj = Vector3f(0, 0, 0);
+        float H = 1.0 / h;
+
+        for (int i = 0; i < all_points.size(); i++)
+        {
+            weight0 = (VERYSMALLNUMBER + min_dist) / (VERYSMALLNUMBER + all_dist[i]);
+            weight1 = pow(weight0, H);
+            weight2 = weight0 * weight1;
+            sum_weight += weight1;
+            pr.proj += weight2 * all_points[i];
+        }
+
+        float normalization = pow(sum_weight, 1 + h);
+        pr.proj = pr.proj / normalization;
+        pr.dist = min_dist / pow(sum_weight, h);
+
+        return pr;
+    }
+}
+
+ProjResult projection_polytope(MatrixXf A, VectorXf b, Vector3f point, float h, float eps)
+{
+    if (h < 1e-5 && eps < 1e-5)
+    {
+        ProjResult pr;
+        return pr;
+
+        pr.proj =  solveQP(Matrix3f::Identity(), -point,-A, -b);
+        pr.dist = (pr.proj-point).norm();
+
+        return pr;
+    }
 }
 
 GeometricPrimitives GeometricPrimitives::to_pointcloud(float disc) const
@@ -608,6 +761,9 @@ GeometricPrimitives GeometricPrimitives::to_pointcloud(float disc) const
         return generate_point_cloud_cylinder(lx, lz, htm, disc);
     if (type == 3)
         return this->copy();
+    if (type == 4)
+        throw std::runtime_error("Not implemented yet!");
+
 }
 
 ProjResult GeometricPrimitives::projection(Vector3f point, float h, float eps) const
@@ -619,7 +775,9 @@ ProjResult GeometricPrimitives::projection(Vector3f point, float h, float eps) c
     if (type == 2)
         return projection_cylinder(lx, lz, htm, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
     if (type == 3)
-        return projection_pointcloud(kdtree, pointcloud, point, h, eps);
+        return projection_pointcloud(kdtree, pointcloud, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
+    if (type == 3)
+        return projection_polytope(A, b, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
 }
 
 Vector3f support_sphere(Vector3f direction, float radius, Matrix4f htm)
@@ -670,6 +828,25 @@ Vector3f support_cylinder(Vector3f direction, float radius, float height, Matrix
     return pc + Q * localSupport;
 }
 
+Vector3f support_points_gp(Vector3f direction, vector<Vector3f> points)
+{
+    float max_value = -VERYBIGNUMBER;
+    Vector3f point_selected;
+    float aux;
+
+    for(int i=0; i < points.size(); i++)
+    {
+        aux = direction.dot(points[i]);
+        if(aux > max_value)
+        {
+            max_value = aux;
+            point_selected = points[i];
+        }
+    }
+
+    return point_selected;
+}
+
 Vector3f GeometricPrimitives::support(Vector3f direction) const
 {
     if (type == 0)
@@ -678,6 +855,9 @@ Vector3f GeometricPrimitives::support(Vector3f direction) const
         return support_box(direction, lx, ly, lz, htm);
     if (type == 2)
         return support_cylinder(direction, lx, lz, htm);
+    if (type == 3 || type == 4)
+        return support_points_gp(direction, points_gp);
+    
 }
 
 float max4(float a1, float a2, float a3, float a4)
@@ -767,7 +947,7 @@ AABB GeometricPrimitives::get_aabb() const
         return aabb;
     }
 
-    if (type == 3)
+    if (type == 3 || type == 4)
     {
         aabb.lx = this->lx;
         aabb.ly = this->ly;
@@ -776,6 +956,7 @@ AABB GeometricPrimitives::get_aabb() const
 
         return aabb;
     }
+
 }
 
 float AABB::dist_aabb(AABB aabb1, AABB aabb2)
@@ -1202,10 +1383,10 @@ PrimDistResult GeometricPrimitives::dist_to(GeometricPrimitives prim, float h, f
             else
             {
                 if (type == 3)
-                    return dist_to_bvh_smooth(prim, pointcloud_vec.size(), bvh, h, eps);
+                    return dist_to_bvh_smooth(prim, points_gp.size(), bvh, h, eps);
                 else
                 {
-                    PrimDistResult pdr = dist_to_bvh_smooth(*this, prim.pointcloud_vec.size(), prim.bvh, h, eps);
+                    PrimDistResult pdr = dist_to_bvh_smooth(*this, prim.points_gp.size(), prim.bvh, h, eps);
                     Vector3f aux = pdr.proj_A;
                     pdr.proj_A = pdr.proj_B;
                     pdr.proj_B = aux;
@@ -1231,9 +1412,12 @@ GeometricPrimitives GeometricPrimitives::copy() const
         return GeometricPrimitives::create_cylinder(htm, lx, lz);
     if (type == 3)
     {
-        vector<Vector3f> points = pointcloud_vec;
+        vector<Vector3f> points = points_gp;
         return GeometricPrimitives::create_pointcloud(points);
     }
+    if(type == 4)
+        return GeometricPrimitives::create_polytope(A, b);
+    
 }
 
 string PrimDistResult::toString() const
@@ -1534,7 +1718,7 @@ vector<FKPrimResult> Manipulator::fk_prim(const vector<VectorXf> &q, const vecto
 
 FKPrimResult Manipulator::fk_prim(VectorXf q, Matrix4f htm_world_base) const
 {
-    //return fk_prim({q}, {fk(q, htm_world_base)})[0];
+    // return fk_prim({q}, {fk(q, htm_world_base)})[0];
     //
     return fk_prim(vector<VectorXf>{q}, vector<FKResult>{fk(q, htm_world_base)})[0];
 }
@@ -1826,7 +2010,7 @@ DistStructRobotObj Manipulator::compute_dist(GeometricPrimitives obj, VectorXf q
                 if (obj.type == 3 && !(h < 1e-5 && eps < 1e-5))
                 {
                     dslo_new.jac_distance += (pdr.proj_B.cross(pdr.proj_A) - pdr.aux).transpose() * Jw / (pdr.dist + 1e-6);
-                    //cout << "aaa = " << ((pdr.proj_B.cross(pdr.proj_A) - pdr.aux).transpose() * Jw / (pdr.dist + 1e-6)).norm() << std::endl;
+                    // cout << "aaa = " << ((pdr.proj_B.cross(pdr.proj_A) - pdr.aux).transpose() * Jw / (pdr.dist + 1e-6)).norm() << std::endl;
                 }
 
                 old_rows = jac_tot.rows();

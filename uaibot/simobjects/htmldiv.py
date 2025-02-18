@@ -9,7 +9,7 @@ class HTMLDiv:
   ----------
   name : string
       The object's name.
-      (default: 'genHTMLDiv').
+      (default: '' (automatic)).
 
   html_text : string
       The html string.

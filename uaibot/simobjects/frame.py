@@ -18,7 +18,7 @@ class Frame:
 
   name : string
       The object's name.
-      (default: 'genFrame').
+      (default: '' (automatic)).
 
   size : positive float
       The axis sizes, in meters.

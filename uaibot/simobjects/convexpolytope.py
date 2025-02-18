@@ -1,11 +1,54 @@
 from utils import *
 import numpy as np
 from graphics.meshmaterial import *
+from scipy.spatial import HalfspaceIntersection, ConvexHull
+from scipy.optimize import linprog
 
+def is_unbounded(A, b):
+    n_dim = A.shape[1]
 
-class Cylinder:
+    for i in range(n_dim):
+        c = np.zeros(n_dim)
+        c[i] = 1  
+
+        res = linprog(c, A_ub=A, b_ub=b, method='highs')
+        if res.status == 3:  
+            return True
+
+    return False
+
+def compute_polytope(A, b):
+    n_dim = A.shape[1]
+    
+    c = np.zeros(n_dim)
+    res = linprog(c, A_ub=A, b_ub=b, method='highs')
+
+    if not res.success:
+        raise ValueError("The polytope is empty.")
+
+    interior_point = res.x  
+
+    if is_unbounded(A, b):
+        raise ValueError("The polytope is unbounded.")
+
+    halfspaces = np.hstack([A, -b.reshape(-1, 1)])
+    hs = HalfspaceIntersection(halfspaces, interior_point)
+    vertices = hs.intersections
+
+    hull = ConvexHull(vertices)
+    faces = hull.simplices
+    
+    for i, face in enumerate(faces):
+        normal = np.cross(vertices[face[1]] - vertices[face[0]], vertices[face[2]] - vertices[face[0]])
+        center = np.mean(vertices[face], axis=0)
+        if np.dot(normal, center) < 0:  
+            faces[i] = face[::-1]  
+
+    return vertices.tolist(), faces.tolist()
+
+class ConvexPolytope:
     """
-  A cylinder object.
+  A convex polytope object.
 
   Parameters
   ----------
@@ -17,14 +60,13 @@ class Cylinder:
       The object's name.
       (default: '' (automatic)).
 
-  radius : positive float
-      The cylinder base radius, in meters.
-      (default: 1).    
+  A : (n,3)-shaped numpy matrix
+      The A matrix that forms the convex polytope according to Ap<=b.
 
-  height : positive float
-      The cylinder's height, in meters.
-      (default: 1).  
 
+  b : (n,1)-shaped numpy matrix
+      The b matrix that forms the convex polytope according to Ap<=b.
+      
   mass : positive float
       The object's mass, in kg.
       (default: 1).
@@ -46,15 +88,25 @@ class Cylinder:
     #######################################
 
     @property
-    def radius(self):
-        """The cylinder base radius, in meters."""
-        return self._radius
+    def A(self):
+        """The A matrix that forms the convex polytope according to Ap<=b."""
+        return self._A
 
     @property
-    def height(self):
-        """The cylinder height, in meters."""
-        return self._height
+    def b(self):
+        """The b matrix that forms the convex polytope according to Ap<=b."""
+        return self._b
 
+    @property
+    def vertexes(self):
+        """All the vertexes of the polygon"""
+        return self._vertexes
+
+    @property
+    def faces(self):
+        """All the faces of the polygon"""
+        return self._faces
+        
     @property
     def name(self):
         """The object name."""
@@ -89,7 +141,7 @@ class Cylinder:
     # Constructor
     #######################################
 
-    def __init__(self, htm=np.identity(4), name="", radius=1, height=1, mass=1, color="red", opacity=1, \
+    def __init__(self, htm=np.identity(4), name="", A=[], b=[], mass=1, color="red", opacity=1, \
                  mesh_material=None):
 
         # Error handling
@@ -99,14 +151,19 @@ class Cylinder:
         if not Utils.is_a_number(mass) or mass < 0:
             raise Exception("The parameter 'mass' should be a positive float.")
 
-        if not Utils.is_a_number(radius) or radius < 0:
-            raise Exception("The parameter 'radius' should be a positive float.")
+        if not Utils.is_a_matrix(A,None,3) :
+            raise Exception("The parameter 'A' should be a matrix with 3 columns.")
 
-        if not Utils.is_a_number(height) or height < 0:
-            raise Exception("The parameter 'height' should be a positive float.")
+        if not Utils.is_a_vector(b):
+            raise Exception("The parameter 'b' should be a vector.")
+        
+        if not np.shape(A)[0]==np.shape(b)[0]:
+            raise Exception("The number of rows of 'A' and 'b' should be the same.")
+        
+        
 
         if name=="":
-            name="var_cylinder_id_"+str(id(self))
+            name="var_convexpolytope_id_"+str(id(self))
 
         if not (Utils.is_a_name(name)):
             raise Exception(
@@ -123,17 +180,19 @@ class Cylinder:
             raise Exception("The parameter 'opacity' should be a float between 0 and 1.")
         # end error handling
 
-        self._radius = radius
-        self._height = height
+        self._vertexes, self._faces = compute_polytope(A, b)
+        self._A = A
+        self._b = b
         self._htm = np.matrix(htm)
         self._name = name
         self._mass = 1
         self._frames = []
-        self._volume = np.pi * self.height * self.radius * self.radius
+        self._volume = 0
         self._max_time = 0
 
+
         if mesh_material is None:
-            self._mesh_material = MeshMaterial(color=color, opacity=opacity, metalness=1, roughness=1)
+            self._mesh_material = MeshMaterial(color=color, opacity=opacity, metalness=1, roughness=1, side="DoubleSide")
         else:
             self._mesh_material = mesh_material
 
@@ -146,9 +205,9 @@ class Cylinder:
 
     def __repr__(self):
 
-        string = "Cylinder with name '" + self.name + "': \n\n"
-        string += " Radius (m): " + str(self.radius) + "\n"
-        string += " Height (m): " + str(self.height) + "\n"
+        string = "Convex Polytope with name '" + self.name + "': \n\n"
+        string += " Number of vertexes: " + str(len(self.vertexes)) + "\n"
+        string += " Number of faces: " + str(len(self.faces)) + "\n"
         string += " Color: " + str(self.color) + "\n"
         string += " Mass (kg): " + str(self.mass) + "\n"
         string += " HTM: \n" + str(self.htm) + "\n"
@@ -228,10 +287,10 @@ class Cylinder:
         """Generate code for injection."""
 
         string = "\n"
-        string += "//BEGIN DECLARATION OF THE CYLINDER '" + self.name + "'\n\n"
+        string += "//BEGIN DECLARATION OF THE CONVEX POLYTOPE '" + self.name + "'\n\n"
         string += self.mesh_material.gen_code(self._name) + "\n"
-        string += "const var_" + self._name + " = new Cylinder(" + str(self._radius) + "," + str(
-            self._height) + "," + str(self._frames) + ", material_" + self._name + ");\n"
+        string += "const var_" + self._name + " = new ConvexPolytope(" + str(self._vertexes) + "," + str(
+            self._faces) + "," + str(self._frames) + ", material_" + self._name + ");\n"
         string += "sceneElements.push(var_" + self._name + ");\n"
         string += "//USER INPUT GOES HERE"
 
