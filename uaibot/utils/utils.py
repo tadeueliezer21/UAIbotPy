@@ -29,7 +29,7 @@ class Utils:
 
     UAIBOT_NAME_TYPES = ['uaibot.', 'cylinder.', 'box.', 'ball.', 'convexpolytope.', 'robot.', 'simulation.', 'meshmaterial.',
                              'texture.', 'pointlight.', 'frame.', 'model3d.', 'links.', 'pointcloud.', 'vector.', 'rigidobject.',
-                             '.group', '.htmldiv', 'CPP_GeometricPrimitives', 'CPP_DistStructRobotObj']
+                             '.group', '.htmldiv', 'CPP_GeometricPrimitives', 'CPP_DistStructRobotObj','CPP_AABB']
 
     IS_SIMPLE = ['uaibot.Ball', 'uaibot.Box', 'uaibot.Cylinder', 'uaibot.ConvexPolytope']
     
@@ -568,9 +568,9 @@ class Utils:
         b = np.asarray(b).reshape((n,))   
 
         C = A.T  
-
+        
         result = quadprog.solve_qp(H, -f, C, b, 0)
-
+        
         return np.matrix(result[0].reshape((m,1)))
 
     #######################################
@@ -1012,9 +1012,13 @@ class Utils:
             if Utils.get_uaibot_type(obj) == 'uaibot.Cylinder':
                 return ub_cpp.CPP_GeometricPrimitives.create_cylinder(htm, obj.radius, obj.height)
             if Utils.get_uaibot_type(obj) == 'uaibot.PointCloud':
-                return obj.obj.cpp_pointcloud 
+                return obj.cpp_pointcloud 
             if Utils.get_uaibot_type(obj) == 'uaibot.ConvexPolytope':
-                return ub_cpp.CPP_GeometricPrimitives.create_convexpolytope(htm, obj.A, obj.b)
+                Q = htm[0:3,0:3]
+                p = htm[0:3,-1]
+                A = obj.A * Q.transpose()
+                b = obj.b + obj.A * Q.transpose()*p
+                return ub_cpp.CPP_GeometricPrimitives.create_convexpolytope(htm, A, b)
             
     @staticmethod
     def compute_dist(obj_a, obj_b, p_a_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):

@@ -3,6 +3,8 @@ import numpy as np
 from graphics.meshmaterial import *
 from scipy.spatial import HalfspaceIntersection, ConvexHull
 from scipy.optimize import linprog
+from simobjects.box import *
+import os
 
 def is_unbounded(A, b):
     n_dim = A.shape[1]
@@ -21,7 +23,7 @@ def compute_polytope(A, b):
     n_dim = A.shape[1]
     
     c = np.zeros(n_dim)
-    res = linprog(c, A_ub=A, b_ub=b, method='highs')
+    res = linprog(c, A_ub=A, b_ub=b-1e-6, method='highs', bounds=(None,None))
 
     if not res.success:
         raise ValueError("The polytope is empty.")
@@ -30,6 +32,7 @@ def compute_polytope(A, b):
 
     if is_unbounded(A, b):
         raise ValueError("The polytope is unbounded.")
+    
 
     halfspaces = np.hstack([A, -b.reshape(-1, 1)])
     hs = HalfspaceIntersection(halfspaces, interior_point)
@@ -46,15 +49,34 @@ def compute_polytope(A, b):
 
     return vertices.tolist(), faces.tolist()
 
+def compute_htm(points):
+
+    points = np.array(points)
+    
+    center = np.mean(points, axis=0).reshape(3,1)  
+    
+    centered_points = points - center.T
+    
+    M = centered_points.transpose()@ centered_points 
+    
+    _, _, Vt = np.linalg.svd(M) 
+    
+    transformation_matrix = np.eye(4) 
+    transformation_matrix[:3, :3] = Vt.T  
+    transformation_matrix[:3, 3] = center.flatten()  
+    
+    return np.matrix(transformation_matrix)
+
 class ConvexPolytope:
     """
   A convex polytope object.
 
   Parameters
   ----------
-  htm : 4x4 numpy array or 4x4 nested list
-      The object's configuration.
-      (default: the same as the current HTM).
+  htm : 4x4 numpy array or 4x4 nested list or None
+      Decide the object's **initial** placement of its frame 
+      If 'None', a frame placement is computed automatically using SVD
+      (default: 'None').
 
   name : string
       The object's name.
@@ -141,12 +163,12 @@ class ConvexPolytope:
     # Constructor
     #######################################
 
-    def __init__(self, htm=np.identity(4), name="", A=[], b=[], mass=1, color="red", opacity=1, \
+    def __init__(self, htm=None, name="", A=[], b=[], mass=1, color="red", opacity=1, \
                  mesh_material=None):
 
         # Error handling
-        if not Utils.is_a_matrix(htm, 4, 4):
-            raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
+        if not (htm == None or Utils.is_a_matrix(htm, 4, 4)):
+            raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix, or 'None'.")
 
         if not Utils.is_a_number(mass) or mass < 0:
             raise Exception("The parameter 'mass' should be a positive float.")
@@ -179,20 +201,54 @@ class ConvexPolytope:
         if (not Utils.is_a_number(opacity)) or opacity < 0 or opacity > 1:
             raise Exception("The parameter 'opacity' should be a float between 0 and 1.")
         # end error handling
-
-        self._vertexes, self._faces = compute_polytope(A, b)
-        self._A = A
-        self._b = b
-        self._htm = np.matrix(htm)
+        
+        #If htm is not set, compute it automatically using SVD
+        if htm==None:
+            vertexes, _ = compute_polytope(A, b)
+            htm = compute_htm(vertexes)
+            
+        #Transform the shape according the initial htm0
+        n = np.shape(A)[0]
+        htm_m = np.matrix(htm)
+        Q = htm_m[0:3,0:3]
+        pc = htm_m[0:3,-1]
+        A_m = np.matrix(A)*Q
+        b_m = np.matrix(b).reshape((n,1))-np.matrix(A)*pc
+        
+        self._vertexes, self._faces = compute_polytope(A_m, b_m)
+        
+        self._A = np.matrix(A_m)
+        self._b = np.matrix(b_m).reshape((n,1))
+        self._htm = htm_m
         self._name = name
         self._mass = 1
         self._frames = []
         self._volume = 0
         self._max_time = 0
-
+        
+        xmin=1e6
+        xmax=-1e6
+        ymin=1e6
+        ymax=-1e6
+        zmin=1e6
+        zmax=-1e6
+        
+        for v in self._vertexes:
+            xmin = min(xmin,v[0])
+            xmax = max(xmax,v[0])
+            ymin = min(ymin,v[1])
+            ymax = max(ymax,v[1])   
+            zmin = min(zmin,v[2])
+            zmax = max(zmax,v[2]) 
+            
+        self._lx = xmax-xmin
+        self._ly = ymax-ymin
+        self._lz = zmax-zmin
+        self._p = np.matrix([(xmax+xmin)/2, (ymax+ymin)/2,  (zmax+zmin)/2]).transpose()
+                 
 
         if mesh_material is None:
-            self._mesh_material = MeshMaterial(color=color, opacity=opacity, metalness=1, roughness=1, side="DoubleSide")
+            self._mesh_material = MeshMaterial(color=color, opacity=opacity, metalness=0.2, roughness=0.2, side="DoubleSide")
         else:
             self._mesh_material = mesh_material
 
@@ -296,45 +352,60 @@ class ConvexPolytope:
 
         return string
 
-    # Compute inertia matrix with respect to the inertia frame
-    def inertia_matrix(self, htm=None):
+    def copy(self):
+        """Return a deep copy of the object, without copying the animation frames."""
+        return ConvexPolytope(self.htm, self.name + "_copy", self.A, self.b, self.color)
+
+    def aabb(self, mode='auto'):
         """
-    The 3D inertia matrix of the object, written in the world frame.
-    Assume that the transformation between the word frame and the object frame is 'htm'.
+    Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
 
     Parameters
     ----------
-    htm : 4x4 numpy array or 4x4 nested list
-        The object's configuration for which the inertia matrix will be computed
-        (default: the same as the current HTM).
-
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
     Returns
     -------
-     inertia_matrix : 3x3 numpy array
-        The 3D inertia matrix.
+     aab: the AABB as a uaibot.Box object
     """
 
-        if htm is None:
-            htm = self._htm
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+        
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            
+            x = self.htm[0:3,0]
+            y = self.htm[0:3,1]
+            z = self.htm[0:3,2]
+            Q = self.htm[0:3,0:3]
+            p = self.htm[0:3,-1]
+            
+            p1 = self._lx * x + self._ly * y + self._lz * z
+            p2 = -self._lx * x + self._ly * y + self._lz * z
+            p3 = self._lx * x - self._ly * y + self._lz * z
+            p4 = self._lx * x + self._ly * y - self._lz * z
+            
+            lx = max(abs(p1[0]), abs(p2[0]), abs(p3[0]), abs(p4[0]))
+            ly = max(abs(p1[1]), abs(p2[1]), abs(p3[1]), abs(p4[1]))
+            lz = max(abs(p1[2]), abs(p2[2]), abs(p3[2]), abs(p4[2]))
+            
+            lx = np.max([abs(p1[0, 0]), abs(p2[0, 0]), abs(p3[0, 0]), abs(p4[0, 0])])
+            ly = np.max([abs(p1[1, 0]), abs(p2[1, 0]), abs(p3[1, 0]), abs(p4[1, 0])])
+            lz = np.max([abs(p1[2, 0]), abs(p2[2, 0]), abs(p3[2, 0]), abs(p4[2, 0])])
+            
+            pc = Q*self._p + p
+            
+            return Box(name = "aabb_"+self.name, width= lx, depth=ly, height=lz, htm=Utils.trn(pc),opacity=0.5)
 
-        # Error handling
-        if not Utils.is_a_matrix(htm, 4, 4):
-            raise Exception("The optional parameter 'htm' should be a 4x4 homogeneous transformation matrix")
-        # end error handling
-
-        Ixx = (1 / 12) * self.mass * (3 * self.radius * self.radius + self.height * self.height)
-        Iyy = (1 / 12) * self.mass * (3 * self.radius * self.radius + self.height * self.height)
-        Izz = (1 / 2) * self.mass * (self.radius * self.radius)
-        Q = htm[0:3, 0:3]
-        S = Utils.S(htm[0:3, 3])
-
-        return Q * np.diag([Ixx, Iyy, Izz]) * Q.T - self.mass * S * S
-
-    def copy(self):
-        """Return a deep copy of the object, without copying the animation frames."""
-        return Cylinder(self.htm, self.name + "_copy", self.radius, self.height, self.mass, self.color)
-
-
+        else:
+            aabb = obj_cpp.get_aabb()
+            return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5) 
 
 
     # Compute distance to an object
@@ -371,7 +442,7 @@ class ConvexPolytope:
 
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
-            obj_cpp = Utils.obj_to_cpp(self) if Utils.is_a_simple_object(self) else self
+            obj_cpp = Utils.obj_to_cpp(self)
             
         if ( ( h > 0 or eps > 0) and ((mode == 'python') or ((mode=='auto' and os.environ['CPP_SO_FOUND']=='0')))):
             raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")

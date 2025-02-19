@@ -138,6 +138,13 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
          .def_readwrite("dist", &ProjResult::dist)
          .def_readwrite("proj", &ProjResult::proj);
 
+     py::class_<AABB>(m, "CPP_AABB")
+         .def(py::init<>())
+         .def_readwrite("lx", &AABB::lx)
+         .def_readwrite("ly", &AABB::ly)
+         .def_readwrite("lz", &AABB::lz)
+         .def_readwrite("p", &AABB::p);
+
      py::class_<GeometricPrimitives>(m, "CPP_GeometricPrimitives")
          .def(py::init<>())
          .def_readwrite("htm", &GeometricPrimitives::htm)
@@ -155,7 +162,7 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
                      py::arg("points"))
          .def_static("create_convexpolytope",
                      static_cast<GeometricPrimitives (*)(Matrix4f, MatrixXf, VectorXf)>(&GeometricPrimitives::create_convexpolytope),
-                     py::arg("htm"),py::arg("A"),py::arg("b"))
+                     py::arg("htm"), py::arg("A"), py::arg("b"))
          .def("to_pointcloud",
               static_cast<GeometricPrimitives (GeometricPrimitives::*)(float) const>(&GeometricPrimitives::to_pointcloud),
               py::arg("disc"))
@@ -168,6 +175,8 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
          .def("projection",
               static_cast<ProjResult (GeometricPrimitives::*)(Vector3f, float, float) const>(&GeometricPrimitives::projection),
               py::arg("point"), py::arg("h"), py::arg("eps"))
+         .def("get_aabb",
+              static_cast<AABB (GeometricPrimitives::*)() const>(&GeometricPrimitives::get_aabb))
          .def("__str__", &GeometricPrimitives::toString)
          .def("__repr__", &GeometricPrimitives::toString);
 

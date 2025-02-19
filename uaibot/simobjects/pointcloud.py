@@ -3,6 +3,7 @@ import numpy as np
 import os
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
+from simobjects.box import *
 
 class PointCloud:
     """
@@ -215,6 +216,45 @@ class PointCloud:
         string += "//USER INPUT GOES HERE"
 
         return string
+
+    def copy(self):
+        return PointCloud(self.name + "_copy", np.matrix(self.points), self.size, self.color)
+
+    def aabb(self, mode='auto'):
+        """
+    Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
+
+    Parameters
+    ----------
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
+    Returns
+    -------
+     aab: the AABB as a uaibot.Box object
+    """
+
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = self._cpp_pointcloud
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            row_mins = self.points.min(axis=1) 
+            row_maxs = self.points.max(axis=1)  
+            xmin, ymin, zmin = row_mins
+            xmax, ymax, zmax = row_maxs
+            w = xmax-xmin
+            d = ymax-ymin
+            h = zmax-zmin
+            center = np.matrix([(xmax+xmin)/2, (ymax+ymin)/2, (zmax+zmin)/2]).transpose()
+            return Box(name = "aabb_"+self.name, width= w, depth=d, height=h, htm=Utils.trn(center),opacity=0.5)
+        else:
+            aabb = obj_cpp.get_aabb()
+            return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5)
 
 
     # Compute distance to an object

@@ -1,6 +1,8 @@
 from utils import *
 import numpy as np
 from graphics.meshmaterial import *
+from simobjects.box import *
+import os
 
 
 class Cylinder:
@@ -237,71 +239,48 @@ class Cylinder:
 
         return string
 
-    # Compute inertia matrix with respect to the inertia frame
-    def inertia_matrix(self, htm=None):
-        """
-    The 3D inertia matrix of the object, written in the world frame.
-    Assume that the transformation between the word frame and the object frame is 'htm'.
-
-    Parameters
-    ----------
-    htm : 4x4 numpy array or 4x4 nested list
-        The object's configuration for which the inertia matrix will be computed
-        (default: the same as the current HTM).
-
-    Returns
-    -------
-     inertia_matrix : 3x3 numpy array
-        The 3D inertia matrix.
-    """
-
-        if htm is None:
-            htm = self._htm
-
-        # Error handling
-        if not Utils.is_a_matrix(htm, 4, 4):
-            raise Exception("The optional parameter 'htm' should be a 4x4 homogeneous transformation matrix")
-        # end error handling
-
-        Ixx = (1 / 12) * self.mass * (3 * self.radius * self.radius + self.height * self.height)
-        Iyy = (1 / 12) * self.mass * (3 * self.radius * self.radius + self.height * self.height)
-        Izz = (1 / 2) * self.mass * (self.radius * self.radius)
-        Q = htm[0:3, 0:3]
-        S = Utils.S(htm[0:3, 3])
-
-        return Q * np.diag([Ixx, Iyy, Izz]) * Q.T - self.mass * S * S
-
     def copy(self):
         """Return a deep copy of the object, without copying the animation frames."""
         return Cylinder(self.htm, self.name + "_copy", self.radius, self.height, self.mass, self.color)
 
-    def aabb(self):
+    def aabb(self, mode='auto'):
         """
-    Compute the width, depth and height of an axis aligned bounding box (aabb) that
-    covers the object. It also considers the current orientation.
+    Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
 
+    Parameters
+    ----------
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
     Returns
     -------
-     width : positive float
-        The width of the box, in meters.
-
-     depth : positive float
-        The depth of the box, in meters.
-
-     height : positive float
-        The depth of the box, in meters.
+     aab: the AABB as a uaibot.Box object
     """
 
-        p1 = 2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
-        p2 = -2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
-        p3 = 2*self.radius * self.htm[:, 0] - 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
-        p4 = 2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] - self.height * self.htm[:, 2]
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
 
-        w = np.max([abs(p1[0, 0]), abs(p2[0, 0]), abs(p3[0, 0]), abs(p4[0, 0])])
-        d = np.max([abs(p1[1, 0]), abs(p2[1, 0]), abs(p3[1, 0]), abs(p4[1, 0])])
-        h = np.max([abs(p1[2, 0]), abs(p2[2, 0]), abs(p3[2, 0]), abs(p4[2, 0])])
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            p1 = 2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
+            p2 = -2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
+            p3 = 2*self.radius * self.htm[:, 0] - 2*self.radius * self.htm[:, 1] + self.height * self.htm[:, 2]
+            p4 = 2*self.radius * self.htm[:, 0] + 2*self.radius * self.htm[:, 1] - self.height * self.htm[:, 2]
 
-        return w, d, h
+            w = np.max([abs(p1[0, 0]), abs(p2[0, 0]), abs(p3[0, 0]), abs(p4[0, 0])])
+            d = np.max([abs(p1[1, 0]), abs(p2[1, 0]), abs(p3[1, 0]), abs(p4[1, 0])])
+            h = np.max([abs(p1[2, 0]), abs(p2[2, 0]), abs(p3[2, 0]), abs(p4[2, 0])])
+            
+            return Box(name = "aabb_"+self.name, width= w, depth=d, height=h, htm=Utils.trn(self.htm[0:3,-1]),opacity=0.5)
+        else:
+            aabb = obj_cpp.get_aabb()
+            return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5)
+
+        
 
     def to_point_cloud(self, delta=0.025):
 
@@ -379,7 +358,7 @@ class Cylinder:
 
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
-            obj_cpp = Utils.obj_to_cpp(self) if Utils.is_a_simple_object(self) else self
+            obj_cpp = Utils.obj_to_cpp(self) 
             
         if ( ( h > 0 or eps > 0) and ((mode == 'python') or ((mode=='auto' and os.environ['CPP_SO_FOUND']=='0')))):
             raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")

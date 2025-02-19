@@ -216,9 +216,7 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
     float ly_max = -1e6;
     float lz_min = 1e6;
     float lz_max = -1e6;
-    float xc = 0;
-    float yc = 0;
-    float zc = 0;
+
 
     for (int i = 0; i < points.size(); i++)
     {
@@ -232,21 +230,14 @@ GeometricPrimitives GeometricPrimitives::create_pointcloud(vector<Vector3f> &poi
         lx_max = max(lx_max, gp.pointcloud->pts[i].x);
         ly_max = max(ly_max, gp.pointcloud->pts[i].y);
         lz_max = max(lz_max, gp.pointcloud->pts[i].z);
-        xc += gp.pointcloud->pts[i].x;
-        yc += gp.pointcloud->pts[i].y;
-        zc += gp.pointcloud->pts[i].z;
         gp.points_gp.push_back(points[i]);
     }
-
-    xc = xc / points.size();
-    yc = yc / points.size();
-    zc = zc / points.size();
 
     gp.lx = lx_max - lx_min;
     gp.ly = ly_max - ly_min;
     gp.lz = lz_max - lz_min;
-    gp.htm = trn(xc, yc, zc);
-    gp.center = Vector3f(xc, yc, zc);
+    gp.htm = trn((lx_max+lx_min)/2, (ly_max+ly_min)/2, (lz_max+lz_min)/2);
+    gp.center = Vector3f((lx_max+lx_min)/2, (ly_max+ly_min)/2, (lz_max+lz_min)/2);
 
     gp.kdtree = std::make_shared<nanoflann::KDTreeSingleIndexAdaptor<
         nanoflann::L2_Simple_Adaptor<float, nanoflann::PointCloud<float>>,
@@ -263,18 +254,24 @@ GeometricPrimitives GeometricPrimitives::create_convexpolytope(Matrix4f htm, Mat
 {
     GeometricPrimitives gp = GeometricPrimitives();
     // Check if the polytope is empty
-    gp.points_gp = get_vertex(A, b);
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f p = htm.block<3, 1>(0, 3);
+
+    MatrixXf A_mod = A*Q;
+    VectorXf b_mod = b-A*p;
+
+    gp.points_gp = get_vertex(A_mod, b_mod);
 
     if (gp.points_gp.size() == 0)
         throw std::runtime_error("Polytope is empty!");
 
     // Check if the polytope is unbounded
-    VectorXf ex_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(1, 0, 0), -A, -b);
-    VectorXf ex_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(-1, 0, 0), -A, -b);
-    VectorXf ey_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 1, 0), -A, -b);
-    VectorXf ey_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, -1, 0), -A, -b);
-    VectorXf ez_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 0, 1), -A, -b);
-    VectorXf ez_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 0, -1), -A, -b);
+    VectorXf ex_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(1, 0, 0), -A_mod, -b_mod);
+    VectorXf ex_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(-1, 0, 0), -A_mod, -b_mod);
+    VectorXf ey_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 1, 0), -A_mod, -b_mod);
+    VectorXf ey_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, -1, 0), -A_mod, -b_mod);
+    VectorXf ez_p = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 0, 1), -A_mod, -b_mod);
+    VectorXf ez_n = solveQP(Matrix3f::Identity() / VERYBIGNUMBER, Vector3f(0, 0, -1), -A_mod, -b_mod);
 
     float dx = abs(ex_p[0] - ex_n[0]);
     float dy = abs(ey_p[1] - ey_n[1]);
@@ -283,7 +280,6 @@ GeometricPrimitives GeometricPrimitives::create_convexpolytope(Matrix4f htm, Mat
     if (dx > 1e3 || dy > 1e3 || dz > 1e3)
         throw std::runtime_error("Polytope is unbounded!");
 
-    //
 
     int num_constraints = A.rows();
     int dim = A.cols();
@@ -293,17 +289,17 @@ GeometricPrimitives GeometricPrimitives::create_convexpolytope(Matrix4f htm, Mat
 
     for (int i = 0; i < num_constraints; ++i)
     {
-        float row_norm = A.row(i).norm();
+        float row_norm = A_mod.row(i).norm();
 
         if (row_norm > 1e-6)
         {
-            A_norm.row(i) = A.row(i) / row_norm;
-            b_norm(i) = b(i) / row_norm;
+            A_norm.row(i) = A_mod.row(i) / row_norm;
+            b_norm(i) = b_mod(i) / row_norm;
         }
         else
         {
-            A_norm.row(i) = A.row(i);
-            b_norm(i) = b(i);
+            A_norm.row(i) = A_mod.row(i);
+            b_norm(i) = b_mod(i);
         }
     }
 
@@ -318,28 +314,25 @@ GeometricPrimitives GeometricPrimitives::create_convexpolytope(Matrix4f htm, Mat
     float y_max = -VERYBIGNUMBER;
     float z_min = VERYBIGNUMBER;
     float z_max = -VERYBIGNUMBER;
-    gp.center = Vector3f(0,0,0);
 
-    Matrix3f Q = htm.block<3, 3>(0, 0);
-    Vector3f p = htm.block<3, 1>(0, 3);
     Vector3f tr_point;
 
     for (int i = 0; i < gp.points_gp.size(); i++)
     {
-        tr_point =  Q.transpose()*(gp.points_gp[i]-p);
+        tr_point =  gp.points_gp[i];
         x_min = minf(x_min, tr_point[0]);
         x_max = maxf(x_max, tr_point[0]);
         y_min = minf(y_min, tr_point[1]);
         y_max = maxf(y_max, tr_point[1]);
         z_min = minf(z_min, tr_point[2]);
         z_max = maxf(z_max, tr_point[2]);
-        gp.center += tr_point;
     }
-    gp.center = gp.center / gp.points_gp.size();
+    gp.center = Vector3f((x_max + x_min)/2, (y_max + y_min)/2, (z_max + z_min)/2);
     gp.lx = x_max - x_min;
     gp.ly = y_max - y_min;
     gp.lz = z_max - z_min;
     gp.htm = htm;
+
 
     return gp;
 }
@@ -908,9 +901,9 @@ AABB GeometricPrimitives::get_aabb() const
 
     if (type == 0)
     {
-        aabb.lx = this->lx;
-        aabb.ly = this->lx;
-        aabb.lz = this->lx;
+        aabb.lx = 2 * this->lx;
+        aabb.ly = 2 * this->lx;
+        aabb.lz = 2 * this->lx;
         aabb.p = htm.block(0, 3, 3, 1);
 
         return aabb;
@@ -967,10 +960,11 @@ AABB GeometricPrimitives::get_aabb() const
 
     if (type == 4)
     {
-        Vector3f p1 = 2 * this->lx * x + 2 * this->lx * y + this->lz * z;
-        Vector3f p2 = -2 * this->lx * x + 2 * this->lx * y + this->lz * z;
-        Vector3f p3 = 2 * this->lx * x - 2 * this->lx * y + this->lz * z;
-        Vector3f p4 = 2 * this->lx * x + 2 * this->lx * y - this->lz * z;
+        Vector3f p1 = this->lx * x + this->ly * y + this->lz * z;
+        Vector3f p2 = -this->lx * x + this->ly * y + this->lz * z;
+        Vector3f p3 = this->lx * x - this->ly * y + this->lz * z;
+        Vector3f p4 = this->lx * x + this->ly * y - this->lz * z;
+
 
         float lx = max4(abs(p1[0]), abs(p2[0]), abs(p3[0]), abs(p4[0]));
         float ly = max4(abs(p1[1]), abs(p2[1]), abs(p3[1]), abs(p4[1]));

@@ -161,18 +161,22 @@ class ConvexPolytope extends Objsim {
 		const verticesArray = [];
 		const indicesArray = [];
 
+		// this.vertexes.forEach(v => {
+		// 	verticesArray.push(v[0], v[1], v[2]);
+		// });
+
 		this.vertexes.forEach(v => {
-			verticesArray.push(v[0], v[1], v[2]);
+			verticesArray.push(v[0], v[2], -v[1]);
+		});
+
+		this.faces.forEach(f => {
+			indicesArray.push(f[0], f[2], f[1]);
 		});
 
 		// this.faces.forEach(f => {
 		// 	indicesArray.push(f[0], f[1], f[2]);
 		// });
 
-		this.faces.forEach(f => {
-			indicesArray.push(f[0], f[2], f[1]);
-		});
-		
 
 		geometry.setAttribute(
 			"position",
