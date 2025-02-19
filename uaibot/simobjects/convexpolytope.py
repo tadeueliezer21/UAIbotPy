@@ -9,13 +9,23 @@ import os
 def is_unbounded(A, b):
     n_dim = A.shape[1]
 
+    n_dim = A.shape[1]
+
     for i in range(n_dim):
         c = np.zeros(n_dim)
         c[i] = 1  
 
-        res = linprog(c, A_ub=A, b_ub=b, method='highs')
-        if res.status == 3:  
-            return True
+        res = linprog(c, A_ub=A, b_ub=b, method='highs', bounds=[(None, None)] * n_dim)
+
+        if res.status == 3 or abs(res.x[i])>1e3: 
+            return False  
+
+        c[i] = -1  
+
+        res = linprog(c, A_ub=A, b_ub=b, method='highs', bounds=[(None, None)] * n_dim)
+
+        if res.status == 3 or abs(res.x[i])>1e3: 
+            return False  
 
     return False
 

@@ -1110,7 +1110,7 @@ string pmat(Matrix4f m)
     return s;
 }
 
-QueueElement eval_node(int index, const GeometricPrimitives &prim, const BVH &bvh, PrimDistResult &bestResult)
+QueueElement eval_node(int index, const GeometricPrimitives &prim, const AABB &prim_aabb, const BVH &bvh, PrimDistResult &bestResult)
 {
     QueueElement qe;
     qe.nodeIndex = index;
@@ -1132,7 +1132,7 @@ QueueElement eval_node(int index, const GeometricPrimitives &prim, const BVH &bv
     }
     else
     {
-        qe.dist = AABB::dist_aabb(bvh.aabb[index], prim.get_aabb());
+        qe.dist = AABB::dist_aabb(bvh.aabb[index], prim_aabb);
         qe.proj_A = Vector3f(0, 0, 0);
         qe.proj_B = Vector3f(0, 0, 0);
         return qe;
@@ -1152,7 +1152,9 @@ PrimDistResult dist_to_bvh(const GeometricPrimitives &prim, const BVH &bvh)
     if (bvh.aabb.empty())
         return bestResult;
 
-    pq.push(eval_node(0, prim, bvh, bestResult)); // Root node
+    AABB prim_aabb = prim.get_aabb();
+
+    pq.push(eval_node(0, prim, prim_aabb, bvh, bestResult)); // Root node
 
     while (!pq.empty())
     {
@@ -1168,15 +1170,15 @@ PrimDistResult dist_to_bvh(const GeometricPrimitives &prim, const BVH &bvh)
 
         // Otherwise
         if (bvh.left_child[nodeIndex] != -1)
-            pq.push(eval_node(bvh.left_child[nodeIndex], prim, bvh, bestResult));
+            pq.push(eval_node(bvh.left_child[nodeIndex], prim, prim_aabb, bvh, bestResult));
         if (bvh.right_child[nodeIndex] != -1)
-            pq.push(eval_node(bvh.right_child[nodeIndex], prim, bvh, bestResult));
+            pq.push(eval_node(bvh.right_child[nodeIndex], prim, prim_aabb, bvh, bestResult));
     }
 
     return bestResult;
 }
 
-QueueElement eval_node_range(int index, const GeometricPrimitives &prim, const BVH &bvh, vector<Vector3f> &result, float threshold)
+QueueElement eval_node_range(int index, const GeometricPrimitives &prim,  const AABB &prim_aabb, const BVH &bvh, vector<Vector3f> &result, float threshold)
 {
     QueueElement qe;
     qe.nodeIndex = index;
@@ -1195,7 +1197,7 @@ QueueElement eval_node_range(int index, const GeometricPrimitives &prim, const B
     }
     else
     {
-        qe.dist = AABB::dist_aabb(bvh.aabb[index], prim.get_aabb());
+        qe.dist = AABB::dist_aabb(bvh.aabb[index], prim_aabb);
         qe.proj_A = Vector3f(0, 0, 0);
         qe.proj_B = Vector3f(0, 0, 0);
         return qe;
@@ -1213,11 +1215,13 @@ vector<Vector3f> dist_to_bvh_range(const GeometricPrimitives &prim, const BVH &b
     PrimDistResult bestResult;
     bestResult.dist = VERYBIGNUMBER;
 
+    AABB prim_aabb = prim.get_aabb();
+
     // Start with the root node
     if (bvh.aabb.empty())
         return result;
 
-    pq.push(eval_node_range(0, prim, bvh, result, threshold)); // Root node
+    pq.push(eval_node_range(0, prim, prim_aabb, bvh, result, threshold)); // Root node
 
     while (!pq.empty())
     {
@@ -1234,9 +1238,9 @@ vector<Vector3f> dist_to_bvh_range(const GeometricPrimitives &prim, const BVH &b
         // cout << "Creating descendants..."<<std::endl;
         // Otherwise
         if (bvh.left_child[nodeIndex] != -1)
-            pq.push(eval_node_range(bvh.left_child[nodeIndex], prim, bvh, result, threshold));
+            pq.push(eval_node_range(bvh.left_child[nodeIndex], prim, prim_aabb, bvh, result, threshold));
         if (bvh.right_child[nodeIndex] != -1)
-            pq.push(eval_node_range(bvh.right_child[nodeIndex], prim, bvh, result, threshold));
+            pq.push(eval_node_range(bvh.right_child[nodeIndex], prim, prim_aabb, bvh, result, threshold));
     }
 
     return result;
