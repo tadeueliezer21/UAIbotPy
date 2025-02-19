@@ -732,26 +732,62 @@ ProjResult projection_pointcloud(KDTree tree, PointCloud pc, Vector3f point, flo
     }
 }
 
-ProjResult projection_convexpolytope(MatrixXf A, VectorXf b, Matrix4f htm, Vector3f point, float h, float eps)
+ProjResult projection_convexpolytope(MatrixXf A, VectorXf b, Matrix4f htm, Vector3f point, float lx, float ly, float lz, Vector3f center, float h, float eps)
 {
+    ProjResult pr;
+    Vector3f pc = htm.block<3, 1>(0, 3);
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f point_transformed = Q.transpose() * (point - pc);
+    Vector3f pi_transformed;
+
     if (h < 1e-5 && eps < 1e-5)
     {
-        ProjResult pr;
-        Vector3f pc = htm.block<3, 1>(0, 3);
-        Matrix3f Q = htm.block<3, 3>(0, 0);
-        Vector3f point_transformed = Q.transpose() * (point - pc);
-
-        Vector3f pi_transformed = solveQP(Matrix3f::Identity(), -point_transformed, -A, -b);
-
-        pr.proj = Q * pi_transformed + pc;
-        pr.dist = (pr.proj - point).norm();
-
-        return pr;
+        pi_transformed = solveQP(Matrix3f::Identity(), -point_transformed, -A, -b);
+        pr.dist = (pi_transformed - point_transformed).norm();
     }
     else
     {
-        cout << "ERRO!" << std::endl;
+        float G = 0;
+        Vector3f grad_G = Vector3f(0,0,0);
+        float inner;
+        int N = A.rows();
+
+        for(int i=0; i < A.rows(); i++)
+        {
+            inner = A.row(i)*point_transformed - b[i];
+            G+= smf(inner, 0, h);
+            grad_G+= smf(inner, 1, h)*A.row(i).transpose();
+        }
+
+        //This, ideally, should be computed automatically
+        int Nc = N/2+1;
+
+        G = G/Nc;
+        grad_G = grad_G/Nc;
+    
+        float cr = 1.2 * (lx * lx / 4 + ly * ly / 4 + lz * lz / 4);
+        float R = 0.5 * ((point_transformed-center).squaredNorm()- cr);
+    
+        float alpha = eps;
+        float beta = 3 * eps;
+        float gamma = 1 - 2 * (alpha + beta);
+    
+        float F = alpha * R + beta * G;
+
+        Vector3f grad_F = alpha * (point_transformed-center) + beta * grad_G;
+   
+        float M = sqrtf(F * F + gamma * G * G);
+        Vector3f grad_e = grad_F + (F*grad_F + gamma * G * grad_G)/M;
+
+        pi_transformed = point_transformed - grad_e;    
+        pr.dist = sqrtf(2 * (F + M));
+
     }
+
+    pr.proj = Q * pi_transformed + pc;
+    
+    return pr;
+
 }
 
 GeometricPrimitives GeometricPrimitives::to_pointcloud(float disc) const
@@ -779,7 +815,7 @@ ProjResult GeometricPrimitives::projection(Vector3f point, float h, float eps) c
     if (type == 3)
         return projection_pointcloud(kdtree, pointcloud, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
     if (type == 4)
-        return projection_convexpolytope(A, b, htm, point, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
+        return projection_convexpolytope(A, b, htm, point, lx, ly, lz, center, h == 0 ? 1e-8 : h, eps == 0 ? 1e-8 : eps);
 }
 
 Vector3f support_sphere(Vector3f direction, float radius, Matrix4f htm)

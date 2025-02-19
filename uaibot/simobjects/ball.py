@@ -69,13 +69,10 @@ class Ball:
 
     @property
     def mesh_material(self):
-        """Mesh properties of the object."""
+        """Mesh material properties of the object."""
         return self._mesh_material
 
-    @property
-    def volume(self):
-        """The volume of the object, in m³."""
-        return self._volume
+
 
     #######################################
     # Constructor

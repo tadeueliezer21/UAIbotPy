@@ -497,11 +497,11 @@ class Simulation:
         wall4 = Box(width=size, depth=0.005, height=size, htm=Utils.trn([0, -size/2, size/2]),
                      mesh_material=mesh_ground)
                         
-        light1 = PointLight(name="light1", color="white", intensity=40, htm=Utils.trn([-4,-4, 5.0]))
-        light2 = PointLight(name="light2", color="white", intensity=40, htm=Utils.trn([-4, 4, 5.0]))
-        light3 = PointLight(name="light3", color="white", intensity=40, htm=Utils.trn([ 4,-4, 5.0]))
-        light4 = PointLight(name="light4", color="white", intensity=40, htm=Utils.trn([ 4, 4, 5.0]))
-        light5 = PointLight(name="light5", color="white", intensity=40, htm=Utils.trn([ 0,0,5]))
+        light1 = PointLight(name="light1", color="white", intensity=10, htm=Utils.trn([-2,-2, 5.0]))
+        light2 = PointLight(name="light2", color="white", intensity=10, htm=Utils.trn([-2, 2, 5.0]))
+        light3 = PointLight(name="light3", color="white", intensity=10, htm=Utils.trn([ 2,-2, 5.0]))
+        light4 = PointLight(name="light4", color="white", intensity=10, htm=Utils.trn([ 2, 2, 5.0]))
+        light5 = PointLight(name="light5", color="white", intensity=10, htm=Utils.trn([ 0,0,5]))
 
         
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/"
