@@ -167,7 +167,7 @@ class ConvexPolytope:
                  mesh_material=None):
 
         # Error handling
-        if not (htm == None or Utils.is_a_matrix(htm, 4, 4)):
+        if not (Utils.is_a_matrix(htm, 4, 4) or htm is None):
             raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix, or 'None'.")
 
         if not Utils.is_a_number(mass) or mass < 0:
@@ -203,7 +203,7 @@ class ConvexPolytope:
         # end error handling
         
         #If htm is not set, compute it automatically using SVD
-        if htm==None:
+        if htm is None:
             vertexes, _ = compute_polytope(A, b)
             htm = compute_htm(vertexes)
             

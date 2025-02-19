@@ -830,11 +830,36 @@ Vector3f support_cylinder(Vector3f direction, float radius, float height, Matrix
     return pc + Q * localSupport;
 }
 
-Vector3f support_points_gp(Vector3f direction, vector<Vector3f> points)
+Vector3f support_convexpolygon(Vector3f direction, vector<Vector3f> points, Matrix4f htm)
 {
     float max_value = -VERYBIGNUMBER;
     Vector3f point_selected;
     float aux;
+
+    Vector3f pc = htm.block<3, 1>(0, 3);
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f pointmod;
+
+    for (int i = 0; i < points.size(); i++)
+    {
+        pointmod = Q*points[i]+pc;
+        aux = direction.dot(pointmod);
+        if (aux > max_value)
+        {
+            max_value = aux;
+            point_selected = pointmod;
+        }
+    }
+
+    return point_selected;
+}
+
+Vector3f support_pointcloud(Vector3f direction, vector<Vector3f> points)
+{
+    float max_value = -VERYBIGNUMBER;
+    Vector3f point_selected;
+    float aux;
+
 
     for (int i = 0; i < points.size(); i++)
     {
@@ -857,8 +882,10 @@ Vector3f GeometricPrimitives::support(Vector3f direction) const
         return support_box(direction, lx, ly, lz, htm);
     if (type == 2)
         return support_cylinder(direction, lx, lz, htm);
-    if (type == 3 || type == 4)
-        return support_points_gp(direction, points_gp);
+    if (type == 3)
+        return support_pointcloud(direction, points_gp);
+    if (type == 4)
+        return support_convexpolygon(direction, points_gp, htm);        
 }
 
 float max4(float a1, float a2, float a3, float a4)
