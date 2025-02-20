@@ -363,7 +363,7 @@ class Robot:
         return _fkm(self, q, axis, htm, mode)
 
 
-    def ikm(self, htm_target, q0=None, p_tol=0.001, a_tol=5, no_iter_max=200, ignore_orientation=False, mode='auto'):
+    def ikm(self, htm_target, htm=None, q0=None, p_tol=0.001, a_tol=5, no_iter_max=200, ignore_orientation=False, mode='auto'):
         """
     Try to solve the inverse kinematic problem for the end-effector, given a
     desired homogeneous transformation matrix. It returns the manipulator
@@ -381,6 +381,9 @@ class Robot:
     ----------
     htm_target : 4x4 numpy array or 4x4 nested list
         The target end-effector HTM, written in scenario coordinates.
+    htm : 4x4 numpy array or 4x4 nested list
+        The pose of the basis of the manipulator.
+        (default: None (the current base htm))
     q0 : n-dimensional numpy vector or array
         Initial guess for the algorithm for the joint configuration.
         (default: a random joint configuration).
@@ -406,7 +409,7 @@ class Robot:
     q : n-dimensional numpy column vector
         The configuration that solves the IK problem.
     """
-        return _ikm(self, htm_target, q0, p_tol, a_tol, no_iter_max, ignore_orientation, mode)
+        return _ikm(self, htm_target, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation, mode)
 
     def jac_geo(self, q=None, axis='eef', htm=None, mode='auto'):
         """

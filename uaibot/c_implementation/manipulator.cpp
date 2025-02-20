@@ -1934,7 +1934,7 @@ TaskResult Manipulator::fk_task(VectorXf q, Matrix4f htm_world_base, Matrix4f tg
     return tr;
 }
 
-IKResult Manipulator::ik(Matrix4f tg_htm, VectorXf q0, float p_tol, float a_tol, int no_iter_max, bool ignore_orientation) const
+IKResult Manipulator::ik(Matrix4f tg_htm, Matrix4f htm, VectorXf q0, float p_tol, float a_tol, int no_iter_max, bool ignore_orientation) const
 {
     float eta = 0.03;
     float eps = 0.001;
@@ -1949,7 +1949,7 @@ IKResult Manipulator::ik(Matrix4f tg_htm, VectorXf q0, float p_tol, float a_tol,
 
     while (cont)
     {
-        tr = this->fk_task(q, Matrix4f::Identity(), tg_htm);
+        tr = this->fk_task(q, htm, tg_htm);
 
         if (!ignore_orientation)
         {

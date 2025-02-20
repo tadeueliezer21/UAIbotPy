@@ -198,8 +198,8 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
          .def("fk_task", &Manipulator::fk_task,
               py::arg("q"), py::arg("htm_world_base"), py::arg("tg_htm"))
          .def("ik",
-              static_cast<IKResult (Manipulator::*)(Matrix4f, VectorXf, float, float, int, bool) const>(&Manipulator::ik),
-              py::arg("tg_htm"), py::arg("q0"), py::arg("p_tol"), py::arg("a_tol"), py::arg("no_iter_max"), py::arg("ignore_orientation"))
+              static_cast<IKResult (Manipulator::*)(Matrix4f, Matrix4f, VectorXf, float, float, int, bool) const>(&Manipulator::ik),
+              py::arg("tg_htm"), py::arg("htm"), py::arg("q0"), py::arg("p_tol"), py::arg("a_tol"), py::arg("no_iter_max"), py::arg("ignore_orientation"))
          .def("set_joint_param",
               (void(Manipulator::*)(int, float, float, float, float, int, float, float)) & Manipulator::set_joint_param,
               py::arg("ind_link"), py::arg("theta"), py::arg("d"), py::arg("alpha"), py::arg("a"), py::arg("joint_type"), py::arg("q_min"),

@@ -329,7 +329,7 @@ struct Manipulator
 
     TaskResult fk_task(VectorXf q, Matrix4f htm_world_base, Matrix4f tg_htm) const;
 
-    IKResult ik(Matrix4f tg_htm, VectorXf q0, float p_tol, float a_tol, int no_iter_max, bool ignore_orientation) const;
+    IKResult ik(Matrix4f tg_htm, Matrix4f htm, VectorXf q0, float p_tol, float a_tol, int no_iter_max, bool ignore_orientation) const;
 
     CheckFreeConfigResult check_free_configuration(VectorXf q, Matrix4f htm, vector<GeometricPrimitives> obstacles, bool check_joint,
                                                    bool check_auto, float tol, float dist_tol, int no_iter_max) const;

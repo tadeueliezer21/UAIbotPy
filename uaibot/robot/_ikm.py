@@ -2,10 +2,13 @@ from utils import *
 import numpy as np
 import os
 
-def _ikm(self, htm_target, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False, mode='auto'):
+def _ikm(self, htm_target, htm = None, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False, mode='auto'):
     n = len(self._links)
     if q0 is None:
         q0 = np.matrix(np.reshape((2 * np.pi) * np.random.rand(n) - np.pi, (n, 1)))
+        
+    if htm is None:
+        htm = self.htm
 
     # Error handling
     if not Utils.is_a_matrix(htm_target, 4, 4):
@@ -31,9 +34,9 @@ def _ikm(self, htm_target, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, igno
         # end error handling
 
     if mode == 'python' or  (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-        return _ikm_python(self, htm_target, q0, p_tol, a_tol, no_iter_max, ignore_orientation)
+        return _ikm_python(self, htm_target, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation)
     else:
-        ik_res = self.cpp_robot.ik(htm_target, q0, p_tol, a_tol, no_iter_max, ignore_orientation)
+        ik_res = self.cpp_robot.ik(htm_target, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation)
 
         if not ik_res.success:
             raise Exception("Solution for IK not found. You can try the following: \n" \
@@ -47,7 +50,7 @@ def _ikm(self, htm_target, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, igno
 
 
 # (Private function) Used in IK
-def _evolve_config(self, q, p_tol, a_tol, htm_target, iter_remain, ignore_orientation):
+def _evolve_config(self, q, htm, p_tol, a_tol, htm_target, iter_remain, ignore_orientation):
     n = len(self.links)
     found = False
     zero_u = False
@@ -60,7 +63,7 @@ def _evolve_config(self, q, p_tol, a_tol, htm_target, iter_remain, ignore_orient
 
     while (not found) and (not zero_u) and (not iter_end):
 
-        r, jac_r = self.task_function(htm_des = htm_target, q = np.array(q), mode='python')
+        r, jac_r = self.task_function(htm=htm, htm_des = htm_target, q = np.array(q), mode='python')
         
         # print(r)
         # print(jac_r)
@@ -97,7 +100,7 @@ def _evolve_config(self, q, p_tol, a_tol, htm_target, iter_remain, ignore_orient
 
 
 # Inverse kinematics for the end-effector
-def _ikm_python(self, htm_target, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False):
+def _ikm_python(self, htm_target, htm, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False):
     n = len(self._links)
 
     j = 0
@@ -106,7 +109,7 @@ def _ikm_python(self, htm_target, q0=None, p_tol=0.005, a_tol=5, no_iter_max=200
     no_iter_remain = no_iter_max
 
     while not found and no_iter_remain >= 0:
-        found, i, q = _evolve_config(self, q, p_tol, a_tol, htm_target, no_iter_remain, ignore_orientation)
+        found, i, q = _evolve_config(self, q, htm, p_tol, a_tol, htm_target, no_iter_remain, ignore_orientation)
         no_iter_remain -= i
         if not found:
             q = np.matrix(np.reshape((2 * np.pi) * np.random.rand(n), (n, 1)))

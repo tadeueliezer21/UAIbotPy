@@ -441,7 +441,63 @@ class ConvexPolytope:
             raise Exception("c++ mode is set, but .so file was not loaded!")
         
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-            raise Exception("Not implemented yet!")
+            eps = 1e-6  
+            all_face_points = []
+            
+            A = np.array(self.A, dtype=float)
+            b = np.array(self.b, dtype=float).flatten()
+            
+            vertices_np = [np.array(v, dtype=float) for v in self.vertexes]
+            
+            for i in range(A.shape[0]):
+                a = A[i, :]      
+                bi = b[i]        
+                
+                face_vertices = []
+                for v in vertices_np:
+                    if abs(np.dot(a, v) - bi) < eps:
+                        face_vertices.append(v)
+                        
+                if not face_vertices:
+                    continue  
+                
+
+                n = a / np.linalg.norm(a)
+                if abs(n[0]) < 0.9:
+                    arbitrary = np.array([1.0, 0.0, 0.0])
+                else:
+                    arbitrary = np.array([0.0, 1.0, 0.0])
+
+                d1 = arbitrary - np.dot(arbitrary, n) * n
+                d1 = d1 / np.linalg.norm(d1)
+                d2 = np.cross(n, d1)
+                
+            
+                origin = face_vertices[0]
+                u_vals = []
+                v_vals = []
+                for v in face_vertices:
+                    diff = v - origin
+                    u_vals.append(np.dot(diff, d1))
+                    v_vals.append(np.dot(diff, d2))
+                    
+                u_min, u_max = min(u_vals), max(u_vals)
+                v_min, v_max = min(v_vals), max(v_vals)
+                
+                u_range = np.arange(u_min, u_max + disc, disc)
+                v_range = np.arange(v_min, v_max + disc, disc)
+                for u in u_range:
+                    for v_coord in v_range:
+                        candidate = origin + u * d1 + v_coord * d2
+                        if np.all(np.dot(A, candidate) <= b + eps):
+                            all_face_points.append(candidate.tolist())
+                            
+            all_face_points_transformed = []
+            for points in all_face_points:
+                tr_point = self.htm[0:3,0:3]*np.matrix(points).reshape((3,1))+self.htm[0:3,-1] 
+                all_face_points_transformed.append(tr_point)
+                            
+            return PointCloud(points = all_face_points_transformed, color = self.color, size = disc/2)
         else:
             return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc/2)
         
