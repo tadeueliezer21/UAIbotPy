@@ -2,6 +2,7 @@ from utils import *
 import numpy as np
 from graphics.meshmaterial import *
 import os
+from simobjects.pointcloud import *
 
 class Box:
     """
@@ -288,66 +289,79 @@ class Box:
             return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5) 
 
 
-    def to_point_cloud(self, delta=0.025):
+    def to_point_cloud(self, disc=0.025, mode='auto'):
+        """
+    Transform the object into a PointCloud object using the discretization 'delta'.
 
-        P = np.matrix(np.zeros((3, 0)))
+    Parameters
+    ----------
+    
+    disc: positive float
+        Discretization.
+        (default: 0.025)
 
-        W = round(self.width / delta)+1
-        D = round(self.depth / delta)+1
-        H = round(self.height / delta)+1
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
+    Returns
+    -------
+     pointcloud: the pointcloud object.
+    """
 
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+        
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            P = np.matrix(np.zeros((3, 0)))
 
-        for i in range(W):
-            u = i/(W-1)
-            for j in range(D):
-                v = j/(D-1)
-
-                x = -self.width/2 + self.width*u
-                y = -self.depth/2 + self.depth*v
-                z = -self.height/2
-                P = np.block([P, np.matrix([x,y,z]).transpose()])
-
-                x = -self.width/2 + self.width*u
-                y = -self.depth/2 + self.depth*v
-                z = self.height/2
-                P = np.block([P, np.matrix([x,y,z]).transpose()])
-
-        for i in range(W):
-            u = i / (W - 1)
-            for j in range(H):
-                v = j / (H - 1)
-
-                x = -self.width / 2 + self.width * u
-                y = -self.depth/2
-                z = -self.height/2 + self.height * v
-                P = np.block([P, np.matrix([x, y, z]).transpose()])
-
-                x = -self.width / 2 + self.width * u
-                y = self.depth/2
-                z = -self.height/2 + self.height * v
-                P = np.block([P, np.matrix([x, y, z]).transpose()])
+            T = round(2*np.pi*self.radius / disc)+1
+            R = round(self.radius/disc)+1
+            H = round(self.height / disc)+1
 
 
-        for i in range(D):
-            u = i / (D - 1)
-            for j in range(H):
-                v = j / (H - 1)
+            for i in range(T):
+                u = (2*np.pi)*i/(T-1)
+                for j in range(H):
+                    v = j/(H-1)
 
-                x = -self.width/2
-                y = -self.depth / 2 + self.depth * u
-                z = -self.height / 2 + self.height * v
-                P = np.block([P, np.matrix([x, y, z]).transpose()])
-
-                x = self.width/2
-                y =  -self.depth / 2 + self.depth * u
-                z = -self.height / 2 + self.height * v
-                P = np.block([P, np.matrix([x, y, z]).transpose()])
+                    x = self.radius*np.cos(u)
+                    y = self.radius*np.sin(u)
+                    z = (-self.height/2 + v*self.height)
+                    P = np.block([P, np.matrix([x,y,z]).transpose()])
 
 
-        for i in range(np.shape(P)[1]):
-            P[:,i] = self.htm[0:3,0:3]*P[:,i]+self.htm[0:3,-1]
+            for i in range(R):
+                v = self.radius * (i/(R-1))
+                T = round(2 * np.pi * v / disc)
+                for j in range(T):
+                    u = (2*np.pi)*j/(T-1)
 
-        return P
+                    x = v * np.cos(u)
+                    y = v * np.sin(u)
+                    z = -self.height / 2
+                    P = np.block([P, np.matrix([x, y, z]).transpose()])
+
+                    x = v * np.cos(u)
+                    y = v * np.sin(u)
+                    z = self.height / 2
+                    P = np.block([P, np.matrix([x, y, z]).transpose()])
+
+            for i in range(np.shape(P)[1]):
+                P[:,i] = self.htm[0:3,0:3]*P[:,i]+self.htm[0:3,-1]
+                
+            return PointCloud(points = P, color = self.color, size = disc/2)
+        
+        else:
+            return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc/2)
+      
+    # Compute distance to an object
+    def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+        return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
 
     # Compute distance to an object
     def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):

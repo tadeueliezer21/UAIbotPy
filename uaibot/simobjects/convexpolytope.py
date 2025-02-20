@@ -413,6 +413,38 @@ class ConvexPolytope:
             return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5) 
 
 
+    def to_point_cloud(self, disc=0.025, mode='auto'):
+        """
+    Transform the object into a PointCloud object using the discretization 'delta'.
+
+    Parameters
+    ----------
+    
+    disc: positive float
+        Discretization.
+        (default: 0.025)
+
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
+    Returns
+    -------
+     pointcloud: the pointcloud object.
+    """
+
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+        
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            raise Exception("Not implemented yet!")
+        else:
+            return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc/2)
+        
     # Compute distance to an object
     def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
         return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)

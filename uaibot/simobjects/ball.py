@@ -2,6 +2,7 @@ from utils import *
 import numpy as np
 from graphics.meshmaterial import *
 from simobjects.box import *
+from simobjects.pointcloud import *
 import os
 
 class Ball:
@@ -257,30 +258,53 @@ class Ball:
             
         
 
-    #Generate samples
-    def to_point_cloud(self, delta=0.025):
+    def to_point_cloud(self, disc=0.025, mode = 'auto'):
+        """
+    Transform the object into a PointCloud object using the discretization 'delta'.
 
-        N = round(self.radius / delta)+1
-        P = np.matrix(np.zeros((3, 0)))
-        for i in range(N):
-            phi =  np.pi*(i/N)
-            M = round(N*np.sin(phi))+1
-            for j in range(M):
-                theta = 2 * np.pi *(j/M)
-                x = self.radius * np.sin(phi) * np.cos(theta)
-                y = self.radius * np.sin(phi) * np.sin(theta)
-                z = self.radius * np.cos(phi)
-                P = np.block([P, np.matrix([x, y,  z]).transpose()])
+    Parameters
+    ----------
+    
+    disc: positive float
+        Discretization.
+        (default: 0.025)
 
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
+    Returns
+    -------
+     pointcloud: the pointcloud object.
+    """
 
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+        
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            N = round(self.radius / disc)+1
+            P = np.matrix(np.zeros((3, 0)))
+            for i in range(N):
+                phi =  np.pi*(i/N)
+                M = round(N*np.sin(phi))+1
+                for j in range(M):
+                    theta = 2 * np.pi *(j/M)
+                    x = self.radius * np.sin(phi) * np.cos(theta)
+                    y = self.radius * np.sin(phi) * np.sin(theta)
+                    z = self.radius * np.cos(phi)
+                    P = np.block([P, np.matrix([x, y,  z]).transpose()])
 
-        for i in range(np.shape(P)[1]):
-            P[:,i] = self.htm[0:3,0:3]*P[:,i]+self.htm[0:3,-1]
+            for i in range(np.shape(P)[1]):
+                P[:,i] = self.htm[0:3,0:3]*P[:,i]+self.htm[0:3,-1]
 
-        return P
-
-
-
+            return PointCloud(points = P, color = self.color, size = disc)
+        else:
+            return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc)
+      
     # Compute distance to an object
     def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
         return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)

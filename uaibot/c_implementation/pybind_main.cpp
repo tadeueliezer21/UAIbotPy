@@ -150,6 +150,7 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
      py::class_<GeometricPrimitives>(m, "CPP_GeometricPrimitives")
          .def(py::init<>())
          .def_readwrite("htm", &GeometricPrimitives::htm)
+         .def_readwrite("points_gp", &GeometricPrimitives::points_gp)
          .def_static("create_box",
                      static_cast<GeometricPrimitives (*)(Matrix4f, float, float, float)>(&GeometricPrimitives::create_box),
                      py::arg("htm"), py::arg("width"), py::arg("depth"), py::arg("height"))

@@ -508,6 +508,72 @@ GeometricPrimitives generate_point_cloud_cylinder(float radius, float height, Ma
     return GeometricPrimitives::create_pointcloud(points);
 }
 
+GeometricPrimitives generate_point_cloud_convexpolygon(const vector<Vector3f>& vertices, const MatrixXf& A, const VectorXf& b, const MatrixXf& htm, float disc) {
+    vector<Vector3f> all_face_points;
+    const float eps = 1e-6f;  
+
+    Matrix3f Q = htm.block<3, 3>(0, 0);
+    Vector3f p = htm.block<3, 1>(0, 3);
+
+    for (int i = 0; i < A.rows(); i++) {
+        Vector3f a = A.row(i);
+        float bi = b(i);
+
+        vector<Vector3f> face_vertices;
+        for (const auto& v : vertices) {
+            if (fabs(a.dot(v) - bi) < eps)
+                face_vertices.push_back(v);
+        }
+
+        if (face_vertices.empty())
+            continue;
+
+        Vector3f n = a.normalized();
+        Vector3f arbitrary = (fabs(n.x()) < 0.9f) ? Vector3f(1, 0, 0) : Vector3f(0, 1, 0);
+        Vector3f d1 = (arbitrary - arbitrary.dot(n) * n).normalized();
+        Vector3f d2 = n.cross(d1);  
+
+        Vector3f origin = face_vertices[0];
+        float u_min = numeric_limits<float>::max(), u_max = numeric_limits<float>::lowest();
+        float v_min = numeric_limits<float>::max(), v_max = numeric_limits<float>::lowest();
+
+        for (const auto& v : face_vertices) {
+            Vector3f diff = v - origin;
+            float u = diff.dot(d1);
+            float v_coord = diff.dot(d2);
+            if (u < u_min) u_min = u;
+            if (u > u_max) u_max = u;
+            if (v_coord < v_min) v_min = v_coord;
+            if (v_coord > v_max) v_max = v_coord;
+        }
+
+
+        for (float u = u_min; u <= u_max + eps; u += disc) {
+            for (float v_coord = v_min; v_coord <= v_max + eps; v_coord += disc) {
+
+                Vector3f candidate = origin + u * d1 + v_coord * d2;
+                bool inside = true;
+                for (int j = 0; j < A.rows(); j++) {
+                    if (A.row(j).dot(candidate) > b(j) + eps) {
+                        inside = false;
+                        break;
+                    }
+                }
+                if (inside) {
+                    all_face_points.push_back(candidate);
+                }
+            }
+        }
+    }
+
+    vector<Vector3f> all_face_points_tr;
+
+    for(int i=0; i < all_face_points.size(); i++)
+        all_face_points_tr.push_back(Q*all_face_points[i]+p);
+
+    return GeometricPrimitives::create_pointcloud(all_face_points_tr);
+}
+
 inline double smf(double x, int order, double h)
 {
     if (x < 0)
@@ -801,7 +867,7 @@ GeometricPrimitives GeometricPrimitives::to_pointcloud(float disc) const
     if (type == 3)
         return this->copy();
     if (type == 4)
-        throw std::runtime_error("Not implemented yet!");
+        return generate_point_cloud_convexpolygon(points_gp, A, b, htm, disc);
 }
 
 ProjResult GeometricPrimitives::projection(Vector3f point, float h, float eps) const
