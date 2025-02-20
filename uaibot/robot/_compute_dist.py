@@ -24,6 +24,7 @@ def _diststructlinkobj_py2cpp(dslo_py):
 
     dslo_cpp = ub_cpp.CPP_DistStructLinkObj()
 
+    dslo_cpp.is_null = False
     dslo_cpp.link_number = dslo_py.link_number
     dslo_cpp.link_col_obj_number = dslo_py.link_col_obj_number
     dslo_cpp.distance = dslo_py.distance
@@ -54,7 +55,7 @@ def _diststructrobotobj_py2cpp(dslo_py):
     if not (dslo_py is None):
         dsro_cpp.jac_dist_mat = dslo_py.jac_dist_mat
         dsro_cpp.dist_vect = dslo_py.dist_vect
-        dsro_cpp.list_info = [_diststructlinkobj_py2cpp(dslo) for dslo in dslo_py.list_info]
+        dsro_cpp.list_info = [_diststructlinkobj_py2cpp(dslo) for dslo in dslo_py._list_info]
 
     return dsro_cpp
 

@@ -16,6 +16,7 @@ def _diststructlinklink_py2cpp(dsll_py):
 
     dsll_cpp = ub_cpp.CPP_DistStructLinkLink()
 
+    dsll_cpp.is_null = False
     dsll_cpp.link_number_1 = dsll_py.link_number_1
     dsll_cpp.link_number_2 = dsll_py.link_number_2
     dsll_cpp.link_col_obj_number_1 = dsll_py.link_col_obj_number_1
@@ -48,7 +49,7 @@ def _diststructrobotauto_py2cpp(dsra_py):
     if not (dsra_py is None):
         dsra_cpp.jac_dist_mat = dsra_py.jac_dist_mat
         dsra_cpp.dist_vect = dsra_py.dist_vect
-        dsra_cpp.list_info = [_diststructlinklink_py2cpp(dsll) for dsll in dsra_py.list_info]
+        dsra_cpp.list_info = [_diststructlinklink_py2cpp(dsll) for dsll in dsra_py._list_info]
 
     return dsra_cpp
 

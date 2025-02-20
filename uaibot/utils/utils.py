@@ -179,7 +179,7 @@ class Utils:
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def htm_rand(trn_min=0, trn_max = 1, rot=np.pi/2):
+    def htm_rand(trn_min=[0.,0.,0.], trn_max = [1.,1.,1.], rot=np.pi/2):
         """
       Returns a random homogeneous transformation matrix.
 
@@ -199,9 +199,9 @@ class Utils:
           A homogeneous transformation matrix.
       """
 
-        x = np.random.uniform(trn_min,trn_max)
-        y = np.random.uniform(trn_min,trn_max)
-        z = np.random.uniform(trn_min,trn_max)
+        x = np.random.uniform(trn_min[0],trn_max[0])
+        y = np.random.uniform(trn_min[1],trn_max[1])
+        z = np.random.uniform(trn_min[2],trn_max[2])
         ax = np.random.uniform(-rot / 2, rot / 2)
         ay = np.random.uniform(-rot / 2, rot / 2)
         az = np.random.uniform(-rot / 2, rot / 2)

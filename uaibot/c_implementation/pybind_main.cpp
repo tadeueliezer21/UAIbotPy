@@ -100,6 +100,7 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
          .def_readonly("index", &VectorFieldResult::index);
 
      py::class_<DistStructLinkObj>(m, "CPP_DistStructLinkObj")
+         .def(py::init<>())
          .def_readwrite("is_null", &DistStructLinkObj::is_null)
          .def_readwrite("link_number", &DistStructLinkObj::link_number)
          .def_readwrite("link_col_obj_number", &DistStructLinkObj::link_col_obj_number)
@@ -116,6 +117,7 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
          .def_readwrite("list_info", &DistStructRobotObj::list_info);
 
      py::class_<DistStructLinkLink>(m, "CPP_DistStructLinkLink")
+         .def(py::init<>())
          .def_readwrite("is_null", &DistStructLinkLink::is_null)
          .def_readwrite("link_number_1", &DistStructLinkLink::link_number_1)
          .def_readwrite("link_number_2", &DistStructLinkLink::link_number_2)

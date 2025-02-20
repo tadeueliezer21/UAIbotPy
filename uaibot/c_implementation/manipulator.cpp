@@ -764,28 +764,28 @@ ProjResult projection_convexpolytope(MatrixXf A, VectorXf b, Matrix4f htm, Vecto
 
         G = G/Nc;
         grad_G = grad_G/Nc;
-    
+
         float cr = 1.2 * (lx * lx / 4 + ly * ly / 4 + lz * lz / 4);
         float R = 0.5 * ((point_transformed-center).squaredNorm()- cr);
-    
+
         float alpha = eps;
         float beta = 3 * eps;
         float gamma = 1 - 2 * (alpha + beta);
-    
+
         float F = alpha * R + beta * G;
 
         Vector3f grad_F = alpha * (point_transformed-center) + beta * grad_G;
-   
+
         float M = sqrtf(F * F + gamma * G * G);
         Vector3f grad_e = grad_F + (F*grad_F + gamma * G * grad_G)/M;
 
-        pi_transformed = point_transformed - grad_e;    
+        pi_transformed = point_transformed - grad_e;
         pr.dist = sqrtf(2 * (F + M));
 
     }
 
     pr.proj = Q * pi_transformed + pc;
-    
+
     return pr;
 
 }
@@ -921,7 +921,7 @@ Vector3f GeometricPrimitives::support(Vector3f direction) const
     if (type == 3)
         return support_pointcloud(direction, points_gp);
     if (type == 4)
-        return support_convexpolygon(direction, points_gp, htm);        
+        return support_convexpolygon(direction, points_gp, htm);
 }
 
 float max4(float a1, float a2, float a3, float a4)
@@ -1039,7 +1039,7 @@ AABB GeometricPrimitives::get_aabb() const
 
         Matrix3f Q = htm.block<3, 3>(0, 0);
         Vector3f p = htm.block<3, 1>(0, 3);
-    
+
         aabb.p = Q * this->center + p;
 
         return aabb;
@@ -1288,7 +1288,7 @@ PrimDistResult dist_to_bvh_smooth(const GeometricPrimitives &prim, int pc_size, 
 
     float min_dist = dist_to_bvh(prim, bvh).dist;
 
-    float tol = 1e-3;
+    float tol = 0.05; //1e-3
     float threshold = min_dist / pow(tol, h);
 
     vector<Vector3f> all_points = dist_to_bvh_range(prim, bvh, threshold);
@@ -1296,6 +1296,8 @@ PrimDistResult dist_to_bvh_smooth(const GeometricPrimitives &prim, int pc_size, 
 
     float min_dist_smooth = VERYBIGNUMBER;
     float aux_dist;
+
+    // cout << "Usage = "<<((float) all_points.size())/((float) pc_size)<<std::endl;
 
     for (int i = 0; i < all_points.size(); i++)
     {
@@ -1312,9 +1314,11 @@ PrimDistResult dist_to_bvh_smooth(const GeometricPrimitives &prim, int pc_size, 
     pdr.dist = 0;
     float H = 1.0 / h;
 
+    min_dist_smooth = 0.5*pow(min_dist_smooth,2);
+
     for (int i = 0; i < all_points.size(); i++)
     {
-        weight0 = (VERYSMALLNUMBER + min_dist_smooth) / (VERYSMALLNUMBER + all_dist[i].dist);
+        weight0 = (VERYSMALLNUMBER + min_dist_smooth) / (VERYSMALLNUMBER + 0.5*pow(all_dist[i].dist,2));
         weight1 = pow(weight0, H);
         weight2 = weight0 * weight1;
         sum_weight += weight1;
@@ -1328,7 +1332,7 @@ PrimDistResult dist_to_bvh_smooth(const GeometricPrimitives &prim, int pc_size, 
     pdr.proj_B = pdr.proj_B / normalization;
     pdr.aux = pdr.aux / normalization;
 
-    pdr.dist = min_dist_smooth / pow(sum_weight, h);
+    pdr.dist = sqrtf(2*min_dist_smooth / pow(sum_weight, h));
 
     return pdr;
 }
@@ -2019,6 +2023,8 @@ CheckFreeConfigResult Manipulator::check_free_configuration(VectorXf q, Matrix4f
     return cfcr;
 }
 
+DistStructLinkObj::DistStructLinkObj() {};
+
 DistStructLinkObj DistStructRobotObj::get_item(int ind_link, int ind_obj_link)
 {
     for (int ind_info = 0; ind_info < list_info.size(); ind_info++)
@@ -2066,7 +2072,7 @@ DistStructRobotObj Manipulator::compute_dist(GeometricPrimitives obj, VectorXf q
             if (AABB::dist_aabb(obj_copy.get_aabb(), obj_aabb) < max_dist)
             {
                 Vector3f p_obj_0;
-                if (!old_dist_struct.is_null)
+                if (old_dist_struct.is_null)
                     p_obj_0 = obj.htm.block(0, 0, 3, 1);
                 else
                 {
@@ -2077,6 +2083,7 @@ DistStructRobotObj Manipulator::compute_dist(GeometricPrimitives obj, VectorXf q
                             p_obj_0 = dslo.point_object;
                         else
                             p_obj_0 = obj.htm.block(0, 0, 3, 1);
+                        
                     }
                     catch (const std::exception &e)
                     {
@@ -2121,6 +2128,8 @@ DistStructRobotObj Manipulator::compute_dist(GeometricPrimitives obj, VectorXf q
 
     return dsro;
 }
+
+DistStructLinkLink::DistStructLinkLink() {};
 
 DistStructLinkLink DistStructRobotAuto::get_item(int ind_link_1, int ind_link_2, int ind_obj_link_1, int ind_obj_link_2)
 {
@@ -2191,7 +2200,7 @@ DistStructRobotAuto Manipulator::compute_dist_auto(VectorXf q, DistStructRobotAu
                     if (AABB::dist_aabb(obj_copy_1.get_aabb(), obj_copy_2.get_aabb()) < max_dist)
                     {
                         Vector3f p_obj_1;
-                        if (!old_dist_struct.is_null)
+                        if (old_dist_struct.is_null)
                             p_obj_1 = obj_copy_1.htm.block(0, 0, 3, 1);
                         else
                         {

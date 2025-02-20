@@ -182,6 +182,8 @@ struct DistStructLinkObj
     Vector3f point_link;
     Vector3f point_object;
     MatrixXf jac_distance;
+
+    DistStructLinkObj();
 };
 
 struct DistStructRobotObj
@@ -208,6 +210,8 @@ struct DistStructLinkLink
     Vector3f point_link_1;
     Vector3f point_link_2;
     MatrixXf jac_distance;
+
+    DistStructLinkLink();
 };
 
 struct DistStructRobotAuto

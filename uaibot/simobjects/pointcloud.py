@@ -145,7 +145,7 @@ class PointCloud:
 
     def __repr__(self):
 
-        string = "Point cloud '" + self._name + "' with " + str(len(self.points)) + " points: \n\n"
+        string = "Point cloud '" + self._name + "' with " + str(np.shape(self.points)[1]) + " points: \n\n"
         string += " Size: " + str(self.size) + "\n"
         string += " Color: " + str(self._color) + "\n"
 
