@@ -48,6 +48,8 @@ from ._create_franka_emika_3 import _create_franka_emika_3
 from ._create_davinci import _create_davinci
 from ._create_magician_e6 import _create_magician_e6
 
+from ._constrained_control import _constrained_control
+
 import os
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
@@ -1244,3 +1246,15 @@ class Robot:
     """
 
         return _check_free_configuration(self, q, htm, obstacles, check_joint, check_auto, tol, dist_tol, no_iter_max, mode)
+    
+    def constrained_control(self, htm_tg, q=None, obstacles=[], htm=None, 
+                              Kp =  2.0, eta_obs = 0.3, eta_auto = 0.3, eta_joint = 0.3, 
+                              eps_to_obs = 0.003, h_to_obs = 0.003, 
+                              eps_auto = 0.02,  h_auto = 0.05, 
+                              d_safe_obs = 0.02, d_safe_auto = 0.002, d_safe_jl = (np.pi/180)*5,
+                              eps_reg = 0.01):
+        
+        return _constrained_control(self, htm_tg, q, obstacles, htm, Kp, eta_obs, eta_auto, eta_joint, 
+                              eps_to_obs, h_to_obs, eps_auto,  h_auto, d_safe_obs, d_safe_auto, d_safe_jl,eps_reg)
+        
+        

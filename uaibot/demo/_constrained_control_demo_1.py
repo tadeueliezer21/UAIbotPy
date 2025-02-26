@@ -48,8 +48,9 @@ def _constrained_control_demo_1():
     d_safe_obs = 0.02
     d_safe_auto = 0.002
     d_safe_jl = (np.pi/180)*5
-    tolp=1 #1mm error tolerance
-    tolo=1 #1deg error tolerance
+    tolp=1.0 #1mm error tolerance
+    tolo=1.0 #1deg error tolerance
+    eps_reg = 0.01
 
     #Main loop
     t = 0
@@ -89,7 +90,7 @@ def _constrained_control_demo_1():
         #Create the optimization problem
         A =    np.matrix(np.vstack( (A_obj, A_auto, A_joint) ) )
         b =    -eta * np.matrix(np.vstack( (b_obj, b_auto, b_joint) ) )
-        H = 2*(Jr.transpose() * Jr + 0.01 *np.identity(7))
+        H = 2*(Jr.transpose() * Jr + eps_reg *np.identity(7))
         f = Jr.transpose() * Kp * funF(r)
         
         #Solve QP and obtain joint velocity
@@ -115,7 +116,7 @@ def _constrained_control_demo_1():
         dmin_auto = 1000*dr_auto_0.get_closest_item().distance
         
         str_msg = "\rt = "+str(round(t,2))+" s, epx = "+str(epx)+" mm, epy = "+str(epy)+" mm, epz = "+str(epz)+" mm, "
-        str_msg += "eox = "+str(epx)+" deg, eoy = "+str(epy)+" deg, eoz = "+str(epz)+" deg"
+        str_msg += "eox = "+str(epx)+" deg, eoy = "+str(epy)+" deg, eoz = "+str(epz)+" deg     "
         
         prox_joints = (180/np.pi) * min((qr-q_min).min(), (q_max - qr).min())
         
