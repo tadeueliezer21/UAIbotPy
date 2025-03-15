@@ -361,9 +361,10 @@ class Utils:
         if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
             raise Exception("c++ mode is set, but .so file was not loaded!")
 
-        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-            n, m = A.shape
+        n, m = A.shape
         
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            
             M = np.block([
                 [eps * np.eye(m), -A.T],
                 [A, np.eye(n)]
@@ -372,9 +373,9 @@ class Utils:
             rhs = np.concatenate((np.zeros((m,1)), b))
             solution = np.linalg.solve(M, rhs)
             
-            return np.matrix(solution[:m])
+            return np.matrix(solution[:m]).reshape((n,1))
         else:
-            return ub_cpp.dp_inv_solve(A,b,eps)
+            return np.matrix(ub_cpp.dp_inv_solve(A,b,eps)).reshape((n,1))
                  
 
     @staticmethod

@@ -100,7 +100,8 @@ setup(
         "scipy>=1.10",  
         "setuptools>=58.0.4",
         "quadprog>=0.1.13",
-        "matplotlib >= 3.10.0"
+        "matplotlib >= 3.10.0",
+        "requests"
     ],
     setup_requires=["pybind11>=2.10"],
 )
