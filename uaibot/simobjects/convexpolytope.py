@@ -228,7 +228,6 @@ class ConvexPolytope:
         self._name = name
         self._mass = 1
         self._frames = []
-        self._volume = 0
         self._max_time = 0
         
         xmin=1e6
@@ -253,7 +252,7 @@ class ConvexPolytope:
                  
 
         if mesh_material is None:
-            self._mesh_material = MeshMaterial(color=color, opacity=opacity, metalness=0.2, roughness=0.2, side="DoubleSide")
+            self._mesh_material = MeshMaterial(color=color, opacity=opacity, side="DoubleSide")
         else:
             self._mesh_material = mesh_material
 

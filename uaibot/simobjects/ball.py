@@ -115,11 +115,10 @@ class Ball:
         self._name = name
         self._mass = 1
         self._frames = []
-        self._volume = (4 / 3) * np.pi * self.radius * self.radius * self.radius
         self._max_time = 0
 
         if mesh_material is None:
-            self._mesh_material = MeshMaterial(color=color, opacity=opacity, metalness=1, roughness=1)
+            self._mesh_material = MeshMaterial(color=color, opacity=opacity)
         else:
             self._mesh_material = mesh_material
 

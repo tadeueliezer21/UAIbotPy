@@ -169,7 +169,7 @@ class Simulation:
     # Constructor
     #######################################
 
-    def __init__(self, obj_list=[], ambient_light_intensity=12, ldr_urls=None, camera_type="perspective", width=[],
+    def __init__(self, obj_list=[], ambient_light_intensity=4, ldr_urls=None, camera_type="perspective", width=[],
                  height=[], show_world_frame = True, show_grid = True, load_screen_color="#19bd39", background_color="#F5F6FA",
                  camera_start_pose = None):
 
@@ -240,15 +240,6 @@ class Simulation:
         self._background_color = background_color
         self._camera_start_pose = np.array(camera_start_pose).tolist()
    
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.5]))
-        
-        self.add(light1)
-        self.add(light2)
-        self.add(light3)
-        self.add(light4)
              
         #Add reference frame
         if self._show_world_frame:
