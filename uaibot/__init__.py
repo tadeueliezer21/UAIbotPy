@@ -1,24 +1,38 @@
 __version__ = '0.0.21'
 
-from .robot import *
-from .demo import *
-from .utils import *
-from uaibot.robot.links import *
-from .simulation import *
-from sfm import *
-from uaibot.simobjects.ball import *
-from uaibot.simobjects.box import *
-from uaibot.simobjects.smoothbox import *
-from uaibot.simobjects.cylinder import *
-from uaibot.simobjects.cone import *
-from uaibot.graphics.meshmaterial import *
-from uaibot.simobjects.pointlight import *
-from uaibot.graphics.texture import *
-from uaibot.simobjects.frame import *
-from uaibot.graphics.model3d import *
-from uaibot.simobjects.pointcloud import *
-from uaibot.simobjects.vector import *
-from uaibot.simobjects.rigidobject import *
-from uaibot.simobjects.group import *
-from uaibot.simobjects.htmldiv import *
-from uaibot.algorithm.rrt import *
+import os
+import sys
+
+# Get the directory of the current __init__.py file
+current_dir = os.path.dirname(__file__)
+
+# Add the directory of __init__.py to sys.path
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+
+
+try:
+    import uaibot_cpp_bind as ub_cpp
+    os.environ['CPP_SO_FOUND'] = '1'
+except ImportError:
+    print("INFO: CPP .so not found! Only python mode is available!")
+    os.environ['CPP_SO_FOUND'] = '0'
+
+from robot import *
+from demo import *
+from utils import *
+from simulation import *
+from graphics import *
+from simobjects import *
+
+import numpy as np
+np.set_printoptions(
+    precision=4,   
+    linewidth=80,  
+    suppress=True  
+)
+
+
+
+

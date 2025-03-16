@@ -1,10 +1,10 @@
 from utils import *
 import numpy as np
 
-
 def _check_free_configuration(self, q=None, htm=None, obstacles=[],
                               check_joint=True, check_auto=True,
-                              tol=0.0005, dist_tol=0.005, no_iter_max=20):
+                              tol=0.0005, dist_tol=0.005, no_iter_max=20, mode='auto'):
+    
     n = len(self.links)
 
     if q is None:
@@ -13,6 +13,9 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
         htm = self.htm
 
     # Error handling
+    if mode not in ['python','c++','auto']:
+        raise Exception("The parameter 'mode' should be 'python,'c++', or 'auto'.")
+
     if not Utils.is_a_vector(q, n):
         raise Exception("The parameter 'q' should be a " + str(n) + " dimensional vector.")
 
@@ -23,8 +26,8 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
         raise Exception("The parameter 'list' should be a list of simple objects.")
 
     for obs in obstacles:
-        if not Utils.is_a_simple_object(obs):
-            raise Exception("The parameter 'list' should be a list of simple objects.")
+        if not Utils.is_a_metric_object(obs):
+            raise Exception("The parameter 'list' should be a list of metric objects : " + str(Utils.IS_METRIC) + ".")
 
     if not str(type(check_joint)) == "<class 'bool'>":
         raise Exception("The parameter 'check_joint' should be a boolean.")
@@ -41,11 +44,33 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
     if not Utils.is_a_natural_number(no_iter_max) or no_iter_max <= 0:
         raise Exception("The parameter 'no_iter_max' should be a positive natural number.")
 
-
+    if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+        raise Exception("c++ mode is set, but .so file was not loaded!")
     # end error handling
 
+    if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+        return _check_free_configuration_python(self, q, htm, obstacles, check_joint, check_auto, tol, dist_tol, no_iter_max)
+    else:
+        obstacles_cpp=[]
+        for obs in obstacles:
+            if Utils.get_uaibot_type(obs) == 'uaibot.CPP_GeometricPrimitives':
+                obstacles_cpp.append(obs)
+            else:
+                obstacles_cpp.append(Utils.obj_to_cpp(obs))
+                
+        cfcres = self.cpp_robot.check_free_configuration(q, htm, obstacles_cpp, check_joint, check_auto, tol, dist_tol, no_iter_max)
+        return cfcres.isfree, cfcres.message, cfcres.info
 
-    jac_dh, mth_dh = self.jac_geo(q, "dh", htm)
+
+        
+def _check_free_configuration_python(self, q=None, htm=None, obstacles=[],
+                              check_joint=True, check_auto=True,
+                              tol=0.0005, dist_tol=0.005, no_iter_max=20):
+    
+    n = len(self.links)
+
+    #_, mth_dh = self.jac_geo(q, "dh", htm)
+    mth_dh = self.fkm(q, "dh", htm)
 
     col_object_copy = []
 
@@ -83,7 +108,7 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
     if check_joint:
         k = 0
         while not collided and k < n:
-            collided = self.q[k] < self.joint_limit[k, 0]
+            collided = q[k] < self.joint_limit[k, 0]
             if collided:
                 message = "Joint number " + str(k) + " is below minimum limit."
                 info = [0, k]
@@ -92,7 +117,7 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
 
         k = 0
         while not collided and k < n:
-            collided = self.q[k] > self.joint_limit[k, 1]
+            collided = q[k] > self.joint_limit[k, 1]
             if collided:
                 message = "Joint number " + str(k) + " is above maximum limit."
                 info = [1, k]
@@ -132,6 +157,7 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
 
                 _, _, d = Utils.compute_dist(col_object_copy[i][isub], col_object_copy[j][jsub] \
                                                          , None, tol, no_iter_max)
+                
                 if d < dist_tol:
                     collided = True
                     message = "Collision between link " + str(i) + " (col object " + str(isub) + ") and link " + str(

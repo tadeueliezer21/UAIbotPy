@@ -11,7 +11,7 @@ class Vector:
 
    name : string
        The object's name.
-       (default: 'genVector').
+       (default: '' (automatic)).
 
    color : string
        The object's color, a HTML - compatible string.

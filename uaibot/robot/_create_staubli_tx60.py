@@ -37,23 +37,21 @@ def _create_staubli_tx60(htm, name, color, opacity):
     # Collision model
     col_model = [[], [], [], [], [], []]
 
-    # col_model[0].append(Box(htm=Utils.trn([-0.37, 0, 0]),
-    #                             name=name + "_C0_0", width=0.25, depth=0.16, height=0.52, color="orange", opacity=0.3))
 
-
-    #col_model[5].append(Ball(htm=np.identity(4),
-    #                             name=name + "_C5_0", radius=0.0362, color="red", opacity=0.3))
-
-    col_model[0].append(Cylinder(htm=Utils.trn([0, -0.15, 0]) @ Utils.rotx(-3.14 / 2),
+    col_model[0].append(Cylinder(htm=Utils.trn([0, -0.15, 0]) * Utils.rotx(-3.14 / 2),
                                  name=name + "_C0_0", radius=0.1, height=0.45, color="red", opacity=0.3))
-    col_model[1].append(Box(htm=Utils.trn([-0.15, 0, -0.125]) @ Utils.rotz(3.14 / 2) @ Utils.rotx(-3.14 / 2 - c * 7.3),
+    col_model[1].append(Box(htm=Utils.trn([-0.15, 0, -0.125]) * Utils.rotz(3.14 / 2) * Utils.rotx(-3.14 / 2 - c * 7.3),
                             name=name + "_C1_0", width=0.18, depth=0.1, height=0.45, color="blue", opacity=0.3))
     col_model[2].append(Box(htm=Utils.trn([0, -0.02, 0]),
-                            name=name + "_C2_0", width=0.17, depth=0.2, height=0.25, color="green", opacity=0.3))
+                            name=name + "_C2_0", width=0.17, depth=0.21, height=0.25, color="green", opacity=0.3))
     col_model[3].append(Box(htm=Utils.trn([0, -0.08, 0]),
                             name=name + "_C3_0", width=0.15, depth=0.27, height=0.13, color="orange", opacity=0.3))
 
     # Create 3d objects
+    htm1 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, 1., -0.005], [0., -1., 0.0008, 0.], [0., 0., 0., 1.]])
+    htm2 = np.matrix([[0.0008, 0.1279, 0.9918, -0.31], [-1., 0.0001, 0.0008, 0.], [0., -0.9918, 0.1279, 0.02], [0., 0., 0., 1.]])
+    htm3 = np.matrix([[-1., 0.0016, 0., -0.], [-0.0016, -1., 0., 0.005], [0., 0., 1., 0.], [0., 0., 0., 1.]])
+    htm4 = np.matrix([[-1., -0.0016, 0., 0.], [0., 0.0008, 1., -0.31], [-0.0016, 1., -0.0008, 0.], [0., 0., 0., 1.]])
 
     base_3d_obj = [Model3D(
         'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/base_link.stl',
@@ -68,7 +66,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
         [Model3D(
             'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_1.stl',
             scale,
-            Utils.trn([0, -0.005, 0]) @ Utils.rotx(-3.14 / 2),
+            htm1,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                          opacity=opacity))
          ]
@@ -78,7 +76,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
         [Model3D(
             'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_2.stl',
             scale,
-            Utils.trn([-0.31, 0, 0.02]) @ Utils.rotz(-3.14 / 2) @ Utils.rotx(-3.14 / 2 + c * 7.3),
+            htm2,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                          opacity=opacity))
          ]
@@ -88,7 +86,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
         [Model3D(
             'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_3.stl',
             scale,
-            Utils.rotz(-3.14) @ Utils.trn([0, 0.045 - 0.05, 0]),
+            htm3,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                          opacity=opacity))
          ]
@@ -98,7 +96,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
         [Model3D(
             'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/StaubliTX60/link_4.stl',
             scale,
-            Utils.trn([0, -0.31, 0]) @ Utils.roty(3.14) @ Utils.rotx(-3.14 / 2),
+            htm4,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                          opacity=opacity))
          ]
@@ -123,50 +121,12 @@ def _create_staubli_tx60(htm, name, color, opacity):
          ]
     )
 
-    # Inertial parameter of the robots
-
-    list_com_coordinates = [[0, -0.15, 0],
-                            [-0.15, 0, -0.125],
-                            [0, -0.02, 0],
-                            [0, -0.08, 0],
-                            [0.0, 0.0, 0.03],
-                            [0.0, 0.0, 0.0]]
-
-    list_inertia_mat = []
-
-    list_inertia_mat.append(np.array([[0.8386, 0.0000, 0.0000],
-                                      [0.0000, 0.1001, 0.0002],
-                                      [0.0000, 0.0002, 0.8386]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_inertia_mat.append(np.array( [[ 0.2198, 0.0000, -0.2150],
-                                       [ 0.0000, 0.6621, -0.0000],
-                                       [-0.2150,-0.0000,  0.4614]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_inertia_mat.append(np.array( [[ 0.0965, -0.0000,  0.0000],
-                                       [-0.0000,  0.0691,  0.0000],
-                                       [ 0.0000,  0.0000,  0.1077]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-
-    list_inertia_mat.append(np.array( [[ 0.1070, -0.0001, -0.0000],
-                                       [-0.0001,  0.0245,  0.0000],
-                                       [-0.0000,  0.0000,  0.1035]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_inertia_mat.append(np.array([[0., 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., 0.]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_inertia_mat.append(np.array([[0., 0., 0.],
-                                      [0., 0., 0.],
-                                      [0., 0., 0.]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_mass = [20.026, 11.474, 12.040, 7.458, 0.300, 0.300]
-
     # Create links
 
     links = []
     for i in range(n):
         links.append(Link(i, link_info[0][i], link_info[1][i], link_info[2][i], link_info[3][i], link_info[4][i],
-                          link_3d_obj[i], list_mass[i], list_com_coordinates[i], list_inertia_mat[i]))
+                          link_3d_obj[i]))
 
         for j in range(len(col_model[i])):
             links[i].attach_col_object(col_model[i][j], col_model[i][j].htm)
@@ -179,5 +139,5 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     #Create joint limits
     joint_limits = (np.pi/180)*np.matrix([[-180,180],[-127.5+90, 127.5+90],[-142.5+90, 142.5+90],[-270,270],[-121,132.5],[-270,270]])
-
+    
     return base_3d_obj, links, htm_base_0, np.identity(4), q0, joint_limits

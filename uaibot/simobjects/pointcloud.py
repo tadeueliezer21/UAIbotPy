@@ -1,6 +1,9 @@
 from utils import *
 import numpy as np
-
+import os
+if os.environ['CPP_SO_FOUND']=="1":
+    import uaibot_cpp_bind as ub_cpp
+from simobjects.box import *
 
 class PointCloud:
     """
@@ -14,7 +17,7 @@ class PointCloud:
 
    name : string
        The object's name.
-       (default: 'genPointCloud').
+       (default: '' (automatic)).
 
    size : positive float
        The size of each point in the point cloud.
@@ -52,9 +55,48 @@ class PointCloud:
         """The points that compose the point cloud."""
         return np.array(self._points)
 
+    @property
+    def cpp_pointcloud(self):
+        """The c++ version of the point cloud"""
+        return self._cpp_pointcloud
+    
     #######################################
     # Constructor
     #######################################
+
+    @staticmethod
+    def try_conversion(vector_list):
+        if not isinstance(vector_list, list):
+            raise Exception("Error")
+
+        stacked_vectors = [] 
+
+        for vec in vector_list:
+
+            if not (isinstance(vec, np.ndarray) or isinstance(vec, list)):
+                raise   Exception("Error")
+            if isinstance(vec, list):
+                if not ( len(vec) == 3):
+                    raise   Exception("Error")
+                else:
+                    vec = np.matrix(vec).reshape((3,1))    
+            if vec.shape == (3,):
+                vec = vec.reshape(3, 1)  
+            elif vec.shape == (1, 3):
+                vec = vec.T 
+            elif vec.shape == (3, 1):
+                pass  
+            else:
+                raise  Exception("Error")
+
+            stacked_vectors.append(vec)
+
+        if not stacked_vectors:
+            raise  Exception("Error")
+
+        return np.matrix(np.hstack(stacked_vectors))
+
+
 
     def __init__(self, name="", points=[], size=0.1, color="blue"):
 
@@ -62,9 +104,10 @@ class PointCloud:
         if not Utils.is_a_number(size) or size < 0:
             raise Exception("The parameter 'size' should be a positive float")
 
+
         if name=="":
             name="var_pointcloud_id_"+str(id(self))
-
+            
         if not (Utils.is_a_name(name)):
             raise Exception(
                 "The parameter 'name' should be a string. Only characters 'a-z', 'A-Z', '0-9' and '_' are allowed. It should not begin with a number.")
@@ -72,19 +115,29 @@ class PointCloud:
         if not Utils.is_a_color(color):
             raise Exception("The parameter 'color' should be a color")
 
-        if not Utils.is_a_matrix(points, 3):
-            raise Exception("The parameter 'points' should be a matrix with 3 rows.")
-
+        if isinstance(points, list) or (not Utils.is_a_matrix(points, 3)):
+            try:
+                self._points = PointCloud.try_conversion(points)
+            except:
+                raise Exception("The parameter 'points' should be a matrix with 3 rows or a list in which all the entries are 3D points (numpy or list of values).")
+        else:
+            self._points = np.matrix(points)
+            
         # end error handling
 
         self._name = name
         self._size = size
-        self._points = np.matrix(points)
         self._color = color
         self._frames = []
         self._max_time = 0
+        
+        if os.environ['CPP_SO_FOUND']=='1':
+            list_of_points = [self._points[:, i:i+1] for i in range(self._points.shape[1])]
+            self._cpp_pointcloud = ub_cpp.CPP_GeometricPrimitives.create_pointcloud(list_of_points)
+        else:
+            self._cpp_pointcloud = []
 
-        self.add_ani_frame(0, 0, np.shape(points)[1])
+        self.add_ani_frame(0, 0, np.shape(self._points)[1])
 
     #######################################
     # Std. Print
@@ -92,7 +145,7 @@ class PointCloud:
 
     def __repr__(self):
 
-        string = "Point cloud '" + self._name + "' with " + str(len(self.points)) + " points: \n\n"
+        string = "Point cloud '" + self._name + "' with " + str(np.shape(self.points)[1]) + " points: \n\n"
         string += " Size: " + str(self.size) + "\n"
         string += " Color: " + str(self._color) + "\n"
 
@@ -163,3 +216,98 @@ class PointCloud:
         string += "//USER INPUT GOES HERE"
 
         return string
+
+    def copy(self):
+        return PointCloud(self.name + "_copy", np.matrix(self.points), self.size, self.color)
+
+    def aabb(self, mode='auto'):
+        """
+    Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
+
+    Parameters
+    ----------
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
+    Returns
+    -------
+     aab: the AABB as a uaibot.Box object
+    """
+
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = self._cpp_pointcloud
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            row_mins = self.points.min(axis=1) 
+            row_maxs = self.points.max(axis=1)  
+            xmin, ymin, zmin = row_mins
+            xmax, ymax, zmax = row_maxs
+            w = xmax-xmin
+            d = ymax-ymin
+            h = zmax-zmin
+            center = np.matrix([(xmax+xmin)/2, (ymax+ymin)/2, (zmax+zmin)/2]).transpose()
+            return Box(name = "aabb_"+self.name, width= w, depth=d, height=h, htm=Utils.trn(center),opacity=0.5)
+        else:
+            aabb = obj_cpp.get_aabb()
+            return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5)
+
+
+    # Compute distance to an object
+    def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+        return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
+    
+    # Compute the projection of a point into an object
+    def projection(self, point, h=0, eps = 0, mode='auto'):
+        """
+    The projection of a point in the object, that is, the
+    closest point in the object to a point 'point'.
+
+    Parameters
+    ----------
+    point : 3D vector
+        The point for which the projection will be computed.
+
+    h : positive float
+        Smoothing parameter (only valid in c++ mode)
+        (default: 0).            
+
+    eps : positive float
+        Smoothing parameter (only valid in c++ mode)
+        (default: 0).      
+        
+    Returns
+    -------
+     proj_point : 3D vector
+        The projection of the point 'point' in the object.
+
+     d : positive float
+        The distance between the object and 'point'.
+    """
+
+
+        if ( ( h > 0 or eps > 0) and ((mode == 'python') or ((mode=='auto' and os.environ['CPP_SO_FOUND']=='0')))):
+            raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
+               
+        if not Utils.is_a_number(h) or h < 0:
+            raise Exception("The optional parameter 'h' must be a nonnegative number.")
+
+        if not Utils.is_a_number(eps) or eps < 0:
+            raise Exception("The optional parameter 'eps' must be a nonnegative number.")
+        
+        if not Utils.is_a_vector(point, 3):
+            raise Exception("The parameter 'point' should be a 3D vector.")
+        
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+
+        # end error handling
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            raise Exception("Projection to point cloud available only for c++ mode!")
+        else:
+            pr = self._cpp_pointcloud.projection(np.matrix(point).reshape((3,1)), h, eps)
+            return np.matrix(pr.proj).transpose(), pr.dist

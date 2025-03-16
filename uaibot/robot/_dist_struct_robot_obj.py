@@ -21,17 +21,17 @@ class DistStructLinkObj:
     @property
     def point_link(self):
         """The closest point (witness) in the link. Written in scenario coordinates and in meters."""
-        return np.array(self._point_link)
+        return np.matrix(self._point_link)
 
     @property
     def point_object(self):
         """The closest point (witness) in the object. Written in scenario coordinates and in meters."""
-        return np.array(self._point_object)
+        return np.matrix(self._point_object)
 
     @property
     def jac_distance(self):
         """The Jacobian of the distance in the robot's configuration space."""
-        return np.array(self._jac_distance)
+        return np.matrix(self._jac_distance)
 
     #######################################
     # Constructor

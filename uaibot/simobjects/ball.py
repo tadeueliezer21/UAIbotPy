@@ -1,7 +1,9 @@
 from utils import *
 import numpy as np
 from graphics.meshmaterial import *
-
+from simobjects.box import *
+from simobjects.pointcloud import *
+import os
 
 class Ball:
     """
@@ -15,7 +17,7 @@ class Ball:
 
   name : string
       The object's name.
-      (default: 'genBall').
+      (default: '' (automatic)).
 
   radius : positive float
       The object's radius, in meters.
@@ -68,13 +70,10 @@ class Ball:
 
     @property
     def mesh_material(self):
-        """Mesh properties of the object."""
+        """Mesh material properties of the object."""
         return self._mesh_material
 
-    @property
-    def volume(self):
-        """The volume of the object, in m³."""
-        return self._volume
+
 
     #######################################
     # Constructor
@@ -116,7 +115,6 @@ class Ball:
         self._name = name
         self._mass = 1
         self._frames = []
-        self._volume = (4 / 3) * np.pi * self.radius * self.radius * self.radius
         self._max_time = 0
 
         if mesh_material is None:
@@ -224,85 +222,94 @@ class Ball:
 
         return string
 
-    # Compute inertia matrix with respect to the inertia frame
-    def inertia_matrix(self, htm=None):
-        """
-    The 3D inertia matrix of the object, written in the world frame.
-    Assume that the transformation between the word frame and the object frame is 'htm'.
-
-    Parameters
-    ----------
-    htm : 4x4 numpy array or 4x4 nested list
-        The object's configuration for which the inertia matrix will be computed
-        (default: the same as the current HTM).
-
-    Returns
-    -------
-     inertia_matrix : 3x3 numpy array
-        The 3D inertia matrix.
-    """
-
-        if htm is None:
-            htm = self._htm
-
-        # Error handling
-        if not Utils.is_a_matrix(htm, 4, 4):
-            raise Exception("The optional parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
-        # end error handling
-
-        S = Utils.S(htm[0:3, 3])
-        I = (2 / 5) * self.mass * (self._radius * self._radius)
-
-        return I * np.identity(3) - self.mass * S * S
-
     def copy(self):
         """Return a deep copy of the object, without copying the animation frames."""
         return Ball(self.htm, self.name + "_copy", self.radius, self.mass, self.color)
 
-    def aabb(self):
+    def aabb(self, mode='auto'):
         """
-    Compute the width, depth and height of an axis aligned bounding box (aabb) that
-    covers the object. It also considers the current orientation.
+    Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
 
+    Parameters
+    ----------
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
     Returns
     -------
-     width : positive float
-        The width of the box, in meters.
-
-     depth : positive float
-        The depth of the box, in meters.
-
-     height : positive float
-        The depth of the box, in meters.
+     aab: the AABB as a uaibot.Box object
     """
-        return 2 * self.radius, 2 * self.radius, 2 * self.radius
+    
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+        
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            drad = 2 * self.radius
+            return Box(name = "aabb_"+self.name, width= drad, depth=drad, height=drad, htm=Utils.trn(self.htm[0:3,-1]),opacity=0.5)
+        else:
+            aabb = obj_cpp.get_aabb()
+            return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5)       
+            
+        
 
-    #Generate samples
-    def generate_samples(self, delta=0.025):
+    def to_point_cloud(self, disc=0.025, mode = 'auto'):
+        """
+    Transform the object into a PointCloud object using the discretization 'delta'.
 
-        N = round(self.radius / delta)+1
-        P = np.matrix(np.zeros((3, 0)))
-        for i in range(N):
-            phi =  np.pi*(i/N)
-            M = round(N*np.sin(phi))+1
-            for j in range(M):
-                theta = 2 * np.pi *(j/M)
-                x = self.radius * np.sin(phi) * np.cos(theta)
-                y = self.radius * np.sin(phi) * np.sin(theta)
-                z = self.radius * np.cos(phi)
-                P = np.block([P, np.matrix([x, y,  z]).transpose()])
+    Parameters
+    ----------
+    
+    disc: positive float
+        Discretization.
+        (default: 0.025)
 
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto') 
+            
+    Returns
+    -------
+     pointcloud: the pointcloud object.
+    """
 
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
+        
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            N = round(self.radius / disc)+1
+            P = np.matrix(np.zeros((3, 0)))
+            for i in range(N):
+                phi =  np.pi*(i/N)
+                M = round(N*np.sin(phi))+1
+                for j in range(M):
+                    theta = 2 * np.pi *(j/M)
+                    x = self.radius * np.sin(phi) * np.cos(theta)
+                    y = self.radius * np.sin(phi) * np.sin(theta)
+                    z = self.radius * np.cos(phi)
+                    P = np.block([P, np.matrix([x, y,  z]).transpose()])
 
-        for i in range(np.shape(P)[1]):
-            P[:,i] = self.htm[0:3,0:3]*P[:,i]+self.htm[0:3,-1]
+            for i in range(np.shape(P)[1]):
+                P[:,i] = self.htm[0:3,0:3]*P[:,i]+self.htm[0:3,-1]
 
-        return P
-
-
-
-    # Compute the projection of a point into an object
-    def projection(self, point, htm=None):
+            return PointCloud(points = P, color = self.color, size = disc)
+        else:
+            return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc)
+      
+    # Compute distance to an object
+    def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+        return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
+        
+        
+    def projection(self, point, h=0, eps = 0, mode='auto'):
         """
     The projection of a point in the object, that is, the
     closest point in the object to a point 'point'.
@@ -312,10 +319,18 @@ class Ball:
     point : 3D vector
         The point for which the projection will be computed.
 
-    htm : 4x4 numpy array or 4x4 nested list
-        The object's configuration
-        (default: the same as the current HTM).            
+    h : positive float
+        Smoothing parameter (only valid in c++ mode)
+        (default: 0).            
 
+    eps : positive float
+        Smoothing parameter (only valid in c++ mode)
+        (default: 0).     
+         
+    mode : string
+        'c++' for the c++ implementation, 'python' for the python implementation
+        and 'auto' for automatic ('c++' is available, else 'python')
+        (default: 'auto')        
     Returns
     -------
      proj_point : 3D vector
@@ -325,25 +340,38 @@ class Ball:
         The distance between the object and 'point'.
     """
 
-        if htm is None:
-            htm = self._htm
 
-        # Error handling
-        if not Utils.is_a_matrix(htm, 4, 4):
-            raise Exception("The optional parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
+        if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
+            obj_cpp = Utils.obj_to_cpp(self) 
+            
+        if ( ( h > 0 or eps > 0) and ((mode == 'python') or ((mode=='auto' and os.environ['CPP_SO_FOUND']=='0')))):
+            raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
+               
+        if not Utils.is_a_number(h) or h < 0:
+            raise Exception("The optional parameter 'h' must be a nonnegative number.")
 
+        if not Utils.is_a_number(eps) or eps < 0:
+            raise Exception("The optional parameter 'eps' must be a nonnegative number.")
+        
         if not Utils.is_a_vector(point, 3):
             raise Exception("The parameter 'point' should be a 3D vector.")
+        
+        if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+            raise Exception("c++ mode is set, but .so file was not loaded!")
 
         # end error handling
 
-        dd = np.linalg.norm(point - htm[0:3, 3])
-        d = max(dd-self.radius,0)
+        if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+            dd = np.linalg.norm(point - self._htm[0:3, 3])
+            d = max(dd-self.radius,0)
 
-        if d == 0:
-            return np.matrix(point).reshape((3,1)), d
+            if d == 0:
+                return np.matrix(point).reshape((3,1)), d
+            else:
+                cp = self._htm[0:3, 3] + self.radius * (np.matrix(point).reshape((3,1)) - self._htm[0:3, 3]) / dd
+                return cp, d
         else:
-            cp = htm[0:3, 3] + self.radius * (np.matrix(point).reshape((3,1)) - htm[0:3, 3]) / dd
-            return cp, d
+            pr = obj_cpp.projection(np.matrix(point).reshape((3,1)), h, eps)
+            return np.matrix(pr.proj).transpose(), pr.dist
 
 

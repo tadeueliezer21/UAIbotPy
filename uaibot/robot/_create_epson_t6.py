@@ -35,9 +35,6 @@ def _create_epson_t6(htm, name, color, opacity):
     # Collision model
     col_model = [[], [], []]
 
-    # col_model[0].append(Box(htm=Utils.trn([-0.37, 0, 0]),
-    #                             name=name + "_C0_0", width=0.25, depth=0.16, height=0.52, color="orange", opacity=0.3))
-
     col_model[0].append(Box(htm=Utils.trn([-0.15, 0, 0.03]),
                             name=name + "_C0_0", width=0.375, height=0.05, depth=0.1, color="red", opacity=0.3))
 
@@ -48,11 +45,18 @@ def _create_epson_t6(htm, name, color, opacity):
                                  name=name + "_C2_0", radius=0.03, height=0.4, color="blue", opacity=0.3))
 
     # Create 3d objects
+    htm1 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, -1., 0.], [0., 1., 0.0008, 0.], [0., 0., 0., 1.]])
+    htm2 = np.matrix([[1., 0., 0., -0.325], [0., 0.0008, -1., 0.], [0., 1., 0.0008, 0.], [0., 0., 0., 1.]])
+    htm3 = np.matrix([[0., -0.0008, 1., 0.], [1., 0.0008, 0., 0.], [-0.0008, 1., 0.0008, 0.22], [0., 0., 0., 1.]])
+    htm4 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, 1., 0.], [0., -1., 0.0008, -0.06], [0., 0., 0., 1.]])
+    htm5 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, 1., 0.], [0., -1., 0.0008, -0.4], [0., 0., 0., 1.]])
+    
+    
 
     base_3d_obj = [
         Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/EpsonT6/Base.obj',
                 0.001,
-                Utils.rotx(3.14 / 2),
+                htm1,
                 MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
                              color=color, opacity=opacity))]
 
@@ -61,12 +65,12 @@ def _create_epson_t6(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/EpsonT6/T6Axis1.obj',
                  0.001,
-                 Utils.trn([-1.3 / 4, 0, 0]) @ Utils.rotx(3.14 / 2),
+                 htm2,
                  MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                               opacity=opacity)),
          Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/EpsonT6/T6Cable.obj',
                  0.001,
-                 Utils.trn([0, 0, 0.22]) @ Utils.roty(3.14 / 2) @ Utils.rotz(3.14 / 2),
+                 htm3,
                  MeshMaterial(color="black", opacity=opacity))
          ]
     )
@@ -74,7 +78,7 @@ def _create_epson_t6(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/EpsonT6/T6Axis2.obj',
                  0.001,
-                 Utils.trn([0, 0, -0.06]) @ Utils.rotx(-3.14 / 2),
+                 htm4,
                  MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                               opacity=opacity))]
     )
@@ -82,39 +86,17 @@ def _create_epson_t6(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/EpsonT6/T6Axis3.obj',
                  0.001,
-                 Utils.trn([0, 0, (-1.6) / 4]) @ Utils.rotx(-3.14 / 2),
+                 htm5,
                  MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                               opacity=opacity))]
     )
-
-    # Intertial parameters
-
-    list_com_coordinates = [[-0.18, 0, 0.025],
-                            [-0.15, 0, -0.15],
-                            [0, 0, -0.2]]
-
-    list_inertia_mat = []
-
-    list_inertia_mat.append(np.array([[0.0012, 0., 0.0031],
-                                      [0., 0.0392, 0.],
-                                      [0.0031, 0., 0.0384]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_inertia_mat.append(np.array([[0.1381, 0., -0.1128],
-                                      [0., 0.2946, -0.],
-                                      [-0.1128, -0., 0.1899]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_inertia_mat.append(np.array([[0.028, 0., 0.],
-                                      [0., 0.028, 0.],
-                                      [0., 0., 0.0002]]) + np.diag([3.0e-4, 3.0e-4, 4.5e-4]))
-
-    list_mass = [0.8652, 5.0149, 0.5219]
 
     # Create links
 
     links = []
     for i in range(n):
         links.append(Link(i, link_info[0][i], link_info[1][i], link_info[2][i], link_info[3][i], link_info[4][i],
-                          link_3d_obj[i], list_mass[i], list_com_coordinates[i], list_inertia_mat[i]))
+                          link_3d_obj[i]))
 
         for j in range(len(col_model[i])):
             links[i].attach_col_object(col_model[i][j], col_model[i][j].htm)
@@ -129,4 +111,5 @@ def _create_epson_t6(htm, name, color, opacity):
     c = (np.pi/180)
     joint_limits = np.matrix([[-c*132,c*132],[-c*141,c*141],[0+0.02,0.15+0.02]])
 
+    
     return base_3d_obj, links, htm_base_0, np.identity(4), q0, joint_limits
