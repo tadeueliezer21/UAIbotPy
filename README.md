@@ -50,7 +50,7 @@ After it is done, we test if it is working by running the following command
 ```python
 import uaibot as ub
 
-sim = ub.Demo.control_demo_1()
+sim = ub.Demo.constrained_control_demo_1()
 ```
 
 This will generate a simulation that was already pre-coded into UAIbot. It will return the simulation variable (sim) and automatically run the animation for you!
@@ -72,7 +72,7 @@ The <strong>sim.run()</strong> may not work in some IDEs. In that case, you need
 ```python
 import uaibot as ub
 
-sim = ub.Demo.control_demo_1()
+sim = ub.Demo.constrained_control_demo_1()
 sim.save('C:\\','test_uaibot')
 ```
 
