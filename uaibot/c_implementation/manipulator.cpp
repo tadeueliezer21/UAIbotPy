@@ -652,7 +652,7 @@ ProjResult projection_box(float lx, float ly, float lz, Matrix4f htm, Vector3f p
     float R = 0.5 * (x * x + y * y + z * z - cr);
 
     float alpha = eps;
-    float beta = 3 * eps;
+    float beta = 0 * 3 * eps;
     float gamma = 1 - 2 * (alpha + beta);
 
     float F = alpha * R + beta * G;
@@ -702,7 +702,7 @@ ProjResult projection_cylinder(float radius, float height, Matrix4f htm, Vector3
     float R = 0.5 * (x * x + y * y + z * z - cr);
 
     float alpha = eps;
-    float beta = 3 * eps;
+    float beta = 0 * 3 * eps;
     float gamma = 1 - 2 * (alpha + beta);
 
     float F = alpha * R + beta * G;
@@ -835,7 +835,7 @@ ProjResult projection_convexpolytope(MatrixXf A, VectorXf b, Matrix4f htm, Vecto
         float R = 0.5 * ((point_transformed-center).squaredNorm()- cr);
 
         float alpha = eps;
-        float beta = 3 * eps;
+        float beta = 0 * 3 * eps;
         float gamma = 1 - 2 * (alpha + beta);
 
         float F = alpha * R + beta * G;
