@@ -49,7 +49,7 @@ def _task_function_python(self, htm_des, q=None, htm=None):
     y_des = htm_des[0:3, 1]
     z_des = htm_des[0:3, 2]
 
-    jac_eef, htm_eef = self.jac_geo(q, "eef", htm)
+    jac_eef, htm_eef = self.jac_geo(q, "eef", htm, mode='python')
     p_eef = htm_eef[0:3, 3]
     x_eef = htm_eef[0:3, 0]
     y_eef = htm_eef[0:3, 1]

@@ -58,7 +58,11 @@ def _fkm_python(self, q, axis, htm):
             htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.rotz(self._links[i].theta)
 
         if self.links[i].joint_type == 1:
-            htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.trn([0, 0, q[i]])
+            if isinstance(q, (np.matrix, np.ndarray)):
+                qi =  float(np.ravel(q)[i])
+            elif isinstance(q, list):
+                qi = float(q[i])
+            htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.trn([0, 0, qi])
         else:
             htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.trn([0, 0, self._links[i].d])
 

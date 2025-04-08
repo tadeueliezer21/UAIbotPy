@@ -1820,8 +1820,8 @@ vector<FKResult> Manipulator::fk(const vector<VectorXf> &q, const vector<Matrix4
                     p_j_ant = (ind_cols > 0) ? fkres.get_p_dh(ind_cols - 1) : htm_0.block<3, 1>(0, 3);
                     z_j_ant = (ind_cols > 0) ? fkres.get_z_dh(ind_cols - 1) : htm_0.block<3, 1>(0, 2);
 
-                    v = (joint_type[ind_links] == 0) ? z_j_ant.cross(p_i - p_j_ant) : z_j_ant;
-                    w = (joint_type[ind_links] == 0) ? z_j_ant : Vector3f::Zero();
+                    v = (joint_type[ind_cols] == 0) ? z_j_ant.cross(p_i - p_j_ant) : z_j_ant;
+                    w = (joint_type[ind_cols] == 0) ? z_j_ant : Vector3f::Zero();
 
                     for (int ind_rows = 0; ind_rows < 3; ind_rows++)
                     {
