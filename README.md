@@ -61,7 +61,7 @@ Note that you will need to reinstall UAIBot every time you open GoogleColab sinc
 
 <h2>Using in desktop-based IDE's</h2>
 
-You can install the UAIBot package in a desktop-based IDE such as Pycharm. Install using the terminal
+You can install the UAIBot package locally in your machine. **You will need Python 3.11**. We suggested creating a brand new environment and then install it using the terminal
 
 ```python
 >>pip install uaibot
