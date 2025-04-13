@@ -60,4 +60,4 @@ for i in range(1000):
     
     
 
-sim.save("/home/vinicius/Desktop/uaibot_devel/uaibot_files/testing","control")
+sim.save("/home/vinicius/Desktop/uaibot_paper/uaibot_files_paper/uaibot/tests","control")

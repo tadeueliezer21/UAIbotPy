@@ -20,13 +20,6 @@ class Utils:
     # Constants
     #######################################
 
-    _PI = 3.1415926
-    _SQRTHALFPI = 1.2533141
-    _SQRT2 = 1.4142135
-    _CONSTJA = 2.7889
-    _CONSTI0HAT1 = 0.24273
-    _CONSTI0HAT2 = 0.43023
-
     UAIBOT_NAME_TYPES = ['uaibot.', 'cylinder.', 'box.', 'ball.', 'convexpolytope.', 'robot.', 'simulation.', 'meshmaterial.',
                              'texture.', 'pointlight.', 'frame.', 'model3d.', 'links.', 'pointcloud.', 'vector.', 'rigidobject.',
                              '.group', '.htmldiv', 'CPP_GeometricPrimitives', 'CPP_DistStructRobotObj','CPP_AABB']
@@ -872,7 +865,7 @@ class Utils:
     def is_url_available(url, types):
         """
       Try to access the content of the url 'url'. Also verifies if the content is one of the extensions contained in
-      'types' (e.g, types = ['png', 'bmp', 'jpg', 'jpeg'] for images).
+      'types' (e.g., types = ['png', 'bmp', 'jpg', 'jpeg'] for images).
 
       Never throws an Exception, always returning a string with a message. Returns 'ok!' if and only if the
       url was succesfully acessed and has the correct file type.
