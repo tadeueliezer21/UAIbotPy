@@ -599,12 +599,14 @@ class Robot extends Objsim {
 												mat.opacity = userOpacity;
 												mat.transparent = userOpacity < 1.0;
 												mat.needsUpdate = true;
+												mat.material.format = 1023;
 											}
 										});
 									} else {
 										child.material.opacity = userOpacity;
 										child.material.transparent = userOpacity < 1.0;
 										child.material.needsUpdate = true;
+										child.material.format = 1023;
 									}
 								}
 							});
