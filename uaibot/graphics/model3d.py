@@ -60,8 +60,11 @@ class Model3D:
     def __init__(self, url="", scale=1, htm=np.identity(4), mesh_material=None):
 
         # Error handling
+        
+        ALLOWED_MESHES_TYPES = ["uaibot.MeshMaterial","uaibot.MTLMeshMaterial","uaibot.GLBMeshMaterial"] 
 
-        error = Utils.is_url_available(url, ['obj','stl','dae'])
+
+        error = Utils.is_url_available(url, ['obj','stl','dae','glb'])
         if not (error == "ok!"):
             raise Exception("The parameter 'url' " + error)
 
@@ -71,15 +74,24 @@ class Model3D:
         if not Utils.is_a_number(scale) or scale < 0:
             raise Exception("The parameter 'scale' should be a float.")
 
-        if not (Utils.get_uaibot_type(mesh_material) == "uaibot.MeshMaterial" or (mesh_material is None)):
-            raise Exception("The parameter 'mesh_material' should be a 'uaibot.MeshMaterial' object or 'None'.")
+        if not (Utils.get_uaibot_type(mesh_material) in ALLOWED_MESHES_TYPES or (mesh_material is None)):
+            raise Exception("The parameter 'mesh_material' should be a "+str(ALLOWED_MESHES_TYPES)+" object or 'None'.")
+
+        self._type = url[url.rfind(".")+1:len(url)+1]
+        
+        if (not self._type == 'obj') and  Utils.get_uaibot_type(mesh_material) == "uaibot.MTLMeshMaterial":
+            raise Exception("The parameter 'mesh_material' is a of MTL type, but the object is not of type '.obj'. MTL files are only supported to obj.")
+
+        if (not self._type == 'glb') and  Utils.get_uaibot_type(mesh_material) == "uaibot.GLBMeshMaterial":
+            raise Exception("The parameter 'mesh_material' is a GLB type, but the object is not of type '.glb'.")
+
 
         # end error handling
 
         self._url = url
         self._scale = scale
         self._htm = htm
-        self._type = url[url.rfind(".")+1:len(url)+1]
+        
 
 
         if mesh_material is None:

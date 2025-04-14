@@ -814,7 +814,7 @@ class Robot:
         return Robot(name, links, base_3d_obj, htm, htm_base_0, htm_n_eef, q0, eef_frame_visible, joint_limits)
 
     @staticmethod
-    def create_kuka_lbr_iiwa(htm=np.identity(4), name='', color="silver", opacity=1, eef_frame_visible=True):
+    def create_kuka_lbr_iiwa(htm=np.identity(4), name='', color="", opacity=1, eef_frame_visible=True):
         """
     Create a Kuka LBR IIWA 14 R820, a seven degree of freedom manipulator.
     Model taken from the ROS github repository (https://github.com/ros-industrial/kuka_experimental).
@@ -830,8 +830,9 @@ class Robot:
         (default: empty (automatic)).
 
     htm : color
-        A HTML-compatible string representing the object color.
-        (default: 'silver')'.
+        A HTML-compatible string representing the object color. 
+        If set to '' (empty string), set colors from textures.
+        (default: '')'.
 
     opacity : positive float between 0 and 1
         The opacity of the robot. 1 = fully opaque and 0 = transparent.
@@ -847,7 +848,7 @@ class Robot:
         return Robot(name, links, base_3d_obj, htm, htm_base_0, htm_n_eef, q0, eef_frame_visible, joint_limits)
 
     @staticmethod
-    def create_franka_emika_3(htm=np.identity(4), name='', color="silver", opacity=1, eef_frame_visible=True):
+    def create_franka_emika_3(htm=np.identity(4), name='', color="", opacity=1, eef_frame_visible=True):
         """
     Create a Franka Emika 3, a seven degree of freedom manipulator.
     Model taken from the ROS github repository (https://github.com/BolunDai0216/FR3Env/tree/d5218531471cadafd395428f8c2033f6feeb3555/FR3Env/robots/meshes/visual).
@@ -863,8 +864,9 @@ class Robot:
         (default: empty (automatic)).
 
     htm : color
-        A HTML-compatible string representing the object color.
-        (default: 'silver')'.
+        A HTML-compatible string representing the object color. 
+        If set to '' (empty string), set colors from textures.
+        (default: '')'.
 
     opacity : positive float between 0 and 1
         The opacity of the robot. 1 = fully opaque and 0 = transparent.
