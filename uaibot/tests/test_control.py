@@ -4,6 +4,7 @@ import requests
 from io import BytesIO
 import matplotlib.pyplot as plt
 import sys
+import os
 
 
 
@@ -61,5 +62,5 @@ for i in range(1000):
     t+=dt
     
     
-
-sim.save("/home/vinicius/Desktop/uaibot_paper/uaibot_files_paper/uaibot/tests","control")
+current_folder = os.path.dirname(os.path.abspath(__file__))
+sim.save(current_folder,"control")

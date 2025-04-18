@@ -4,6 +4,7 @@ import time
 import sys
 import matplotlib.pyplot as plt
 import matplotlib
+import os
 
 print("Testing free configuration")
 
@@ -87,5 +88,5 @@ print("Max time took to check free configuration: "+str(round(1000*max_time,2))+
 print("Test was a success!")   
 
 
-        
-sim.save("/home/vinicius/Desktop/uaibot_paper/uaibot_files_paper/testing","test_free_config")
+current_folder = os.path.dirname(os.path.abspath(__file__))        
+sim.save(current_folder,"test_free_config")
