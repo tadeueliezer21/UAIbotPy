@@ -1,38 +1,4 @@
-[tool.poetry]
-name = "uaibot"
-version = "0.0.2"
-description = "A browser-based robotic simulator"
-authors = ["Vinicius Gonçalves <vinicius.marianog@gmail.com>", "Johnata Brayan <johnatabrayan@gmail.com>"]
-license = "MIT"
-readme = "README.md"
-homepage = "http://uaibot.github.io/"
-repository = "https://github.com/UAIbot"
-classifiers = [
-    "Intended Audience :: Education",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Topic :: Education",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Visualization"
-]
-
-[tool.poetry.dependencies]
-python = ">=3.7,<3.11"
-colour = "^0.1.5"
-cvxopt = "^1.2.7"
-ipython = "^7.0.0"
-numpy = "^1.21.5"
-plotly = "^5.5.0"
-httplib2 = "^0.20.4"
-pycollada= "^0.7.2"
-PyWavefront= "^1.3.3"
-numpy-stl= "^2.16.3"
-pandas= "1.5.3"
-scipy= "1.11.2"
-
-[tool.poetry.dev-dependencies]
-ipykernel = "^6.9.2"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=58.0.4", "wheel", "pybind11>=2.10", "cmake"]
+build-backend = "setuptools.build_meta"
+

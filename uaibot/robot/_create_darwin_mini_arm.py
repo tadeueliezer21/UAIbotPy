@@ -212,4 +212,32 @@ def _create_darwin_mini_arm(htm, name, color, opacity):
     # Create joint limits
     joint_limits = (np.pi / 180) * np.matrix([[-180, 180], [-180, 180], [-180, 180]])
 
+    ###
+    # Get all variables in the global scope
+    # for i in range(12):
+    #     try:
+    #         matrix_str = str(eval('htm'+str(i+1)))
+    #         matrix_str = matrix_str.strip()
+
+    #         # Replace multiple spaces with a single space
+    #         matrix_str = "\n".join(" ".join(row.split()) for row in matrix_str.split("\n"))
+
+    #         # Split into rows, remove extra brackets
+    #         rows = matrix_str.strip("[]").split("\n")
+
+    #         # Format each row to insert commas between numbers
+    #         formatted_rows = []
+    #         for row in rows:
+    #             row = row.strip()
+    #             elements = row.strip("[]").split()
+    #             formatted_row = "[" + ", ".join(elements) + "]"
+    #             formatted_rows.append(formatted_row)
+
+    #         # Join rows in a single line
+    #         formatted_matrix = "[" + ", ".join(formatted_rows) + "]"
+    #         print("htm"+str(i+1)+" = np.matrix("+formatted_matrix+")")
+    #     except:
+    #         print("")
+    ###
+    
     return base_3d_obj, links, np.identity(4), np.identity(4), q0, joint_limits

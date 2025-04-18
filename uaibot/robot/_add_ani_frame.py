@@ -39,6 +39,9 @@ def _add_ani_frame(self, time, q=None, htm=None, enforce_joint_limits=False):
     self._htm = htm
     self._frames.append(f)
     self._max_time = max(self._max_time, time)
+    
+    if self.eef_frame_visible:
+        self._eef_frame.add_ani_frame(time,self.fkm(q))
 
     # Update attached objects:
     if len(self.attached_objects) > 0:

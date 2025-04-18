@@ -24,3 +24,6 @@ def _set_ani_frame(self, q=None, htm=None, enforce_joint_limits=False):
     self.code = ''
     self._max_time = 0
     self.add_ani_frame(0, q, htm, enforce_joint_limits)
+    
+    if self.eef_frame_visible:
+        self._eef_frame.add_ani_frame(0,self.fkm(q))

@@ -1,10 +1,60 @@
 from utils import *
 import numpy as np
+import math
 from ._dist_struct_robot_auto import DistStructRobotAuto
+from ._dist_struct_robot_auto import DistStructLinkLink
+import os
+if os.environ['CPP_SO_FOUND']=="1":
+    import uaibot_cpp_bind as ub_cpp
+
+def _diststructlinklink_cpp2py(dsll_cpp):
+
+    dsll_py = DistStructLinkLink(dsll_cpp.link_number_1, dsll_cpp.link_col_obj_number_1, dsll_cpp.link_number_2, dsll_cpp.link_col_obj_number_2, dsll_cpp.distance, np.matrix(dsll_cpp.point_link_1).reshape((3,1)), np.matrix(dsll_cpp.point_link_2).reshape((3,1)), np.matrix(dsll_cpp.jac_distance))
+    return dsll_py
+
+def _diststructlinklink_py2cpp(dsll_py):
+
+    dsll_cpp = ub_cpp.CPP_DistStructLinkLink()
+
+    dsll_cpp.is_null = False
+    dsll_cpp.link_number_1 = dsll_py.link_number_1
+    dsll_cpp.link_number_2 = dsll_py.link_number_2
+    dsll_cpp.link_col_obj_number_1 = dsll_py.link_col_obj_number_1
+    dsll_cpp.link_col_obj_number_2 = dsll_py.link_col_obj_number_2
+    dsll_cpp.distance = dsll_py.distance
+    dsll_cpp.point_link_1 = dsll_py.point_link_1
+    dsll_cpp.point_link_2 = dsll_py.point_link_2
+    dsll_cpp.jac_distance = dsll_py.jac_distance
+
+    return dsll_cpp
+
+def _diststructrobotauto_cpp2py(dsra_cpp, _robot):
+
+    dsra_py = DistStructRobotAuto(_robot)
+
+    dsra_py._jac_dist_mat = np.matrix(dsra_cpp.jac_dist_mat)
+    n = np.shape(dsra_cpp.dist_vect)[0]
+    dsra_py._dist_vect = np.matrix(dsra_cpp.dist_vect).reshape((n,1))
+    
+    dsra_py._list_info = [_diststructlinklink_cpp2py(dsll) for dsll in dsra_cpp.list_info]
+    dsra_py._no_items = len(dsra_py._list_info)
+
+    return dsra_py
+
+def _diststructrobotauto_py2cpp(dsra_py):
+
+    dsra_cpp = ub_cpp.CPP_DistStructRobotAuto()
+
+    dsra_cpp.is_null = dsra_py is None
+    if not (dsra_py is None):
+        dsra_cpp.jac_dist_mat = dsra_py.jac_dist_mat
+        dsra_cpp.dist_vect = dsra_py.dist_vect
+        dsra_cpp.list_info = [_diststructlinklink_py2cpp(dsll) for dsll in dsra_py._list_info]
+
+    return dsra_cpp
 
 
-# Compute the distance from each non-sequential link to other link
-def _compute_dist_auto(self, q=None, old_dist_struct=None, tol=0.0005, no_iter_max=20, max_dist = np.inf):
+def _compute_dist_auto(self, q=None, old_dist_struct=None, tol=0.0005, no_iter_max=20, max_dist = np.inf, h=0, eps = 0, mode='auto'):
     n = len(self.links)
 
     if q is None:
@@ -32,7 +82,32 @@ def _compute_dist_auto(self, q=None, old_dist_struct=None, tol=0.0005, no_iter_m
         except:
             raise Exception("The parameter 'old_dist_struct' must be a 'DistStructRobotAuto' object.")
 
+    if not Utils.is_a_number(h) or h < 0:
+        raise Exception("The optional parameter 'h' must be a nonnegative number.")
+
+    if not Utils.is_a_number(eps) or eps < 0:
+        raise Exception("The optional parameter 'eps' must be a nonnegative number.")
+    
+    if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+        raise Exception("c++ mode is set, but .so file was not loaded!")
     # end error handling
+
+    if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+        if h >0 or eps > 0:
+            raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
+         
+        return _compute_dist_auto_python(self, q, old_dist_struct, tol, no_iter_max, max_dist)
+    else:
+        
+
+        old_dsra = _diststructrobotauto_py2cpp(old_dist_struct)       
+        new_dsra = self.cpp_robot.compute_dist_auto(q, old_dsra, tol, no_iter_max, max_dist, h+1e-6, eps+1e-6)
+
+        return _diststructrobotauto_cpp2py(new_dsra, self)
+
+
+def _compute_dist_auto_python(self, q=None, old_dist_struct=None, tol=0.0005, no_iter_max=20, max_dist = np.inf):
+    n = len(self.links)
 
     dist_struct = DistStructRobotAuto(self)
 

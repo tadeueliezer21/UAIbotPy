@@ -8,7 +8,7 @@
     <img src="https://viniciusmgn.github.io/aulas_manipuladores/presentation/images/aula1/logouaibot.svg" alt="UAIBot Logo"/>
 </p>
 
-UAIBot is a <strong>web-based Python robotic simulator</strong> developed by <strong>Vinicius Mariano Gonçalves</strong>  (Electrical Engineering Department, Federal University of Minas Gerais, Brazil) and his students. 
+UAIBot is a web-based Python robotic simulator developed by <strong>Vinicius Mariano Gonçalves</strong>  (Electrical Engineering Department, Federal University of Minas Gerais, Brazil) and his students. 
 
 While teaching robotics, I used many different desktop-based simulators with my students (such as CoppeliaSim and Matlab Toolboxes). However, I realized that students nowadays are much more used to web-based applications. This is why I, together with my students, came up with the idea of creating a simulator with the following goals:
 
@@ -50,7 +50,7 @@ After it is done, we test if it is working by running the following command
 ```python
 import uaibot as ub
 
-sim = ub.Demo.control_demo_1()
+sim = ub.Demo.constrained_control_demo_1()
 ```
 
 This will generate a simulation that was already pre-coded into UAIbot. It will return the simulation variable (sim) and automatically run the animation for you!
@@ -61,7 +61,7 @@ Note that you will need to reinstall UAIBot every time you open GoogleColab sinc
 
 <h2>Using in desktop-based IDE's</h2>
 
-You can install the UAIBot package in a desktop-based IDE such as Pycharm. Install using the terminal
+You can install the UAIBot package locally in your machine. **You will need Python 3.11**. We suggested creating a brand new environment and then install it using the terminal
 
 ```python
 >>pip install uaibot
@@ -72,7 +72,7 @@ The <strong>sim.run()</strong> may not work in some IDEs. In that case, you need
 ```python
 import uaibot as ub
 
-sim = ub.Demo.control_demo_1()
+sim = ub.Demo.constrained_control_demo_1()
 sim.save('C:\\','test_uaibot')
 ```
 

@@ -8,8 +8,16 @@ from robot.links import Link
 
 import numpy as np
 
-def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, name='davinci_arm1'):
-    color1, color2, color3 = color
+
+def _create_davinci_arm1(color, opacity, name='davinci_arm1'):
+
+    if not Utils.is_a_color(color):
+        raise Exception(
+            "The parameter 'color' should be a HTML-compatible color.")
+
+    if (not Utils.is_a_number(opacity)) or opacity < 0 or opacity > 1:
+        raise Exception(
+            "The parameter 'opacity' should be a float between 0 and 1.")
 
     theta2 = np.deg2rad(1.875)
     theta3 = np.deg2rad(3.25 - 1.875)
@@ -29,6 +37,7 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     alpha5 = np.pi*(1/2 + 1/9)
     alpha6 = np.pi/2
     alpha9 = np.pi/2
+    alpha10 = np.pi/2*0
 
     a2 = 0.3
     a3 = 0.415
@@ -57,12 +66,8 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     n = link_info.shape[1]
     base_3d_obj = []
     link_3d_obj = []
-    mesh = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color1, opacity=opacity, side="DoubleSide")
-    mesh2 = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color2, opacity=opacity, side="DoubleSide")
-    mesh3 = MeshMaterial(metalness=0.8, roughness=0.4, clearcoat=0, normal_scale=[
-                        0.5, 0.5], color=color3, opacity=opacity, side="DoubleSide")
+    mesh = MeshMaterial(metalness=0.5, clearcoat=0, roughness=0.5, normal_scale=[
+                        0.5, 0.5], color=color, opacity=opacity, side="DoubleSide")
     b1 = 0.1
     b2 = 0.45
     b3 = 1.1
@@ -93,17 +98,17 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link1_mth = Utils.inv_htm(Q01)
     link_3d_obj.append([
         # torre movel
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/4.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/4.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
         # cilindro conector
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/5.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/5.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
     ])
 
     link2_mth = Utils.inv_htm(Q02)
     link_3d_obj.append([
         # ligacao de cilindros curta
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/8.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/8.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
     ])
 
@@ -111,11 +116,11 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link_3d_obj.append([
         # cilindro conector
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/59.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/59.obj',
             scale=scale, htm=link3_mth, mesh_material=mesh),
         # ligacao de cilindros longa
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/9.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/9.obj',
             scale=scale, htm=link3_mth, mesh_material=mesh),
     ])
 
@@ -124,7 +129,7 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
         # ligacao de cilindros longa
         Model3D(
 
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/11.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/11.obj',
             scale=scale, htm=link4_mth, mesh_material=mesh),
     ])
 
@@ -132,7 +137,7 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link_3d_obj.append([
         # cotovelo
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/10.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/10.obj',
             scale=scale, htm=link5_mth, mesh_material=mesh),
     ])
 
@@ -140,7 +145,7 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link_3d_obj.append([
         # pá dobrada
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/38.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/38.obj',
             scale=scale, htm=link6_mth, mesh_material=mesh),
     ])
 
@@ -148,7 +153,7 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link_3d_obj.append([
         # conecta pá com bumerangue
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/19.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/19.obj',
             scale=scale, htm=link7_mth, mesh_material=mesh),
     ])
 
@@ -156,7 +161,7 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link_3d_obj.append([
         # bumerangue
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/21.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/21.obj',
             scale=scale, htm=link8_mth, mesh_material=mesh),
 
     ])
@@ -165,7 +170,7 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link_3d_obj.append([
         # envoltoria agulha
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/43.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/43.obj',
             scale=scale, htm=link9_mth, mesh_material=mesh),
     ])
 
@@ -173,20 +178,20 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link_3d_obj.append([
         # guia
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/45.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/45.obj',
                 scale=scale, htm=link10_mth, mesh_material=mesh),
         # agulha
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/54.obj',
-                scale=scale, htm=link10_mth, mesh_material=mesh3),
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/54.obj',
+                scale=scale, htm=link10_mth, mesh_material=mesh),
         # abridor de garrafa
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/51.obj',
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/51.obj',
             scale=scale, htm=link10_mth, mesh_material=mesh),
         # botao
         Model3D(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/52.obj',
-                scale=scale, htm=link10_mth, mesh_material=mesh2),
+            url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/52.obj',
+                scale=scale, htm=link10_mth, mesh_material=mesh),
     ])
 
     col_model = [[], [], [], [], [], [], [], [], [], []]
@@ -283,8 +288,15 @@ def _create_davinci_arm1(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     return links, base_3d_obj, htm_base_0, htm_n_eef, q0, joint_limits
 
 
-def _create_davinci_arm2(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, name='davinci_arm2'):
-    color1, color2, color3 = color
+def _create_davinci_arm2(color, opacity, name='davinci_arm2'):
+
+    if not Utils.is_a_color(color):
+        raise Exception(
+            "The parameter 'color' should be a HTML-compatible color.")
+
+    if (not Utils.is_a_number(opacity)) or opacity < 0 or opacity > 1:
+        raise Exception(
+            "The parameter 'opacity' should be a float between 0 and 1.")
 
     theta2 = np.deg2rad(-3)
     theta3 = np.deg2rad(98.5)
@@ -329,12 +341,8 @@ def _create_davinci_arm2(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     n = link_info.shape[1]
     base_3d_obj = []
     link_3d_obj = []
-    mesh = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color1, opacity=opacity, side="DoubleSide")
-    mesh2 = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color2, opacity=opacity, side="DoubleSide")
-    mesh3 = MeshMaterial(metalness=0.8, roughness=0.4, clearcoat=0, normal_scale=[
-                        0.5, 0.5], color=color3, opacity=opacity, side="DoubleSide")
+    mesh = MeshMaterial(metalness=0.5, clearcoat=0, roughness=0.5, normal_scale=[
+                        0.5, 0.5], color=color, opacity=opacity, side="DoubleSide")
     b1 = -0.086
     b2 = 0.2634
     b3 = 1.3
@@ -363,76 +371,76 @@ def _create_davinci_arm2(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link1_mth = Utils.inv_htm(Q01)
     link_3d_obj.append([
         # torre movel
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/58.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/58.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
         # cilindro conector
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/63.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/63.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
     ])
 
     link2_mth = Utils.inv_htm(Q02)
     link_3d_obj.append([
         # ligacao de cilindros longa
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/64.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/64.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
     ])
 
     link3_mth = Utils.inv_htm(Q03)
     link_3d_obj.append([
         # ligacao de cilindros longa
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/61.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/61.obj',
                 scale=scale, htm=link3_mth, mesh_material=mesh),
     ])
 
     link4_mth = Utils.inv_htm(Q04)
     link_3d_obj.append([
         # cotovelo
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/14.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/14.obj',
                 scale=scale, htm=link4_mth, mesh_material=mesh),
     ])
 
     link5_mth = Utils.inv_htm(Q05)
     link_3d_obj.append([
         # pá dobrada
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/36.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/36.obj',
                 scale=scale, htm=link5_mth, mesh_material=mesh),
     ])
 
     link6_mth = Utils.inv_htm(Q06)
     link_3d_obj.append([
         # conecta pá com bumerangue
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/34.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/34.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh),
     ])
 
     link7_mth = Utils.inv_htm(Q07)
     link_3d_obj.append([
         # bumerangue
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/39.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/39.obj',
                 scale=scale, htm=link7_mth, mesh_material=mesh),
     ])
 
     link8_mth = Utils.inv_htm(Q08)
     link_3d_obj.append([
         # envoltoria agulha
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/42.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/42.obj',
                 scale=scale, htm=link8_mth, mesh_material=mesh),
     ])
 
     link9_mth = Utils.inv_htm(Q09)
     link_3d_obj.append([
         # guia
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/23.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/23.obj',
                     scale=scale, htm=link9_mth, mesh_material=mesh),
         # agulha
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/55.obj',
-                scale=scale, htm=link9_mth, mesh_material=mesh3),
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/55.obj',
+                scale=scale, htm=link9_mth, mesh_material=mesh),
         # abridor de garrafa
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/25.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/25.obj',
                 scale=scale, htm=link9_mth, mesh_material=mesh),
         # botao
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/53.obj',
-                scale=scale, htm=link9_mth, mesh_material=mesh2),
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/53.obj',
+                scale=scale, htm=link9_mth, mesh_material=mesh),
     ])
 
     col_model = [[], [], [], [], [], [], [], [], []]
@@ -522,8 +530,15 @@ def _create_davinci_arm2(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     return links, base_3d_obj, htm_base_0, htm_n_eef, q0, joint_limits
 
 
-def _create_davinci_arm3(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, name='davinci_arm3'):
-    color1, color2, color3 = color
+def _create_davinci_arm3(color, opacity, name='davinci_arm3'):
+
+    if not Utils.is_a_color(color):
+        raise Exception(
+            "The parameter 'color' should be a HTML-compatible color.")
+
+    if (not Utils.is_a_number(opacity)) or opacity < 0 or opacity > 1:
+        raise Exception(
+            "The parameter 'opacity' should be a float between 0 and 1.")
 
     theta2 = np.deg2rad(-3)
     theta3 = np.deg2rad(98.5)
@@ -568,12 +583,8 @@ def _create_davinci_arm3(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     n = link_info.shape[1]
     base_3d_obj = []
     link_3d_obj = []
-    mesh = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color1, opacity=opacity, side="DoubleSide")
-    mesh2 = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color2, opacity=opacity, side="DoubleSide")
-    mesh3 = MeshMaterial(metalness=0.8, roughness=0.4, clearcoat=0, normal_scale=[
-                        0.5, 0.5], color=color3, opacity=opacity, side="DoubleSide")
+    mesh = MeshMaterial(metalness=0.5, clearcoat=0, roughness=0.5, normal_scale=[
+                        0.5, 0.5], color=color, opacity=opacity, side="DoubleSide")
     b1 = -0.086
     b2 = 0.2634
     b3 = 1.3
@@ -602,76 +613,76 @@ def _create_davinci_arm3(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link1_mth = Utils.inv_htm(Q01)
     link_3d_obj.append([
         # torre movel
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/58.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/58.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
         # cilindro conector
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/63.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/63.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
     ])
 
     link2_mth = Utils.inv_htm(Q02)
     link_3d_obj.append([
         # ligacao de cilindros longa
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/64.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/64.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
     ])
 
     link3_mth = Utils.inv_htm(Q03)
     link_3d_obj.append([
         # ligacao de cilindros longa
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/61.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/61.obj',
                 scale=scale, htm=link3_mth, mesh_material=mesh),
     ])
 
     link4_mth = Utils.inv_htm(Q04)
     link_3d_obj.append([
         # cotovelo
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/14.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/14.obj',
                 scale=scale, htm=link4_mth, mesh_material=mesh),
     ])
 
     link5_mth = Utils.inv_htm(Q05)
     link_3d_obj.append([
         # pá dobrada
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/36.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/36.obj',
                 scale=scale, htm=link5_mth, mesh_material=mesh),
     ])
 
     link6_mth = Utils.inv_htm(Q06)
     link_3d_obj.append([
         # conecta pá com bumerangue
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/34.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/34.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh),
     ])
 
     link7_mth = Utils.inv_htm(Q07)
     link_3d_obj.append([
         # bumerangue
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/39.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/39.obj',
                 scale=scale, htm=link7_mth, mesh_material=mesh),
     ])
 
     link8_mth = Utils.inv_htm(Q08)
     link_3d_obj.append([
         # envoltoria agulha
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/42.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/42.obj',
                 scale=scale, htm=link8_mth, mesh_material=mesh),
     ])
 
     link9_mth = Utils.inv_htm(Q09)
     link_3d_obj.append([
         # guia
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/23.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/23.obj',
                     scale=scale, htm=link9_mth, mesh_material=mesh),
         # agulha
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/55.obj',
-                scale=scale, htm=link9_mth, mesh_material=mesh3),
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/55.obj',
+                scale=scale, htm=link9_mth, mesh_material=mesh),
         # abridor de garrafa
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/25.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/25.obj',
                 scale=scale, htm=link9_mth, mesh_material=mesh),
         # botao
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/53.obj',
-                scale=scale, htm=link9_mth, mesh_material=mesh2),
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/53.obj',
+                scale=scale, htm=link9_mth, mesh_material=mesh),
     ])
 
     col_model = [[], [], [], [], [], [], [], [], []]
@@ -762,8 +773,15 @@ def _create_davinci_arm3(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     return links, base_3d_obj, htm_base_0, htm_n_eef, q0, joint_limits
 
 
-def _create_davinci_arm4(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, name='davinci_arm4'):
-    color1, color2, color3 = color
+def _create_davinci_arm4(color, opacity, name='davinci_arm4'):
+
+    if not Utils.is_a_color(color):
+        raise Exception(
+            "The parameter 'color' should be a HTML-compatible color.")
+
+    if (not Utils.is_a_number(opacity)) or opacity < 0 or opacity > 1:
+        raise Exception(
+            "The parameter 'opacity' should be a float between 0 and 1.")
 
     theta2 = np.deg2rad(164.8)
     theta3 = np.deg2rad(-131.8)
@@ -809,12 +827,8 @@ def _create_davinci_arm4(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     n = link_info.shape[1]
     base_3d_obj = []
     link_3d_obj = []
-    mesh = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color1, opacity=opacity, side="DoubleSide")
-    mesh2 = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color2, opacity=opacity, side="DoubleSide")
-    mesh3 = MeshMaterial(metalness=0.8, roughness=0.4, clearcoat=0, normal_scale=[
-                        0.5, 0.5], color=color3, opacity=opacity, side="DoubleSide")
+    mesh = MeshMaterial(metalness=0.5, clearcoat=0, roughness=0.5, normal_scale=[
+                        0.5, 0.5], color=color, opacity=opacity, side="DoubleSide")
     b1 = 0.099
     b2 = 0.0922
     b3 = 1.54
@@ -843,75 +857,75 @@ def _create_davinci_arm4(color=["#919090", "#61b3c7", "#a6a6a6"], opacity=1, nam
     link1_mth = Utils.inv_htm(Q01)
     link_3d_obj.append([
         # torre movel
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/57.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/57.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
         # cilindro conector
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/60.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/60.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
     ])
 
     link2_mth = Utils.inv_htm(Q02)
     link_3d_obj.append([
         # ligacao de cilindros curta
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/15.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/15.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
     ])
 
     link3_mth = Utils.inv_htm(Q03)
     link_3d_obj.append([
         # ligacao de cilindros curta
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/66.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/66.obj',
                 scale=scale, htm=link3_mth, mesh_material=mesh),
     ])
 
     link4_mth = Utils.inv_htm(Q04)
     link_3d_obj.append([
         # cotovelo
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/16.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/16.obj',
                 scale=scale, htm=link4_mth, mesh_material=mesh),
     ])
 
     link5_mth = Utils.inv_htm(Q05)
     link_3d_obj.append([
         # pá dobrada
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/37.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/37.obj',
                 scale=scale, htm=link5_mth, mesh_material=mesh),
     ])
 
     link6_mth = Utils.inv_htm(Q06)
     link_3d_obj.append([
         # conecta pá com bumerangue
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/33.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/33.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh),
     ])
 
     link7_mth = Utils.inv_htm(Q07)
     link_3d_obj.append([
         # bumerangue
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/41.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/41.obj',
                 scale=scale, htm=link7_mth, mesh_material=mesh),
     ])
 
     link8_mth = Utils.inv_htm(Q08)
     link_3d_obj.append([
         # envoltoria agulha
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/28.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/28.obj',
                 scale=scale, htm=link8_mth, mesh_material=mesh),
     ])
 
     link9_mth = Utils.inv_htm(Q09)
     link_3d_obj.append([
         # guia
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/29.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/29.obj',
                     scale=scale, htm=link9_mth, mesh_material=mesh),
         # agulha
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/31.obj',
-                scale=scale, htm=link9_mth, mesh_material=mesh3),
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/31.obj',
+                scale=scale, htm=link9_mth, mesh_material=mesh),
         # base agulha
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/30.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/30.obj',
                 scale=scale, htm=link9_mth, mesh_material=mesh),
         # cabo longo
-        # Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/32.obj',
+        # Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/32.obj',
         #        scale=scale, htm=link9_mth, mesh_material=mesh),
     ])
 

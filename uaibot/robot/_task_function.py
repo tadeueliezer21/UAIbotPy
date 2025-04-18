@@ -1,9 +1,10 @@
 from utils import *
 import numpy as np
-
+import os
 
 # Function used for task function/task Jacobian
-def _task_function(self, htm_des, q=None, htm=None):
+def _task_function(self, htm_des, q=None, htm=None, mode='auto'):
+
     if q is None:
         q = self.q
 
@@ -11,6 +12,9 @@ def _task_function(self, htm_des, q=None, htm=None):
         htm = self.htm
 
     # Error handling
+    if mode not in ['python','c++','auto']:
+        raise Exception("The parameter 'mode' should be 'python,'c++', or 'auto'.")
+       
     if not Utils.is_a_matrix(htm_des, 4, 4):
         raise Exception("The parameter 'htm_des' should be a 4x4 homogeneous transformation matrix.")
 
@@ -22,6 +26,23 @@ def _task_function(self, htm_des, q=None, htm=None):
         raise Exception("The parameter 'q' should be a " + str(n) + " dimensional vector.")
 
     # end error handling
+    if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
+        raise Exception("c++ mode is set, but .so file was not loaded!")
+    # end error handling
+
+    if mode == 'python'  or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
+        return _task_function_python(self, htm_des, q, htm)
+    else:
+        task_res = self.cpp_robot.fk_task(q, htm, htm_des)
+        return np.matrix(task_res.task.reshape(6,1)), np.matrix(task_res.jac_task)
+
+             
+            
+def _task_function_python(self, htm_des, q=None, htm=None):
+
+
+    n = len(self.links)
+
 
     p_des = htm_des[0:3, 3]
     x_des = htm_des[0:3, 0]

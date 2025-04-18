@@ -7,9 +7,15 @@ from simobjects.rigidobject import RigidObject
 import numpy as np
 
 
-def _create_davinci_chest(name="davinci_chest", color=["#707070", "#545353"], opacity=1):
+def _create_davinci_chest(name, color, opacity):
 
-    color1, color2 = color
+    if not Utils.is_a_color(color):
+        raise Exception(
+            "The parameter 'color' should be a HTML-compatible color.")
+
+    if (not Utils.is_a_number(opacity)) or opacity < 0 or opacity > 1:
+        raise Exception(
+            "The parameter 'opacity' should be a float between 0 and 1.")
 
     link_info = np.array([
         # "theta" rotation in z
@@ -28,10 +34,9 @@ def _create_davinci_chest(name="davinci_chest", color=["#707070", "#545353"], op
     n = link_info.shape[1]
     base_3d_obj = []
     chest_obj = []
-    mesh = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color1, opacity=opacity, side="DoubleSide")
-    mesh2 = MeshMaterial(metalness=0, roughness=1, clearcoat=0, clearcoat_roughness=0.03, ior=1.45, normal_scale=[
-                        0.5, 0.5], color=color2, opacity=opacity, side="DoubleSide")
+    mesh = MeshMaterial(metalness=0.5, clearcoat=0, roughness=0.5,
+                        normal_scale=[0.5, 0.5], color=color,
+                        opacity=opacity, side="DoubleSide")
     # original model is rotated (Robot fron = plane X x Y)
 
     Q01 = Utils.rotx(-np.pi/2) * Utils.rotz(np.pi) * Utils.rotz(link_info[0, 0]) * Utils.trn([0, 0, link_info[1, 0]]) * Utils.rotx(link_info[2, 0]) * Utils.trn(
@@ -52,22 +57,22 @@ def _create_davinci_chest(name="davinci_chest", color=["#707070", "#545353"], op
     link1_mth = Utils.inv_htm(Q01)
     chest_obj.extend([
         # feet
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/1.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/1.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
     ])
 
     link2_mth = Utils.inv_htm(Q12)
     chest_obj.extend([
         # base rectangle
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/2.obj',
-                scale=scale, htm=link2_mth, mesh_material=mesh2),
-        # vertical tower
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/3.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/2.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/17.obj',
+        # vertical tower
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/3.obj',
+                scale=scale, htm=link2_mth, mesh_material=mesh),
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/17.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
         # short cable
-        Model3D(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/DaVinci/18.obj',
+        Model3D(url='https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/DaVinci/18.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
     ])
 

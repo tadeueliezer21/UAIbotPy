@@ -10,7 +10,7 @@ class PointLight:
 
    name : string
        The object's name.
-       (default: 'genLight').
+       (default: '' (automatic)).
 
    color : string
        A HTML-compatible color.

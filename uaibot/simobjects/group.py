@@ -21,7 +21,7 @@ class Group:
 
    name : string
        The object's name.
-       (default: 'genGroup').
+       (default: '' (automatic)).
 
    list_of_objects : list of objects that are in 'Utils.IS_GROUPABLE'
        List of objects. Each must be an object of the type contained in the constant list 'Utils.IS_GROUPABLE'.

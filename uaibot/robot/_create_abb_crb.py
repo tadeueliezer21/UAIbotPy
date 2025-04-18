@@ -36,7 +36,40 @@ def _create_abb_crb(htm, name, color, opacity):
     # Collision model
     col_model = [[], [], [], [], [], []]
 
+    col_model[0].append(Cylinder(htm= Utils.trn([0,0,0.025]),
+                                 name=name + "_C0_0", radius=0.08, height=0.30, color="red", opacity=0.3))
+
+    col_model[1].append(Cylinder(htm= Utils.trn([0,0,0.025]),
+                                 name=name + "_C1_0", radius=0.08, height=0.30, color="blue", opacity=0.3))
+
+    col_model[1].append(Box(htm= Utils.trn([-0.23,0,0.025+0.11]),
+                                 name=name + "_C1_1", width=0.58, depth = 0.15, height=0.08, color="blue", opacity=0.3))
+
+    col_model[2].append(Ball(htm= Utils.trn([-0.01,0,-0.065]),
+                                 name=name + "_C2_0", radius=0.075, color="green", opacity=0.3))
+
+    col_model[3].append(Cylinder(htm= Utils.trn([0,-0.3,0])*Utils.rotx(np.pi/2),
+                                 name=name + "_C3_0", radius=0.065, height=0.20, color="yellow", opacity=0.3))
+
+    col_model[3].append(Box(htm= Utils.trn([0,-0.1,-0.09]),
+                                 name=name + "_C3_1", width=0.11, depth=0.32, height=0.08, color="yellow", opacity=0.3))
+
+    col_model[3].append(Cylinder(htm= Utils.trn([0,0,-0.01]),
+                                 name=name + "_C3_2", radius=0.065, height=0.20, color="yellow", opacity=0.3))
+
+    col_model[4].append(Cylinder(htm= Utils.trn([0,0,-0.01]),
+                                 name=name + "_C4_0", radius=0.065, height=0.24, color="magenta", opacity=0.3))
+                          
     # Create 3d objects
+
+    htm1 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, 1., 0.], [0., -1., 0.0008, 0.], [0., 0., 0., 1.]])
+    htm2 = np.matrix([[0.0008, 0., 1., -0.444], [-1., 0.0008, 0.0008, 0.], [-0.0008, -1., 0., 0.], [0., 0., 0., 1.]])
+    htm3 = np.matrix([[0.0008, 0., 1., -0.11], [0., 1., 0., 0.], [-1., 0., 0.0008, 0.], [0., 0., 0., 1.]])
+    htm4 = np.matrix([[0., -0.0008, -1., 0.], [1., 0.0008, 0., -0.47], [0.0008, -1., 0.0008, 0.], [0., 0., 0., 1.]])
+    htm5 = np.matrix([[0., -0.0016, 1., -0.08], [0.0008, -1., -0.0016, 0.], [1., 0.0008, 0., 0.], [0., 0., 0., 1.]])
+    htm6 = np.matrix([[0.0008, 0., -1., 0.], [0., 1., 0., 0.], [1., 0., 0.0008, 0.], [0., 0., 0., 1.]])
+
+    
 
     base_3d_obj = [
         Model3D(
@@ -51,7 +84,7 @@ def _create_abb_crb(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/ABBCRB15000/link_1.stl',
                  scale,
-                 Utils.rotx(-3.14 / 2),
+                 htm1,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#606060",
                               opacity=opacity))]
     )
@@ -59,7 +92,7 @@ def _create_abb_crb(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/ABBCRB15000/link_2.stl',
                  scale,
-                 Utils.trn([-0.444, 0, 0]) @ Utils.rotx(-3.14 / 2) @ Utils.roty(3.14 / 2),
+                 htm2,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#606060",
                               opacity=opacity))]
     )
@@ -67,7 +100,7 @@ def _create_abb_crb(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/ABBCRB15000/link_3.stl',
                  scale,
-                 Utils.trn([-0.11, 0, 0]) @ Utils.roty(3.14 / 2),
+                 htm3,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#606060",
                               opacity=opacity))]
     )
@@ -75,7 +108,7 @@ def _create_abb_crb(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/ABBCRB15000/link_4.stl',
                  scale,
-                 Utils.trn([0, -0.47, 0]) @ Utils.roty(-3.14 / 2) @ Utils.rotz(3.14 / 2),
+                 htm4,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                               opacity=opacity))]
     )
@@ -83,7 +116,7 @@ def _create_abb_crb(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/ABBCRB15000/link_5.stl',
                  scale,
-                 Utils.trn([-0.08, 0, 0]) @ Utils.rotz(3.14 / 2) @ Utils.roty(-3.14 / 2) @ Utils.rotx(3.14 / 2),
+                 htm5,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
                               opacity=opacity))]
     )
@@ -91,12 +124,10 @@ def _create_abb_crb(htm, name, color, opacity):
     link_3d_obj.append(
         [Model3D('https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/ABBCRB15000/link_6.stl',
                  scale,
-                 Utils.trn([0, 0, 0]) @ Utils.roty(-3.14 / 2),
+                 htm6,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="silver",
                               opacity=opacity))]
     )
-
-    # Inertial parameter of the robots
 
     # Create links
 
@@ -113,5 +144,6 @@ def _create_abb_crb(htm, name, color, opacity):
 
     #Create joint limits
     joint_limits = (np.pi/180)*np.matrix([[-180,180],[-180,180],[-225-200+10,85-200-20],[-180,180],[-180,180],[-180,180]])
+
 
     return base_3d_obj, links, np.identity(4), np.identity(4), q0, joint_limits
