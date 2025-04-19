@@ -3,7 +3,7 @@ import numpy as np
 import os
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
-from simobjects.box import *
+
 
 class PointCloud:
     """
@@ -241,6 +241,8 @@ class PointCloud:
             
         if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
             raise Exception("c++ mode is set, but .so file was not loaded!")
+        
+        from simobjects.box import Box
 
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             row_mins = self.points.min(axis=1) 
@@ -309,5 +311,5 @@ class PointCloud:
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             raise Exception("Projection to point cloud available only for c++ mode!")
         else:
-            pr = self._cpp_pointcloud.projection(np.matrix(point).reshape((3,1)), h, eps)
-            return np.matrix(pr.proj).transpose(), pr.dist
+            pr = self._cpp_pointcloud.projection(Utils.cvt(point), h, eps)
+            return Utils.cvt(pr.proj), pr.dist

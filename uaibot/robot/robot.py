@@ -36,7 +36,7 @@ from ._detach_object import _detach_object
 
 from ._compute_dist import _compute_dist
 from ._compute_dist_auto import _compute_dist_auto
-from ._check_free_configuration import _check_free_configuration
+from ._check_free_config import _check_free_config
 
 from ._create_kuka_kr5 import _create_kuka_kr5
 from ._create_epson_t6 import _create_epson_t6
@@ -365,15 +365,11 @@ class Robot:
         return _fkm(self, q, axis, htm, mode)
 
 
-    def ikm(self, htm_target, htm=None, q0=None, p_tol=0.001, a_tol=5, no_iter_max=200, ignore_orientation=False, mode='auto'):
+    def ikm(self, htm_target=None, htm_tg=None, htm=None, q0=None, p_tol=0.001, a_tol=5, no_iter_max=200, ignore_orientation=False, mode='auto'):
         """
     Try to solve the inverse kinematic problem for the end-effector, given a
     desired homogeneous transformation matrix. It returns the manipulator
     configuration.
-
-    Important: it disregards the current htm of the base of the robot. That is,
-    it assumes that robot.htm = np.identity(4). You can easily consider other
-    cases by transforming htm_target as Utils.inv_htm(robot.htm) * htm_target.
 
     Uses an iterative algorithm.
 
@@ -381,7 +377,7 @@ class Robot:
 
     Parameters
     ----------
-    htm_target : 4x4 numpy array or 4x4 nested list
+    htm_tg : 4x4 numpy array or 4x4 nested list
         The target end-effector HTM, written in scenario coordinates.
     htm : 4x4 numpy array or 4x4 nested list
         The pose of the basis of the manipulator.
@@ -411,7 +407,21 @@ class Robot:
     q : n-dimensional numpy column vector
         The configuration that solves the IK problem.
     """
-        return _ikm(self, htm_target, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation, mode)
+    
+    
+        # Backward compatibility shim
+        if htm_tg is None and htm_target is not None:
+            htm_tg = htm_target
+            import warnings
+            warnings.warn(
+                "'htm_target' is deprecated, use 'htm_tg' instead.",
+                DeprecationWarning
+            )
+        elif htm_tg is None:
+            raise ValueError("Missing required argument: 'htm_tg'")    
+        
+    
+        return _ikm(self, htm_tg, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation, mode)
 
     def jac_geo(self, q=None, axis='eef', htm=None, mode='auto'):
         """
@@ -529,38 +539,6 @@ class Robot:
         return _jac_jac_geo(self, q, axis, htm)
 
     #######################################
-    # Methods for dynamics model
-    #######################################
-
-    def dyn_model(self, q, qdot):
-        """
-    Compute the three robot's dynamic model terms, in a given joint configuration 'q'
-    and joint speed 'qdot'.
-
-    Parameters
-    ----------
-    q : n-dimensional numpy vector or array
-        The manipulator's joint configuration.
-
-    qdot : n-dimensional numpy vector or array
-        The manipulator's joint configuration speed.
-
-    Returns
-    -------
-    dyn_m : n x n numpy array
-        The generalized inertia matrix at the joint configuration q.
-
-    dyn_c : n-dimensional numpy column vector
-        The generalized Coriolis-Centrifugal torques at the joint
-        configuration q and joint configuration speed qdot.
-
-    dyn_g : n-dimensional numpy column vector
-        The generalized gravity torques at the joint configuration q.
-
-    """
-        return _dyn_model(self, q, qdot)
-
-    #######################################
     # Methods for control
     #######################################
     @staticmethod
@@ -616,11 +594,14 @@ class Robot:
 
         return _vector_field_rn(q, curve, alpha, const_vel, mode)
 
-    def task_function(self, htm_des, q=None, htm=None, mode='auto'):
+
+
+    
+    def task_function(self, htm_target=None, htm_tg=None, q=None, htm=None, mode='auto'):
         """
     Computes the 6-dimensional task function for end-effector pose control,  
     given a joint configuration, a base configuration and the desired pose 
-    'htm_des'.
+    'htm_tg'.
 
     The first three entries are position error, and the three last entries are
     orientation error.
@@ -631,8 +612,8 @@ class Robot:
 
     Parameters
     ----------
-    htm_des : 4x4 numpy array or 4x4 nested list
-        The desired end-effector pose. 
+    htm_tg : 4x4 numpy array or 4x4 nested list
+        The target end-effector pose. 
  
     q : nd numpy vector or array
         The manipulator's joint configuration.
@@ -655,7 +636,20 @@ class Robot:
     jac_r : 6 x n numpy matrix
         The respective task Jacobian.
     """
-        return _task_function(self, htm_des, q, htm, mode)
+    
+        # Backward compatibility shim
+        if htm_tg is None and htm_target is not None:
+            htm_tg = htm_target
+            import warnings
+            warnings.warn(
+                "'htm_target' is deprecated, use 'htm_tg' instead.",
+                DeprecationWarning
+            )
+        elif htm_tg is None:
+            raise ValueError("Missing required argument: 'htm_tg'")      
+    
+    
+        return _task_function(self, htm_tg, q, htm, mode)
 
 
     #######################################
@@ -1170,7 +1164,10 @@ class Robot:
 
         return _compute_dist_auto(self, q, old_dist_struct, tol, no_iter_max, max_dist, h, eps, mode)
 
-    def check_free_configuration(self, q=None, htm=None, obstacles=[],
+
+        
+
+    def check_free_config(self, q=None, htm=None, obstacles=[],
                               check_joint=True, check_auto=True,
                               tol=0.0005, dist_tol=0.005, no_iter_max=20, mode='auto'):
         """
@@ -1194,7 +1191,6 @@ class Robot:
     htm : 4x4 numpy array or 4x4 nested list
         The robot base's configuration.
         (default: the same as the current htm).
-
 
     check_joint: boolean
         If joint limits should be considered or not.
@@ -1247,7 +1243,7 @@ class Robot:
 
     """
 
-        return _check_free_configuration(self, q, htm, obstacles, check_joint, check_auto, tol, dist_tol, no_iter_max, mode)
+        return _check_free_config(self, q, htm, obstacles, check_joint, check_auto, tol, dist_tol, no_iter_max, mode)
     
     def constrained_control(self, htm_tg, q=None, obstacles=[], htm=None, 
                               Kp =  2.0, eta_obs = 0.3, eta_auto = 0.3, eta_joint = 0.3, 
@@ -1259,4 +1255,23 @@ class Robot:
         return _constrained_control(self, htm_tg, q, obstacles, htm, Kp, eta_obs, eta_auto, eta_joint, 
                               eps_to_obs, h_to_obs, eps_auto,  h_auto, d_safe_obs, d_safe_auto, d_safe_jl,eps_reg)
         
-        
+     
+    #######################################################################################################   
+    #LEGACY
+    def check_free_configuration(self, q=None, htm=None, obstacles=[],
+                              check_joint=True, check_auto=True,
+                              tol=0.0005, dist_tol=0.005, no_iter_max=20, mode='auto'):
+      
+      
+        # Backward compatibility shim
+        import warnings
+        warnings.warn(
+            "'check_free_configuration' is deprecated, use 'check_free_config' instead.",
+            DeprecationWarning
+        )
+              
+        return _check_free_config(self, q, htm, obstacles,
+                              check_joint, check_auto,
+                              tol, dist_tol, no_iter_max, mode)
+     
+    #######################################################################################################

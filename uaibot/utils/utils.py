@@ -8,6 +8,15 @@ from httplib2 import *
 import sys
 import quadprog
 
+from typing import Union, List, TypeAlias, Tuple
+import numpy as np
+import numpy.typing as npt
+
+Vector: TypeAlias = Union[List[float], npt.NDArray[np.float64], np.matrix]
+Matrix: TypeAlias = Union[npt.NDArray[np.float64], np.matrix]
+HTMatrix: TypeAlias = np.matrix
+
+
 import os
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
@@ -40,7 +49,33 @@ class Utils:
     #######################################
 
     @staticmethod
-    def S(v):
+    def cvt(input: Matrix) -> np.matrix:
+        if isinstance(input, list):
+            if all(isinstance(x, (int, float)) for x in input):
+                return np.matrix(input, dtype=np.float64).reshape(-1, 1)
+            elif all(isinstance(x, list) for x in input):
+                return np.matrix(input, dtype=np.float64)
+            else:
+                raise ValueError("Entry is not a valid matrix.")
+        
+        elif isinstance(input, np.ndarray):
+            if input.ndim == 1:
+                return np.matrix(input.reshape(-1, 1), dtype=np.float64)
+            else:
+                if input.shape[1] > 1:
+                    if input.shape[0]==1:
+                        return np.matrix(input, dtype=np.float64).reshape(-1, 1)
+                    else:
+                        return np.matrix(input, dtype=np.float64)
+                else:
+                    return np.matrix(input, dtype=np.float64)                    
+        else:
+            raise TypeError("Entry is not a valid matrix.")                  
+
+        
+
+    @staticmethod
+    def S(v: Vector) -> np.matrix:
         """
       Returns a 3x3 matrix that implements the cross product for a 3D vector  
       as a matricial product, that is, a matrix S(v) such that for any other 
@@ -56,13 +91,13 @@ class Utils:
       S : 3x3 numpy matrix
           A matrix that implements the cross product with v.
       """
-        vv = np.matrix(v).reshape((3,1))
+        vv = Utils.cvt(v)
         return np.matrix([[0, -vv[2,0], vv[1,0]],
                          [vv[2,0], 0, -vv[0,0]],
                          [-vv[1,0], vv[0,0], 0]])
 
     @staticmethod
-    def rot(axis, angle):
+    def rot(axis: Vector, angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in an axis.
@@ -80,14 +115,14 @@ class Utils:
       htm : 4x4 numpy matrix
           The homogeneous transformation matrix.
       """
-        a = np.reshape(axis, (3,))
+        a = Utils.cvt(axis)
         a = a / np.linalg.norm(a)
         K = Utils.S(a)
-        Q = np.identity(3) + sin(angle) * K + (1 - cos(angle)) * (K @ K)
+        Q = np.identity(3) + sin(angle) * K + (1 - cos(angle)) * (K * K)
         return np.hstack([np.vstack([Q, np.matrix([0, 0, 0])]), np.matrix([[0], [0], [0], [1]])])
 
     @staticmethod
-    def trn(vector):
+    def trn(vector: Vector) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the displacement
       of a vector
@@ -102,14 +137,14 @@ class Utils:
       htm : 4x4 numpy matrix
           The homogeneous transformation matrix.
       """
-        v = np.matrix(vector).reshape((3,1))
+        v = Utils.cvt(vector)
         return np.matrix([[1, 0, 0, v[0,0]],
                          [0, 1, 0, v[1,0]],
                          [0, 0, 1, v[2,0]],
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def rotx(angle):
+    def rotx(angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in the 'x' axis.
@@ -130,7 +165,7 @@ class Utils:
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def roty(angle):
+    def roty(angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in the 'y' axis.
@@ -151,7 +186,7 @@ class Utils:
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def rotz(angle):
+    def rotz(angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in the 'z' axis.
@@ -172,7 +207,7 @@ class Utils:
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def htm_rand(trn_min=[0.,0.,0.], trn_max = [1.,1.,1.], rot=np.pi/2):
+    def htm_rand(trn_min: float =[0.,0.,0.], trn_max: float = [1.,1.,1.], rot: float =np.pi/2) -> HTMatrix:
         """
       Returns a random homogeneous transformation matrix.
 
@@ -202,7 +237,7 @@ class Utils:
         return Utils.trn([x,y,z]) * Utils.rotx(ax) * Utils.roty(ay) * Utils.rotz(az)
 
     @staticmethod
-    def inv_htm(htm):
+    def inv_htm(htm: HTMatrix) -> HTMatrix:
         """
       Given a homogeneous transformation matrix, compute its inverse.
       It is faster than using numpy.linalg.inv in the case of HTMs.
@@ -217,6 +252,7 @@ class Utils:
       inv_htm: 4X4 numpy array
           The inverse of the transformation matrix.       
       """
+
         Q = htm[0:3, 0:3]
         p = htm[0:3, 3]
 
@@ -228,7 +264,7 @@ class Utils:
         return inv_htm
 
     @staticmethod
-    def axis_angle(htm):
+    def axis_angle(htm: Matrix) -> Tuple[np.matrix, float]:
         """
       Given an homogeneous transformation matrix representing a rotation, 
       return the rotation axis angle.
@@ -246,6 +282,7 @@ class Utils:
       angle : float
           The rotation angle, in radians.        
       """
+      
         Q = htm[0:3, 0:3]
         trace = Q[0, 0] + Q[1, 1] + Q[2, 2]
         angle = acos((trace - 1) / 2)
@@ -267,7 +304,7 @@ class Utils:
         return axis, angle
 
     @staticmethod
-    def euler_angles(htm):
+    def euler_angles(htm: Matrix) -> Tuple[float, float, float]:
         """
         Computer the Euler angles of a rotation matrix.
         Find alpha, beta and gamma such that.
@@ -305,7 +342,7 @@ class Utils:
 
 
     @staticmethod
-    def dp_inv(A, eps = 0.001):
+    def dp_inv(A: Matrix, eps: float = 0.001) -> np.matrix:
         """
       Compute the damped pseudoinverse of the matrix 'mat'.
       
@@ -323,12 +360,12 @@ class Utils:
       pinvA: mxn numpy array
           The damped pseudoinverse of 'mat'.
       """
-        A_int = np.matrix(A)
-        n = np.shape(A)[1]
+        A_int =  Utils.cvt(A)
+        n = np.shape(A_int)[1]
         return np.linalg.inv(A_int.T * A_int + eps * np.identity(n)) * A_int.T
 
     @staticmethod
-    def dp_inv_solve(A, b, eps = 0.001, mode='auto'):
+    def dp_inv_solve(A: Matrix, b: Vector, eps: float = 0.001, mode: str ='auto') -> np.matrix:
         """
       Solve the problem of minimizing ||A*x-b||^2 + eps*||x||^2
       It is the same as dp_inv(A,eps)*b, but faster
@@ -354,72 +391,24 @@ class Utils:
         if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
             raise Exception("c++ mode is set, but .so file was not loaded!")
 
-        n, m = A.shape
+        A_cvt = Utils.cvt(A)
+        b_cvt = Utils.cvt(b)
+        n, m = A_cvt.shape
         
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             
             M = np.block([
-                [eps * np.eye(m), -A.T],
-                [A, np.eye(n)]
+                [eps * np.eye(m), -A_cvt.T],
+                [A_cvt, np.eye(n)]
             ])
             
-            rhs = np.concatenate((np.zeros((m,1)), b))
+            rhs = np.concatenate((np.zeros((m,1)), b_cvt))
             solution = np.linalg.solve(M, rhs)
             
-            return np.matrix(solution[:m]).reshape((m,1))
+            return Utils.cvt(solution[:m])
         else:
-            return np.matrix(ub_cpp.dp_inv_solve(A,b,eps)).reshape((m,1))
+            return Utils.cvt(ub_cpp.dp_inv_solve(A_cvt,b_cvt,eps))
                  
-
-    @staticmethod
-    def hierarchical_solve(mat_a, mat_b, eps=0.001):
-        """
-      Solve the lexicographical unconstrained quadratic optimization problem
-
-      lexmin_x ||mat_a[i]*x - b[i]||² + eps*||x||²
-
-      with lower indexes having higher priority than higher indexes.
-
-      Parameters
-      ----------
-      mat_a: A list of matrices (double arrays or numpy matrices).
-          The matrices mat_a[i]. All must have the same number of columns.
-
-      mat_b: A list of column vectors (double arrays or numpy matrices).
-          The vectors mat_b[i]. The number of rows of mat_b[i] must be equal to the number
-          of rows of mat_a[i].
-
-      eps: positive float
-          Damping parameter.
-          (default: 0.001).
-
-      Returns
-      -------
-      x: numpy column vector
-          The solution x. For positive eps, the solution is always unique.
-      """
-
-
-        x_sol = Utils.dp_inv(mat_a[0], eps) * mat_b[0]
-
-        if len(mat_a) > 1:
-
-            null_mat_a = null_space(mat_a[0])
-
-            if np.shape(null_mat_a)[1] > 0:
-                mat_a_mod = []
-                mat_b_mod = []
-                for i in range(1, len(mat_a)):
-                    mat_a_mod.append(mat_a[i] * null_mat_a)
-                    mat_b_mod.append(mat_b[i] - mat_a[i] * x_sol)
-
-                y_sol = Utils.hierarchical_solve(mat_a_mod, mat_b_mod, eps)
-                return x_sol + null_mat_a * y_sol
-            else:
-                return x_sol
-        else:
-            return x_sol
-
 
     @staticmethod
     def interpolate(points):
@@ -550,22 +539,25 @@ class Utils:
         return lambda t: aux_interpolate_multiple(points, t)
 
     @staticmethod
-    def solve_qp(H, f, A, b):
+    def solve_qp(H: Matrix, f: Vector, A: Matrix, b: Vector) -> np.matrix:
         #Solves u^THu/2 + f^Tu subject to Au>=b
+        
+        H_cvt = Utils.cvt(H)
+        f_cvt = Utils.cvt(f)
+        A_cvt = Utils.cvt(A)
+        b_cvt = Utils.cvt(b)
+        
+        m = H_cvt.shape[0]
+        n = A_cvt.shape[0]
     
-        H = 0.5 * (H + H.T)  
-
-        m = H.shape[0]
-        n = A.shape[0]
-
-        f = np.asarray(f).reshape((m,))   
-        b = np.asarray(b).reshape((n,))   
-
-        C = A.T  
+        H_cvt = 0.5 * (H_cvt + H_cvt.T)  
         
-        result = quadprog.solve_qp(H, -f, C, b, 0)
+        fc = np.asarray(f_cvt).reshape((m,))
+        bc =  np.asarray(b_cvt).reshape((n,))
+
+        result = quadprog.solve_qp(H_cvt, -fc , A_cvt.T, bc, 0)
         
-        return np.matrix(result[0].reshape((m,1)))
+        return Utils.cvt(result[0])
 
     #######################################
     # Type check functions
@@ -963,13 +955,13 @@ class Utils:
     @staticmethod
     def compute_aabbdist(obj1, obj2):
 
-        w1, d1, h1 = obj1.aabb()
-        w2, d2, h2 = obj2.aabb()
-        delta = obj1.htm[0:3, -1] - obj2.htm[0:3, -1]
+        box1 = obj1.aabb()
+        box2 = obj2.aabb()
+        delta = box1.htm[0:3, -1] - box2.htm[0:3, -1]
 
-        dx = max(abs(delta[0, 0]) - (w1 + w2) / 2, 0)
-        dy = max(abs(delta[1, 0]) - (d1 + d2) / 2, 0)
-        dz = max(abs(delta[2, 0]) - (h1 + h2) / 2, 0)
+        dx = max(abs(delta[0, 0]) - (box1.width + box2.width) / 2, 0)
+        dy = max(abs(delta[1, 0]) - (box1.depth + box2.depth) / 2, 0)
+        dz = max(abs(delta[2, 0]) - (box1.height + box2.height) / 2, 0)
 
         return np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
 
@@ -1050,11 +1042,11 @@ class Utils:
         if p_a_init is None:
             if ((mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1')) and h >= 1e-5:
                 dist_res = obj_a_cpp.dist_to(obj_b_cpp, 0.0, 0.0, tol, no_iter_max, np.matrix([0,0,0]).reshape((3,1)))
-                p_a = np.matrix(dist_res.proj_A).reshape((3,1))
+                p_a = Utils.cvt(dist_res.proj_A)
             else:
-                p_a = np.random.uniform(-3, 3, size=(3,))
+                p_a = Utils.cvt(np.random.uniform(-3, 3, size=(3,)))
         else:
-            p_a = np.array(p_a_init)
+            p_a = Utils.cvt(p_a_init)
 
 
         if not (p_a_init is None or Utils.is_a_vector(p_a_init, 3)):
@@ -1080,10 +1072,10 @@ class Utils:
             if h >0 or eps > 0:
                 raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
             
-            return Utils.compute_dist_python(obj_a, obj_b, p_a_init, tol, no_iter_max)
+            return Utils.compute_dist_python(obj_a, obj_b, p_a, tol, no_iter_max)
         else:
             dist_res = obj_a_cpp.dist_to(obj_b_cpp, h, eps, tol, no_iter_max, p_a)
-            return np.matrix(dist_res.proj_A).reshape((3,1)), np.matrix(dist_res.proj_B).reshape((3,1)), dist_res.dist, dist_res.hist_error
+            return Utils.cvt(dist_res.proj_A), Utils.cvt(dist_res.proj_B), dist_res.dist, dist_res.hist_error
 
 
 

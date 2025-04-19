@@ -360,18 +360,20 @@ class Ball:
             raise Exception("c++ mode is set, but .so file was not loaded!")
 
         # end error handling
+        
+        point_cvt = Utils.cvt(point)
 
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-            dd = np.linalg.norm(point - self._htm[0:3, 3])
+            dd = np.linalg.norm(point_cvt - self._htm[0:3, 3])
             d = max(dd-self.radius,0)
 
             if d == 0:
-                return np.matrix(point).reshape((3,1)), d
+                return point_cvt, d
             else:
-                cp = self._htm[0:3, 3] + self.radius * (np.matrix(point).reshape((3,1)) - self._htm[0:3, 3]) / dd
+                cp = self._htm[0:3, 3] + self.radius * (point_cvt - self._htm[0:3, 3]) / dd
                 return cp, d
         else:
-            pr = obj_cpp.projection(np.matrix(point).reshape((3,1)), h, eps)
-            return np.matrix(pr.proj).transpose(), pr.dist
+            pr = obj_cpp.projection(point_cvt, h, eps)
+            return Utils.cvt(pr.proj), pr.dist
 
 

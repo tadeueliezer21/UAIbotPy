@@ -115,7 +115,7 @@ def _compute_dist(self, obj, q=None, htm=None, old_dist_struct=None, tol=0.0005,
         if h >0 or eps > 0:
             raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
         
-        return _compute_dist_python(self, obj, q, htm, old_dist_struct, tol, no_iter_max, max_dist)
+        return _compute_dist_python(self, obj, Utils.cvt(q), htm, old_dist_struct, tol, no_iter_max, max_dist)
     else:
         
 
@@ -134,7 +134,7 @@ def _compute_dist_python(self, obj, q=None, htm=None, old_dist_struct=None, tol=
 
     dist_struct = DistStructRobotObj(obj, self)
 
-    jac_dh, mth_dh = self.jac_geo(q, "dh", htm, "python")
+    jac_dh, mth_dh = self.jac_geo(q, "dh", htm, mode = "python")
 
     col_object_copy = []
 
@@ -160,7 +160,7 @@ def _compute_dist_python(self, obj, q=None, htm=None, old_dist_struct=None, tol=
                     p_obj_0 = np.matrix(np.random.uniform(-100, 100, size=(3, 1)))
                 else:
                     try:
-                        p_obj_0 = old_dist_struct.get_item(i, j).point_object
+                        p_obj_0 = Utils.cvt(old_dist_struct.get_item(i, j).point_object)
                     except:
                         p_obj_0 = np.matrix(np.random.uniform(-100, 100, size=(3, 1)))
 

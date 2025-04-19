@@ -32,10 +32,10 @@ def _vector_field_rn(q, curve, alpha, const_vel, mode='auto'):
     # end error handling
 
     if mode=='python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-        return _vector_field_rn_python(q, curve, alpha, const_vel)
+        return _vector_field_rn_python(Utils.cvt(q), curve, alpha, const_vel)
     else:
-        vf_res =  ub_cpp.vector_field_rn(np.matrix(q).reshape((n,1)), curve, alpha, const_vel)
-        return vf_res.qdot, vf_res.dist, vf_res.index
+        vf_res =  ub_cpp.vector_field_rn(Utils.cvt(q), curve, alpha, const_vel)
+        return Utils.cvt(vf_res.qdot), vf_res.dist, vf_res.index
 
 
 
@@ -59,17 +59,17 @@ def _compute_ntd(curve, p):
 
     n = np.shape(curve)[0]
 
-    pr = np.matrix(p).reshape((n,1))
+    pr = Utils.cvt(p)
 
     for i in range(len(curve)):
-        dist_temp = np.linalg.norm(pr - np.matrix(curve[i]).reshape((n,1)))
+        dist_temp = np.linalg.norm(pr - Utils.cvt(curve[i]))
         if dist_temp < min_dist:
             min_dist = dist_temp
             ind_min = i
 
 
 
-    vec_n = np.matrix(curve[:,ind_min]).reshape((n,1)) - pr
+    vec_n = Utils.cvt(curve[:,ind_min]) - pr
     vec_n = vec_n / (np.linalg.norm(vec_n) + _EPS)
 
     if ind_min == len(curve) - 1:

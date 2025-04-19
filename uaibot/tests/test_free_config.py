@@ -58,7 +58,7 @@ for i in range(Ntry):
     robot.update_col_object(i)
     
     start = time.time() 
-    isfree, message, info = robot.check_free_configuration(q=qnew, obstacles=all_obj)
+    isfree, message, info = robot.check_free_config(q=qnew, obstacles=all_obj)
     end =  time.time() 
     elapsed = end - start
     sum_time+=elapsed

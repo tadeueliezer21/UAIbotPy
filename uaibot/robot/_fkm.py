@@ -33,13 +33,13 @@ def _fkm(self, q=None, axis='eef', htm=None, mode='auto'):
     # end error handling
 
     if mode == 'python' or axis == 'com' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-        return _fkm_python(self, q, axis, htm)
+        return _fkm_python(self, Utils.cvt(q), axis, htm)
     else:
-        fk_res = self.cpp_robot.fk(q, htm, False)
+        fk_res = self.cpp_robot.fk(Utils.cvt(q), htm, False)
         if axis=='eef':
-            return np.matrix(fk_res.htm_ee)
+            return Utils.cvt(fk_res.htm_ee)
         else:
-            return [np.matrix(m) for m in fk_res.htm_dh]
+            return [Utils.cvt(m) for m in fk_res.htm_dh]
 
 def _fkm_python(self, q, axis, htm):
 
@@ -53,16 +53,12 @@ def _fkm_python(self, q, axis, htm):
             htm_dh[i][:, :] = htm_dh[i - 1][:, :]
 
         if self.links[i].joint_type == 0:
-            htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.rotz(q[i])
+            htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.rotz(q[i,0])
         else:
             htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.rotz(self._links[i].theta)
 
         if self.links[i].joint_type == 1:
-            if isinstance(q, (np.matrix, np.ndarray)):
-                qi =  float(np.ravel(q)[i])
-            elif isinstance(q, list):
-                qi = float(q[i])
-            htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.trn([0, 0, qi])
+            htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.trn([0, 0, q[i,0]])
         else:
             htm_dh[i][:, :] = htm_dh[i][:, :] * Utils.trn([0, 0, self._links[i].d])
 

@@ -414,8 +414,11 @@ class Box:
             raise Exception("c++ mode is set, but .so file was not loaded!")
 
         # end error handling
+        
+        point_cvt = Utils.cvt(point)
+        
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-            tpoint = self._htm[0:3, 0:3].T * (point - self._htm[0:3, 3])
+            tpoint = self._htm[0:3, 0:3].T * (point_cvt - self._htm[0:3, 3])
 
             if abs(tpoint[0,0]) < self.width/2:
                 x = tpoint[0,0]
@@ -442,5 +445,5 @@ class Box:
 
             return self._htm[0:3, 0:3] * np.matrix([[x], [y], [z]]) + self._htm[0:3, 3], d
         else:
-            pr = obj_cpp.projection(np.matrix(point).reshape((3,1)), h, eps)
-            return np.matrix(pr.proj).transpose(), pr.dist
+            pr = obj_cpp.projection(Utils.cvt(point), h, eps)
+            return Utils.cvt(pr.proj), pr.dist

@@ -1,7 +1,7 @@
 from utils import *
 import numpy as np
 
-def _check_free_configuration(self, q=None, htm=None, obstacles=[],
+def _check_free_config(self, q=None, htm=None, obstacles=[],
                               check_joint=True, check_auto=True,
                               tol=0.0005, dist_tol=0.005, no_iter_max=20, mode='auto'):
     
@@ -49,7 +49,7 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
     # end error handling
 
     if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-        return _check_free_configuration_python(self, q, htm, obstacles, check_joint, check_auto, tol, dist_tol, no_iter_max)
+        return _check_free_config_python(self, Utils.cvt(q), htm, obstacles, check_joint, check_auto, tol, dist_tol, no_iter_max)
     else:
         obstacles_cpp=[]
         for obs in obstacles:
@@ -58,19 +58,19 @@ def _check_free_configuration(self, q=None, htm=None, obstacles=[],
             else:
                 obstacles_cpp.append(Utils.obj_to_cpp(obs))
                 
-        cfcres = self.cpp_robot.check_free_configuration(q, htm, obstacles_cpp, check_joint, check_auto, tol, dist_tol, no_iter_max)
+        cfcres = self.cpp_robot.check_free_configuration(Utils.cvt(q), htm, obstacles_cpp, check_joint, check_auto, tol, dist_tol, no_iter_max)
         return cfcres.isfree, cfcres.message, cfcres.info
 
 
         
-def _check_free_configuration_python(self, q=None, htm=None, obstacles=[],
+def _check_free_config_python(self, q=None, htm=None, obstacles=[],
                               check_joint=True, check_auto=True,
                               tol=0.0005, dist_tol=0.005, no_iter_max=20):
     
     n = len(self.links)
 
     #_, mth_dh = self.jac_geo(q, "dh", htm)
-    mth_dh = self.fkm(q, "dh", htm)
+    mth_dh = self.fkm(q, "dh", htm, mode='python')
 
     col_object_copy = []
 
@@ -134,7 +134,7 @@ def _check_free_configuration_python(self, q=None, htm=None, obstacles=[],
 
         if Utils.compute_aabbdist(obstacles[j], col_object_copy[i][isub]) == 0:
             _, _, d = Utils.compute_dist(obstacles[j], col_object_copy[i][isub] \
-                                                     , None, tol, no_iter_max)
+                                                     , None, tol, no_iter_max, mode='python')
             if d < dist_tol:
                 collided = True
                 message = "Collision between link " + str(i) + " (col object " + str(isub) + ") and obstacle "+str(j)+"."
@@ -156,7 +156,7 @@ def _check_free_configuration_python(self, q=None, htm=None, obstacles=[],
             if Utils.compute_aabbdist(col_object_copy[i][isub], col_object_copy[j][jsub]) == 0:
 
                 _, _, d = Utils.compute_dist(col_object_copy[i][isub], col_object_copy[j][jsub] \
-                                                         , None, tol, no_iter_max)
+                                                         , None, tol, no_iter_max, mode='python')
                 
                 if d < dist_tol:
                     collided = True
