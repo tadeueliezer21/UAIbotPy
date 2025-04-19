@@ -5,6 +5,8 @@ from scipy.spatial import HalfspaceIntersection, ConvexHull
 from scipy.optimize import linprog
 from simobjects.box import *
 import os
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
 
 def is_unbounded(A, b):
     n_dim = A.shape[1]
@@ -83,7 +85,7 @@ class ConvexPolytope:
 
   Parameters
   ----------
-  htm : 4x4 numpy array or 4x4 nested list or None
+  htm : 4x4 numpy matrix
       Decide the object's **initial** placement of its frame 
       If 'None', a frame placement is computed automatically using SVD
       (default: 'None').
@@ -94,15 +96,13 @@ class ConvexPolytope:
 
   A : (n,3)-shaped numpy matrix
       The A matrix that forms the convex polytope according to Ap<=b.
+      (default: A matrix that creates a pyramid).
 
 
   b : (n,1)-shaped numpy matrix
       The b matrix that forms the convex polytope according to Ap<=b.
+      (default: A matrix that creates a pyramid).
       
-  mass : positive float
-      The object's mass, in kg.
-      (default: 1).
-
   color : string
       The object's color, a HTML - compatible string.
       (default: "red").
@@ -120,47 +120,42 @@ class ConvexPolytope:
     #######################################
 
     @property
-    def A(self):
+    def A(self) -> np.matrix:
         """The A matrix that forms the convex polytope according to Ap<=b."""
         return self._A
 
     @property
-    def b(self):
+    def b(self) -> np.matrix:
         """The b matrix that forms the convex polytope according to Ap<=b."""
         return self._b
 
     @property
-    def vertexes(self):
+    def vertexes(self) -> List[np.matrix]:
         """All the vertexes of the polygon"""
         return self._vertexes
 
     @property
-    def faces(self):
+    def faces(self) -> List:
         """All the faces of the polygon"""
         return self._faces
         
     @property
-    def name(self):
+    def name(self) -> str:
         """The object name."""
         return self._name
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return np.matrix(self._htm)
 
     @property
-    def mass(self):
-        """Mass of the object, in kg."""
-        return self._mass
-
-    @property
-    def color(self):
+    def color(self) -> str:
         """Color of the object"""
         return self.mesh_material.color
 
     @property
-    def mesh_material(self):
+    def mesh_material(self) -> "MeshMaterial":
         """Mesh material properties of the object"""
         return self._mesh_material
 
@@ -168,15 +163,26 @@ class ConvexPolytope:
     # Constructor
     #######################################
 
-    def __init__(self, htm=None, name="", A=[], b=[], mass=1, color="red", opacity=1, \
-                 mesh_material=None):
+    A_PYRAMID = np.matrix([[ 0.117 ,  0.    ,  0.0338],
+        [-0.    ,  0.117 ,  0.0338],
+        [-0.117 ,  0.    ,  0.0338],
+        [-0.    , -0.117 ,  0.0338],
+        [ 0.    ,  0.    , -1.    ]])
+    
+    B_PYRAMID = np.matrix([[0.0152],
+        [0.0152],
+        [0.0152],
+        [0.0152],
+        [0.    ]])
+    
+    
+    def __init__(self, htm: Optional["HTMatrix"]= None, name: str ="", 
+                 A: Matrix = A_PYRAMID, b: Vector = B_PYRAMID, color: str ="red", opacity: float =1, \
+                 mesh_material: Optional["MeshMaterial"] = None) -> "ConvexPolytope":
 
         # Error handling
         if not (Utils.is_a_matrix(htm, 4, 4) or htm is None):
             raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix, or 'None'.")
-
-        if not Utils.is_a_number(mass) or mass < 0:
-            raise Exception("The parameter 'mass' should be a positive float.")
 
         if not Utils.is_a_matrix(A,None,3) :
             raise Exception("The parameter 'A' should be a matrix with 3 columns.")
@@ -208,17 +214,20 @@ class ConvexPolytope:
         # end error handling
         
         #If htm is not set, compute it automatically using SVD
+        A_cvt = Utils.cvt(A)
+        b_cvt = Utils.cvt(b)
+        
         if htm is None:
-            vertexes, _ = compute_polytope(A, b)
+            vertexes, _ = compute_polytope(A_cvt, b_cvt)
             htm = compute_htm(vertexes)
             
         #Transform the shape according the initial htm0
-        n = np.shape(A)[0]
+        n = np.shape(A_cvt)[0]
         htm_m = np.matrix(htm)
         Q = htm_m[0:3,0:3]
         pc = htm_m[0:3,-1]
-        A_m = np.matrix(A)*Q
-        b_m = np.matrix(b).reshape((n,1))-np.matrix(A)*pc
+        A_m = A_cvt*Q
+        b_m = b_cvt-A_cvt*pc
         
         self._vertexes, self._faces = compute_polytope(A_m, b_m)
         
@@ -226,7 +235,6 @@ class ConvexPolytope:
         self._b = np.matrix(b_m).reshape((n,1))
         self._htm = htm_m
         self._name = name
-        self._mass = 1
         self._frames = []
         self._max_time = 0
         
@@ -269,7 +277,6 @@ class ConvexPolytope:
         string += " Number of vertexes: " + str(len(self.vertexes)) + "\n"
         string += " Number of faces: " + str(len(self.faces)) + "\n"
         string += " Color: " + str(self.color) + "\n"
-        string += " Mass (kg): " + str(self.mass) + "\n"
         string += " HTM: \n" + str(self.htm) + "\n"
 
         return string
@@ -278,7 +285,7 @@ class ConvexPolytope:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, htm=None):
+    def add_ani_frame(self, time: float, htm: Optional["HTMatrix"]=None) -> None:
         """
     Add a single configuration to the object's animation queue.
 
@@ -286,7 +293,7 @@ class ConvexPolytope:
     ----------
     time: positive float
         The timestamp of the animation frame, in seconds.
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -314,14 +321,14 @@ class ConvexPolytope:
         self._frames.append(f)
         self._max_time = max(self._max_time, time)
 
-    def set_ani_frame(self, htm=None):
+    def set_ani_frame(self, htm: Optional["HTMatrix"]=None) -> None:
         """
     Reset object's animation queue and add a single configuration to the 
     object's animation queue.
 
     Parameters
     ----------
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -356,11 +363,11 @@ class ConvexPolytope:
 
         return string
 
-    def copy(self):
+    def copy(self) -> "ConvexPolytope":
         """Return a deep copy of the object, without copying the animation frames."""
         return ConvexPolytope(self.htm, self.name + "_copy", self.A, self.b, self.color)
 
-    def aabb(self, mode='auto'):
+    def aabb(self, mode: str ='auto') -> "Box":
         """
     Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
 
@@ -373,7 +380,7 @@ class ConvexPolytope:
             
     Returns
     -------
-     aab: the AABB as a uaibot.Box object
+     aabb: the AABB as a uaibot.Box object
     """
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
@@ -412,7 +419,7 @@ class ConvexPolytope:
             return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5) 
 
 
-    def to_point_cloud(self, disc=0.025, mode='auto'):
+    def to_point_cloud(self, disc: float =0.025, mode: str = 'auto') -> "PointCloud":
         """
     Transform the object into a PointCloud object using the discretization 'delta'.
 
@@ -501,11 +508,14 @@ class ConvexPolytope:
             return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc/2)
         
     # Compute distance to an object
-    def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+    def compute_dist(self, obj: MetricObject,  p_init: Optional[Vector] = None, 
+                     tol: float =0.001, no_iter_max: int =20, h: float =0, 
+                     eps: float = 0, mode: str ='auto') -> Tuple[Vector, Vector, float, List]:
+        
         return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
     
     # Compute the projection of a point into an object
-    def projection(self, point, h=0, eps = 0, mode='auto'):
+    def projection(self, point: Vector, h: float =0, eps: float = 0, mode: str ='auto') -> Tuple[Vector,float]:
         """
     The projection of a point in the object, that is, the
     closest point in the object to a point 'point'.

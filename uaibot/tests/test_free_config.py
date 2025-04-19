@@ -33,7 +33,7 @@ for i in range(Nobj):
     
     while cont:
         obj = generate_rand_object(color='red', size=0.2, spread=0.4)
-        isfree, message, info = robot.check_free_configuration(q=robot.q, obstacles=[obj])
+        isfree, message, info = robot.check_free_config(q=robot.q, obstacles=[obj])
         cont = not isfree
     
     all_obj.append(obj)

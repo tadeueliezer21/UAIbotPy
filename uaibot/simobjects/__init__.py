@@ -8,4 +8,4 @@ from .htmldiv import *
 from .pointcloud import *
 from .pointlight import *
 from .rigidobject import *
-from .vector import *
+from .arrow import *

@@ -1,10 +1,11 @@
 import numpy as np
 from utils import *
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
 
-
-class Vector:
+class Arrow:
     """
-   A vector object (arrow).
+   An arrow object (vector).
 
    Parameters
    ----------
@@ -24,27 +25,27 @@ class Vector:
     #######################################
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the object."""
         return self._name
 
     @property
-    def color(self):
+    def color(self) -> str:
         """Color of the object"""
         return self._color
 
     @property
-    def thickness(self):
+    def thickness(self) -> float:
         """The thickness of the vetor."""
         return self._thickness
 
     @property
-    def origin(self):
+    def origin(self) -> Vector:
         """The origin point of the vector, in scenario coordinates and in meters."""
         return self._origin
 
     @property
-    def vector(self):
+    def vector(self) -> Vector:
         """The vector, in scenario coordinates and in meters."""
         return self._vector
 
@@ -52,7 +53,8 @@ class Vector:
     # Constructor
     #######################################
 
-    def __init__(self, name="", color="black", thickness=1, origin=[0, 0, 0], vector=[0.5, 0.5, 0.5]):
+    def __init__(self, name: str ="", color: str ="black", thickness: float =1, 
+                 origin: Vector =[0, 0, 0], vector: Vector =[0.5, 0.5, 0.5]) -> "Arrow":
 
         # Error handling
 
@@ -95,7 +97,7 @@ class Vector:
 
     def __repr__(self):
 
-        string = "Vector '" + self.name + "': \n\n"
+        string = "Arrow '" + self.name + "': \n\n"
         string += "Origin: "+str(self.origin)+" \n"
         string += "Vector: " + str(self.vector) + " \n"
 
@@ -105,7 +107,7 @@ class Vector:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, origin=None, vector=None):
+    def add_ani_frame(self, time: float, origin: Optional[Vector] = None, vector: Optional[Vector] = None) -> None:
 
         if origin is None:
             origin = self.origin
@@ -137,7 +139,7 @@ class Vector:
         self._max_time = max(self._max_time, time)
 
     # Set config. Restart animation queue
-    def set_ani_frame(self, start_point=None, end_point=None):
+    def set_ani_frame(self, start_point: Optional[Vector] = None, end_point : Optional[Vector] = None) -> None:
 
         self._frames = []
         self.add_ani_frame(0, start_point, end_point)

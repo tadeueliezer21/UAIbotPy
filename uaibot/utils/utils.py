@@ -7,15 +7,7 @@ from scipy.linalg import null_space
 from httplib2 import *
 import sys
 import quadprog
-
-from typing import Union, List, TypeAlias, Tuple
-import numpy as np
-import numpy.typing as npt
-
-Vector: TypeAlias = Union[List[float], npt.NDArray[np.float64], np.matrix]
-Matrix: TypeAlias = Union[npt.NDArray[np.float64], np.matrix]
-HTMatrix: TypeAlias = np.matrix
-
+from .types import *
 
 import os
 if os.environ['CPP_SO_FOUND']=="1":
@@ -30,7 +22,7 @@ class Utils:
     #######################################
 
     UAIBOT_NAME_TYPES = ['uaibot.', 'cylinder.', 'box.', 'ball.', 'convexpolytope.', 'robot.', 'simulation.', 'meshmaterial.', 'mtlmeshmaterial.',
-                             'glbmeshmaterial.', 'texture.', 'pointlight.', 'frame.', 'model3d.', 'links.', 'pointcloud.', 'vector.', 'rigidobject.',
+                             'glbmeshmaterial.', 'texture.', 'pointlight.', 'frame.', 'model3d.', 'links.', 'pointcloud.', 'arrow.', 'rigidobject.',
                              '.group', '.htmldiv', 'CPP_GeometricPrimitives', 'CPP_DistStructRobotObj','CPP_AABB']
 
     IS_SIMPLE = ['uaibot.Ball', 'uaibot.Box', 'uaibot.Cylinder', 'uaibot.ConvexPolytope']
@@ -41,7 +33,7 @@ class Utils:
                     'uaibot.RigidObject', 'uaibot.Group', 'uaibot.Robot', 'uaibot.PointLight']
 
     IS_OBJ_SIM = ['uaibot.Ball', 'uaibot.Box', 'uaibot.Cylinder', 'uaibot.ConvexPolytope', 'uaibot.Robot',
-                  'uaibot.PointLight', 'uaibot.Frame', 'uaibot.PointCloud', 'uaibot.Vector',
+                  'uaibot.PointLight', 'uaibot.Frame', 'uaibot.PointCloud', 'uaibot.Arrow',
                   'uaibot.RigidObject', 'uaibot.Group', 'uaibot.HTMLDiv']
 
     #######################################
@@ -560,7 +552,7 @@ class Utils:
         return Utils.cvt(result[0])
 
     #######################################
-    # Type check functions
+    # Type check and conversion functions
     #######################################
 
     @staticmethod
@@ -910,80 +902,7 @@ class Utils:
             except ImportError:
                 return "Not in Jupyter/Colab"
         return "None"
-    
-    #######################################
-    # Distance computation functions
-    #######################################
 
-    @staticmethod
-    def softmin(x,h):
-        minval = np.min(x)
-        s=0
-
-        for val in x:
-            s+= exp(-h*(val-minval))
-
-        return minval -(1/h)*np.log(s)
-
-    @staticmethod
-    def softselectmin(x, y, h):
-        minval = np.min(x)
-        s = 0
-
-        coef = []
-        for val in x:
-            coef.append(exp(-(val - minval)/h))
-            s += coef[-1]
-
-        coef = [c/s for c in coef]
-
-        sselect = 0 * y[0]
-        for i in range(len(coef)):
-            sselect += coef[i] * y[i]
-
-        return sselect, minval - h * np.log(s/len(coef))
-
-
-    @staticmethod
-    def softmax(x, h):
-        return Utils.softmin(x,-h)
-
-    @staticmethod
-    def softselectmax(x, y, h):
-        return Utils.softselectmin(x,y,-h)
-
-    @staticmethod
-    def compute_aabbdist(obj1, obj2):
-
-        box1 = obj1.aabb()
-        box2 = obj2.aabb()
-        delta = box1.htm[0:3, -1] - box2.htm[0:3, -1]
-
-        dx = max(abs(delta[0, 0]) - (box1.width + box2.width) / 2, 0)
-        dy = max(abs(delta[1, 0]) - (box1.depth + box2.depth) / 2, 0)
-        dz = max(abs(delta[2, 0]) - (box1.height + box2.height) / 2, 0)
-
-        return np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
-
-
-
-    @staticmethod
-    def compute_dist_python(obj_a, obj_b, p_a, tol=0.001, no_iter_max=20):
-
-        converged = False
-        i = 0
-
-        while (not converged) and i < no_iter_max:
-            p_a_ant = p_a
-            p_b, _ = obj_b.projection(p_a)
-            p_a, _ = obj_a.projection(p_b)
-            converged = np.linalg.norm(p_a - p_a_ant) < tol
-            i += 1
-
-        dist = np.linalg.norm(p_a - p_b)
-
-        return p_a, p_b, dist
-    
     @staticmethod
     def obj_to_cpp(obj, htm=None):
             
@@ -1005,9 +924,84 @@ class Utils:
                 A = obj.A * Q.transpose()
                 b = obj.b + obj.A * Q.transpose()*p
                 return ub_cpp.CPP_GeometricPrimitives.create_convexpolytope(htm, A, b)
-            
+                
+    #######################################
+    # Distance computation functions
+    #######################################
+
     @staticmethod
-    def compute_dist(obj_a, obj_b, p_a_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+    def softmin(x: List[float], h: float) -> float:
+        minval = np.min(x)
+        s=0
+
+        for val in x:
+            s+= exp(-h*(val-minval))
+
+        return minval -(1/h)*np.log(s)
+
+    @staticmethod
+    def softselectmin(x: List[Vector], y: List[float], h: float) -> Vector:
+        minval = np.min(x)
+        s = 0
+
+        coef = []
+        for val in x:
+            coef.append(exp(-(val - minval)/h))
+            s += coef[-1]
+
+        coef = [c/s for c in coef]
+
+        sselect = 0 * y[0]
+        for i in range(len(coef)):
+            sselect += coef[i] * y[i]
+
+        return sselect, minval - h * np.log(s/len(coef))
+
+
+    @staticmethod
+    def softmax(x: List[float], h: float) -> float:
+        return Utils.softmin(x,-h)
+
+    @staticmethod
+    def softselectmax(x: List[Vector], y: List[float], h: float) -> Vector:
+        return Utils.softselectmin(x,y,-h)
+
+    @staticmethod
+    def compute_aabbdist(obj1: MetricObject , obj2: MetricObject) -> float:
+
+        box1 = obj1.aabb()
+        box2 = obj2.aabb()
+        delta = box1.htm[0:3, -1] - box2.htm[0:3, -1]
+
+        dx = max(abs(delta[0, 0]) - (box1.width + box2.width) / 2, 0)
+        dy = max(abs(delta[1, 0]) - (box1.depth + box2.depth) / 2, 0)
+        dz = max(abs(delta[2, 0]) - (box1.height + box2.height) / 2, 0)
+
+        return np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+
+
+    @staticmethod
+    def compute_dist_python(obj_a: MetricObject, obj_b: MetricObject, p_a: Vector, 
+                            tol: float =0.001, no_iter_max: int =20) -> Tuple[Vector, Vector, float, List]:
+
+        converged = False
+        i = 0
+
+        while (not converged) and i < no_iter_max:
+            p_a_ant = p_a
+            p_b, _ = obj_b.projection(p_a)
+            p_a, _ = obj_a.projection(p_b)
+            converged = np.linalg.norm(p_a - p_a_ant) < tol
+            i += 1
+
+        dist = np.linalg.norm(p_a - p_b)
+
+        return p_a, p_b, dist, []
+                
+    @staticmethod
+    def compute_dist(obj_a: MetricObject, obj_b: MetricObject, p_a_init: Vector =None, 
+                     tol: float =0.001, no_iter_max: int=20, h: float=0, 
+                     eps: float = 0, mode: str ='auto') -> Tuple[Vector, Vector, float, List]:
         # Error handling
 
         if mode=='python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):

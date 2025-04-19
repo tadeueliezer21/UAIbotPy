@@ -3,6 +3,8 @@ import numpy as np
 from graphics.meshmaterial import *
 import os
 from simobjects.pointcloud import *
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
 
 class Box:
     """
@@ -10,7 +12,7 @@ class Box:
 
   Parameters
   ----------
-  htm : 4x4 numpy array or 4x4 nested list
+  htm : 4x4 numpy matrix
       The object's configuration
       (default: the same as the current HTM).
 
@@ -30,10 +32,6 @@ class Box:
       The object's height, in meters.
       (default: 1).  
 
-  mass : positive float
-      The object's mass, in kg.
-      (default: 1).  
-
   color : string
       The object's color, a HTML - compatible string.
       (default: "red").
@@ -51,42 +49,37 @@ class Box:
     #######################################
 
     @property
-    def width(self):
+    def width(self) -> float:
         """The box width, in meters."""
         return self._width
 
     @property
-    def height(self):
+    def height(self) -> float:
         """The box height, in meters."""
         return self._height
 
     @property
-    def depth(self):
+    def depth(self) -> float:
         """The box depth, in meters."""
         return self._depth
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The object name."""
         return self._name
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return np.matrix(self._htm)
 
     @property
-    def mass(self):
-        """Mass of the object, in kg."""
-        return self._mass
-
-    @property
-    def color(self):
+    def color(self) -> str:
         """Color of the object"""
         return self.mesh_material.color
 
     @property
-    def mesh_material(self):
+    def mesh_material(self) -> "MeshMaterial":
         """Mesh material properties of the object"""
         return self._mesh_material
 
@@ -94,15 +87,13 @@ class Box:
     # Constructor
     #######################################
 
-    def __init__(self, htm=np.identity(4), name="", width=1, height=1, depth=1, mass=1, color="red", opacity=1, \
-                 mesh_material=None):
+    def __init__(self, htm: "HTMatrix" =np.identity(4), name : str ="", 
+                 width: float =1, height: float =1, depth: float =1, color: str="red", opacity: float =1, \
+                 mesh_material: Optional["MeshMaterial"] = None) -> "Box":
 
         # Error handling
         if not Utils.is_a_matrix(htm, 4, 4):
             raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
-
-        if not Utils.is_a_number(mass) or mass < 0:
-            raise Exception("The parameter 'mass' should be a positive float.")
 
         if not Utils.is_a_number(width) or width < 0:
             raise Exception("The parameter 'width' should be a positive float.")
@@ -136,7 +127,6 @@ class Box:
         self._depth = depth
         self._htm = np.matrix(htm)
         self._name = name
-        self._mass = 1
         self._frames = []
         self._max_time = 0
 
@@ -159,7 +149,6 @@ class Box:
         string += " Depth (m): " + str(self.depth) + "\n"
         string += " Height (m): " + str(self.height) + "\n"
         string += " Color: " + str(self.color) + "\n"
-        string += " Mass (kg): " + str(self.mass) + "\n"
         string += " HTM: \n" + str(self.htm) + "\n"
 
         return string
@@ -168,7 +157,7 @@ class Box:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, htm=None):
+    def add_ani_frame(self, time: float, htm: Optional["HTMatrix"] = None) -> None:
         """
     Add a single configuration to the object's animation queue.
 
@@ -176,7 +165,7 @@ class Box:
     ----------
     time: positive float
         The timestamp of the animation frame, in seconds.
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -204,14 +193,14 @@ class Box:
         self._frames.append(f)
         self._max_time = max(self._max_time, time)
 
-    def set_ani_frame(self, htm=None):
+    def set_ani_frame(self, htm: Optional["HTMatrix"] = None) -> None:
         """
     Reset object's animation queue and add a single configuration to the 
     object's animation queue.
 
     Parameters
     ----------
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -245,11 +234,11 @@ class Box:
         string += "//USER INPUT GOES HERE"
         return string
 
-    def copy(self):
+    def copy(self) -> "Box":
         """Return a deep copy of the object, without copying the animation frames."""
-        return Box(self.htm, self.name + "_copy", self.width, self.height, self.depth, self.mass, self.color)
+        return Box(self.htm, self.name + "_copy", self.width, self.height, self.depth, self.color)
 
-    def aabb(self, mode='auto'):
+    def aabb(self, mode: str ='auto') -> "Box":
         """
     Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
 
@@ -262,7 +251,7 @@ class Box:
             
     Returns
     -------
-     aab: the AABB as a uaibot.Box object
+     aabb: the AABB as a uaibot.Box object
     """
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
@@ -288,7 +277,7 @@ class Box:
             return Box(name = "aabb_"+self.name, width= aabb.lx, depth=aabb.ly, height=aabb.lz, htm=Utils.trn(aabb.p),opacity=0.5) 
 
 
-    def to_point_cloud(self, disc=0.025, mode='auto'):
+    def to_point_cloud(self, disc: float =0.025, mode: str = 'auto') -> "PointCloud":
         """
     Transform the object into a PointCloud object using the discretization 'delta'.
 
@@ -359,15 +348,15 @@ class Box:
             return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc/2)
       
     # Compute distance to an object
-    def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+    def compute_dist(self, obj: MetricObject,  p_init: Optional[Vector] = None, 
+                     tol: float =0.001, no_iter_max: int =20, h: float =0, 
+                     eps: float = 0, mode: str ='auto') -> Tuple[Vector, Vector, float, List]:
+        
         return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
 
-    # Compute distance to an object
-    def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
-        return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
     
     # Compute the projection of a point into an object
-    def projection(self, point, h=0, eps = 0, mode='auto'):
+    def projection(self, point: Vector, h: float =0, eps: float = 0, mode: str ='auto') -> Tuple[Vector,float]:
         """
     The projection of a point in the object, that is, the
     closest point in the object to a point 'point'.

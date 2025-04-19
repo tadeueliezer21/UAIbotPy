@@ -4,6 +4,10 @@ from simobjects.cylinder import *
 from graphics.meshmaterial import *
 from utils import *
 import numpy as np
+from typing import Optional, Tuple, List
+
+GroupableObject: TypeAlias = Union["Ball", "Box", "Cylinder", "ConvexPolytope", "Frame",
+                    "RigidObject", "Group", "Robot", "PointLight"]
 
 
 class Frame:
@@ -12,7 +16,7 @@ class Frame:
 
   Parameters
   ----------
-  htm : 4x4 numpy array or 4x4 nested list
+  htm : 4x4 numpy matrix
       The object's configuration.
       (default: the same as the current HTM).
 
@@ -38,27 +42,27 @@ class Frame:
     #######################################
 
     @property
-    def size(self):
+    def size(self) -> float:
         """The axis size, in meters."""
         return self._size
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the object."""
         return self._name
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return np.matrix(self._ball.htm)
 
     @property
-    def axis_color(self):
+    def axis_color(self) -> List[str]:
         """The axis colors. It is a list of 3 HTML-compatible colors."""
         return self._axis_color
 
     @property
-    def axis_name(self):
+    def axis_name(self) -> List[str]:
         """The axis names. It is a list of 3 strings."""
         return self._axis_name
 
@@ -67,8 +71,9 @@ class Frame:
     # Constructor
     #######################################
 
-    def __init__(self, htm=np.identity(4), name="", size=0.3, axis_color=['red', 'lime', 'blue'],
-                 axis_names=['x', 'y', 'z']):
+    def __init__(self, htm: "HTMatrix" =np.identity(4), name: str ="", size: float =0.3, 
+                 axis_color: List[str] =['red', 'lime', 'blue'],
+                 axis_names: List[str] =['x', 'y', 'z']) -> "Frame":
 
         # Error handling
         if not Utils.is_a_matrix(htm, 4, 4):
@@ -123,7 +128,7 @@ class Frame:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, htm=None):
+    def add_ani_frame(self, time: float, htm: Optional["HTMatrix"] = None) -> None:
         """
     Add a single configuration to the object's animation queue.
 
@@ -145,14 +150,14 @@ class Frame:
         self._max_time = self._ball._max_time
 
     # Set config. Restart animation queue
-    def set_ani_frame(self, htm=None):
+    def set_ani_frame(self, htm: Optional["HTMatrix"] = None) -> None:
         """
     Reset object's animation queue and add a single configuration to the
     object's animation queue.
 
     Parameters
     ----------
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration.
         (default: the same as the current HTM).
 

@@ -1,6 +1,11 @@
 import uaibot as ub
 import numpy as np
 from utils_test import *
+# from uaibot.utils import Utils
+
+
+
+
 
 # input1 = [1,2,3]
 # input2 = [[1],[2],[3]]
@@ -196,8 +201,8 @@ for i in range(NO_TRY):
     obj1 = generate_rand_object(objtype = coin1 if coin1!=3 else 0)
     obj2 = generate_rand_object(objtype = coin2 if coin2!=3 else 0)
     
-    _,_,d_cpp,_ = obj1.compute_dist(obj2,  p_init=[np.random.randn() for j in range(3)], tol=0.0001, no_iter_max=2000, mode='c++')
-    _,_,d_py  = obj1.compute_dist(obj2,  p_init=[np.random.randn() for j in range(3)], tol=0.0001, no_iter_max=2000, mode='python')
+    _,_, d_cpp, _ = obj1.compute_dist(obj2,  p_init=[np.random.randn() for j in range(3)], tol=0.0001, no_iter_max=2000, mode='c++')
+    _,_, d_py, _  = obj1.compute_dist(obj2,  p_init=[np.random.randn() for j in range(3)], tol=0.0001, no_iter_max=2000, mode='python')
     
     max_error = max(max_error,abs(d_cpp-d_py))
     
@@ -209,13 +214,13 @@ print("Testing check_free_config: ")
 no_comp_failed = 0
 for i in range(NO_TRY):
     
-    obj = generate_rand_object(objtype=3)
+    obj = generate_rand_object()
 
     
     q_input = [np.random.randn() for j in range(7)]
 
     ok_cpp, _, _ = robot.check_free_config(q=q_input, obstacles=[obj], mode='c++')
-    ok_py, _, _  = robot.check_free_config(q=q_input, obstacles=[obj], mode='python')
+    ok_py, _, _  = robot.check_free_config(q=q_input, obstacles=[obj], mode='python',  no_iter_max=5000)
     
     if not (ok_cpp==ok_py):
         no_comp_failed = no_comp_failed+1

@@ -1,7 +1,7 @@
 import numpy as np
 from utils import *
 from graphics.texture import *
-
+from utils import *
 
 class MeshMaterial:
     """

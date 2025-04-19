@@ -1,5 +1,6 @@
 from utils import *
-
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
 
 class PointLight:
     """
@@ -20,7 +21,7 @@ class PointLight:
        The light intensity.
        (default: 1).
 
-  htm : 4x4 numpy array or 4x4 nested list
+   htm : 4x4 numpy matrix
       The object's configuration.
       (default: the same as the current HTM).
 
@@ -36,27 +37,27 @@ class PointLight:
     #######################################
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The object name."""
         return self._name
 
     @property
-    def color(self):
+    def color(self) -> str:
         """The light color."""
         return self._color
 
     @property
-    def intensity(self):
+    def intensity(self) -> float:
         """The light intensity"""
         return self._intensity
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return np.matrix(self._htm)
 
     @property
-    def max_distance(self):
+    def max_distance(self) -> float:
         """The light maximum distance (meters)."""
         return self._max_distance
 
@@ -64,7 +65,8 @@ class PointLight:
     # Constructor
     #######################################
 
-    def __init__(self, htm=np.identity(4), name="", color="white", intensity=1, max_distance=0):
+    def __init__(self, htm: "HTMatrix" =np.identity(4), name: str ="", color: str ="white", 
+                 intensity: float =1, max_distance: float =0) -> "PointLight":
 
         # Error handling
 
@@ -117,7 +119,9 @@ class PointLight:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, htm=None, color=None, intensity=None, max_distance=None):
+    def add_ani_frame(self, time: float, htm: Optional[HTMatrix]=None, 
+                      color: Optional[str] = None, intensity: Optional[float] = None, 
+                      max_distance: Optional[float] = None) -> None:
         """
     Add a single configuration to the object's animation queue.
 
@@ -126,7 +130,7 @@ class PointLight:
     time: positive float
         The timestamp of the animation frame, in seconds.
 
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -183,7 +187,9 @@ class PointLight:
         self._max_time = max(self._max_time, time)
 
     # Set config. Restart animation queue
-    def set_ani_frame(self, htm = None, color=None, intensity=None, max_distance=None):
+    def set_ani_frame(self, htm: Optional[HTMatrix]=None, 
+                      color: Optional[str] = None, intensity: Optional[float] = None, 
+                      max_distance: Optional[float] = None) -> None:
         """
     Reset object's animation queue and add a single configuration to the
     object's animation queue.

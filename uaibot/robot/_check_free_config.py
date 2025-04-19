@@ -133,7 +133,7 @@ def _check_free_config_python(self, q=None, htm=None, obstacles=[],
         j = list_col_check[k][2]
 
         if Utils.compute_aabbdist(obstacles[j], col_object_copy[i][isub]) == 0:
-            _, _, d = Utils.compute_dist(obstacles[j], col_object_copy[i][isub] \
+            _, _, d, _ = Utils.compute_dist(obstacles[j], col_object_copy[i][isub] \
                                                      , None, tol, no_iter_max, mode='python')
             if d < dist_tol:
                 collided = True
@@ -155,7 +155,7 @@ def _check_free_config_python(self, q=None, htm=None, obstacles=[],
 
             if Utils.compute_aabbdist(col_object_copy[i][isub], col_object_copy[j][jsub]) == 0:
 
-                _, _, d = Utils.compute_dist(col_object_copy[i][isub], col_object_copy[j][jsub] \
+                _, _, d, _ = Utils.compute_dist(col_object_copy[i][isub], col_object_copy[j][jsub] \
                                                          , None, tol, no_iter_max, mode='python')
                 
                 if d < dist_tol:

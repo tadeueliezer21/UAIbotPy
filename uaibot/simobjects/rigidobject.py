@@ -1,7 +1,8 @@
 from utils import *
 import numpy as np
 from graphics.model3d import *
-
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
 
 class RigidObject:
     """
@@ -17,7 +18,7 @@ class RigidObject:
    list_model_3d : list of 'Model3D' objects
        The 3d model that compose the object.
 
-   htm : 4x4 numpy array or 4x4 nested list
+   htm : 4x4 numpy matrix
        The object's configuration.
        (default: the same as the current HTM).
 
@@ -28,17 +29,17 @@ class RigidObject:
     #######################################
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the object."""
         return self._name
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return np.matrix(self._htm)
 
     @property
-    def list_model_3d(self):
+    def list_model_3d(self) -> List["Model3D"]:
         """The list of 3d models of the object."""
         return self._list_model_3d
 
@@ -46,7 +47,8 @@ class RigidObject:
     # Constructor
     #######################################
 
-    def __init__(self, list_model_3d, name="", htm=np.identity(4)):
+    def __init__(self, list_model_3d: List["Model3D"], name: str ="", 
+                 htm: "HTMatrix"=np.identity(4)) -> "RigidObject":
 
         # Error handling
 
@@ -93,7 +95,7 @@ class RigidObject:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, htm=None):
+    def add_ani_frame(self, time: float, htm: Optional["HTMatrix"]=None) -> None:
         """
     Add a single configuration to the object's animation queue.
 
@@ -130,7 +132,7 @@ class RigidObject:
         self._max_time = max(self._max_time, time)
 
     # Set config. Restart animation queue
-    def set_ani_frame(self, htm=None):
+    def set_ani_frame(self, htm: Optional["HTMatrix"]=None) -> None:
         """
     Reset object's animation queue and add a single configuration to the
     object's animation queue.

@@ -1,6 +1,9 @@
 from utils import *
 import numpy as np
 import os
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
+
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
 
