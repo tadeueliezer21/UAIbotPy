@@ -31,9 +31,9 @@ def _add_ani_frame(self, time, q=None, htm=None, enforce_joint_limits=False):
         for i in range(len(self.links)):
             self._q[i,0] = min(max(self._q[i,0],self.joint_limit[i,0]),self.joint_limit[i,1])
 
-    f = [time, htm[0,0], htm[0,1], htm[0,2], htm[0,3],
-         htm[1,0], htm[1,1], htm[1,2], htm[1,3],
-         htm[2,0], htm[2,1], htm[2,2], htm[2,3],
+    f = [time, htm[0,0].item(), htm[0,1].item(), htm[0,2].item(), htm[0,3].item(),
+         htm[1,0].item(), htm[1,1].item(), htm[1,2].item(), htm[1,3].item(),
+         htm[2,0].item(), htm[2,1].item(), htm[2,2].item(), htm[2,3].item(),
          0, 0, 0, 1, np.array(q).reshape((n,)).tolist()]
 
     self._htm = htm

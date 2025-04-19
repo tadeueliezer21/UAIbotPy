@@ -36,7 +36,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPython3_EXECUTABLE={sys.executable}",
             f"-DPYTHON_INCLUDE_DIR={python_include_dir}",
-            f"-DPYTHON_LIBRARY={python_library_dir}/libpython3.11.so",
+            f"-DPYTHON_LIBRARY={python_library_dir}",
             "-DCMAKE_BUILD_TYPE=Release",
         ]
 
@@ -49,6 +49,14 @@ class CMakeBuild(build_ext):
         
         # Compile the C++ extension
         subprocess.run(["cmake", "--build", ".", "--config", "Release"], cwd=build_temp, check=True)
+        
+        # Explicitly copy the built library to the expected location
+        lib_name = f"{ext.name}{sysconfig.get_config_var('EXT_SUFFIX')}"
+        src_path = os.path.join(extdir, lib_name)
+        dest_path = self.get_ext_fullpath(ext.name)
+        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+        if os.path.exists(src_path):
+            self.copy_file(src_path, dest_path)
 
 class CustomInstall(install):
     """Ensures the C++ extension is built during pip install."""
@@ -93,15 +101,17 @@ setup(
     python_requires=">=3.6",
     install_requires=[
         "pybind11>=2.10",
-        "colour==0.1.5",
-        "httplib2==0.20.4",
-        "ipython==8.0.1",
-        "numpy==1.24", 
+        "colour>=0.1.5",
+        "httplib2>=0.20.4",
+        "ipython>=8.0.1",
+        "numpy>=1.24", 
         "scipy>=1.10",  
-        "setuptools>=58.0.4",
         "quadprog>=0.1.13",
         "matplotlib >= 3.10.0",
         "requests"
     ],
-    setup_requires=["pybind11>=2.10"],
+    setup_requires=[
+        "pybind11>=2.10",
+        # "setuptools>=58.0.4",
+        ],
 )

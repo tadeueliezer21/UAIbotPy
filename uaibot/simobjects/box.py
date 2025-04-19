@@ -195,9 +195,9 @@ class Box:
             raise Exception("The parameter 'time' should be a positive float.")
         # end error handling
 
-        f = [time, np.around(htm[0,0],4), np.around(htm[0,2],4), np.around(-htm[0,1],4), np.around(htm[0,3],4),
-             np.around(htm[1,0],4), np.around(htm[1,2],4), np.around(-htm[1,1],4), np.around(htm[1,3],4),
-             np.around(htm[2,0],4), np.around(htm[2,2],4), np.around(-htm[2,1],4), np.around(htm[2,3],4),
+        f = [time, np.around(htm[0,0],4).item(), np.around(htm[0,2],4).item(), np.around(-htm[0,1],4).item(), np.around(htm[0,3],4).item(),
+             np.around(htm[1,0],4).item(), np.around(htm[1,2],4).item(), np.around(-htm[1,1],4).item(), np.around(htm[1,3],4).item(),
+             np.around(htm[2,0],4).item(), np.around(htm[2,2],4).item(), np.around(-htm[2,1],4).item(), np.around(htm[2,3],4).item(),
              0, 0, 0, 1]
 
         self._htm = htm

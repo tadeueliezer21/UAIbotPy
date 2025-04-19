@@ -1,4 +1,9 @@
-from IPython.core.display import display, HTML
+try:
+    # New versions
+    from IPython.display import display, HTML
+except ImportError:
+    # Fallback for old versions
+    from IPython.core.display import display, HTML
 import re
 from utils import *
 from graphics.meshmaterial import *
