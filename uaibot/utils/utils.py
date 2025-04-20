@@ -8,6 +8,7 @@ from httplib2 import *
 import sys
 import quadprog
 from .types import *
+from typing import Callable
 
 import os
 if os.environ['CPP_SO_FOUND']=="1":
@@ -403,7 +404,7 @@ class Utils:
                  
 
     @staticmethod
-    def interpolate(points):
+    def interpolate(points: List[Vector]) -> Callable[[List[float]], List[np.matrix]]:
         """
       Create a function handle that generates an one-time differentiable interpolated data from 'points'.
 
@@ -412,28 +413,26 @@ class Utils:
       f(i/m) = points[i]. This function is once differentiable and periodic with period 1, so f(t+k)=f(t) for
       an integer k.
 
-      The function can also use a n x m numpy array or lists as 'points'. In this case, f(t) is a n dimensional
-      column vector in which its i-th entry is the same as computing f_i = interpolate(points[i]) and then
-      computing f_i(t).
+      The function can also use a n x m numpy array or lists as 'points'. In this case, f(t) is a n x 1 
+      numpy vector.
 
-      Finally, t can be a list of k elements instead of just a scalar. In this case, f(t) is a n x k numpy matrix
-      in which the element at row i and column j is the same as computing f_i = interpolate(points[i]) and then
-      computing f_i(t[k]).
+      Finally, t can be a list of k elements instead of just a scalar. In this case, f(t) is a list of n x 1 numpy 
+      matrices, in which the k-th element is the same as computing f(t[k]).
 
 
       Parameters
       ----------
-      points: a n x m numpy array or lists
+      points: a list of nD vectors (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
           Points to be interpolated.
 
       Returns
       -------
       f: function handle
-          The function handle that implements the interpolation.
+          The function handle that implements the interpolation. 
       """
 
-        if not Utils.is_a_matrix(points):
-            raise Exception("The parameter 'points' should be a n x m numpy array of numbers.")
+        if not Utils.is_a_list_vector(points):
+            raise Exception("The parameter 'points' should be a list of vectors with the same dimension.")
 
         def aux_interpolate_single(arg_points):
 
@@ -520,13 +519,17 @@ class Utils:
                     "The parameter of the interpolation function must be either a number or a list of numbers.")
 
             y = np.zeros((0, len(t) if Utils.is_a_vector(t) else 1))
-            for i in range(np.shape(arg_points)[0]):
-                fun = aux_interpolate_single(arg_points[i])
+            for i in range(np.shape(Utils.cvt(arg_points[0]))[0]):
+                fun = aux_interpolate_single([Utils.cvt(p)[i,0] for p in arg_points])
                 fun_out = fun(t)
                 fun_out = np.array(fun_out).reshape((1, len(fun_out) if Utils.is_a_vector(fun_out) else 1))
                 y = np.block([[y], [fun_out]])
 
-            return np.matrix(y)
+            list_of_points = [np.matrix(y[:, i].reshape(-1, 1)) for i in range(y.shape[1])]
+            if isinstance(t, list):
+                return list_of_points
+            else:
+                return list_of_points[0]
 
         return lambda t: aux_interpolate_multiple(points, t)
 
@@ -614,6 +617,7 @@ class Utils:
         return str(type(obj)) == "<class 'int'>" and obj >= 0
 
 
+        
     @staticmethod
     def is_a_matrix(obj, n=None, m=None):
         """
@@ -662,24 +666,75 @@ class Utils:
     @staticmethod
     def is_a_vector(obj, n=None):
         """
-      Check if the argument is a n vector of floats.
-      
+      Check if the argument is a vector of floats.
+      A vector is very flexible. For example, a 3D vector (is_a_vector(x,3)) can be:
+      x1 = [0,1,2]
+      x2 = [[0],[1],[2]]
+      x3 = (0,1,2)
+      x4 = np.matrix([0,1,2])
+      x5 = np.matrix([[0],[1],[2]])
+      x6 = np.array([0,1,2])
+      x7 = np.array([[0],[1],[2]])
+            
       Parameters
       ----------
       obj: object
           Object to be verified.
 
       n: positive int
-          Number of elements
-          (default: it does not matter).
+          Check if the vector is n-dimensional. If 'None', it does not matter.
+          (default: 'None').
 
       Returns
       -------
       is_type: boolean
           If the object is of the type.   
       """
-        return Utils.is_a_matrix(obj, n, 1) or Utils.is_a_matrix(obj, 1, n)
+        try:
+            p = Utils.cvt(obj)
+            if n is None:
+                return np.shape(p)[1] == 1
+            else:
+                return (np.shape(p)[0] == n) and (np.shape(p)[1] == 1)
+        except:
+            return False
+        # return Utils.is_a_matrix(obj, n, 1) or Utils.is_a_matrix(obj, 1, n)
 
+    @staticmethod
+    def is_a_list_vector(obj, n=None):
+        """
+      Check if the argument is a list of vector of floats with the same dimension.
+
+      Parameters
+      ----------
+      obj: object
+          Object to be verified.
+
+      n: positive int
+          Check if all the vectors are n-dimensional. If 'None', it does not matter, 
+          as long as they are equal.
+          (default: 'None').
+
+      Returns
+      -------
+      is_type: boolean
+          If the object is of the type.   
+      """
+              
+        if n is None:
+            try:
+                n_common = np.shape(Utils.cvt(obj[0]))[0]
+            except:
+                return False
+        else:
+            n_common = n
+        
+        for p in obj:
+            if not Utils.is_a_vector(p, n_common):
+                return False
+            
+        return True
+    
     @staticmethod
     def is_a_pd_matrix(obj, n=None):
         """
@@ -923,7 +978,7 @@ class Utils:
                     return "Jupyter"
             except ImportError:
                 return "Not in Jupyter/Colab"
-        return "None"
+        return "Local"
 
     @staticmethod
     def obj_to_cpp(obj, htm=None):

@@ -390,7 +390,7 @@ VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alp
 
     T = T / (T.norm() + EPS);
 
-    float G = (2 / M_PI) * atan(alpha * min_dist);
+    float G = (2 / M_PI) * atan(alpha * sqrtf(min_dist));
     float H = sqrtf(1 + EPS - G * G);
 
     // float per = ((float) index_q)/((float) no_q);

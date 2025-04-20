@@ -582,7 +582,7 @@ class Robot:
     IEEE Transactions on Robotics (2021)". 
     
     The vector field has constant velocity and use the function 
-    G(u) = (2/pi)*atan(alpha*u).
+    G(u) = (2/pi)*atan(alpha*sqrt(u)).
 
 
     Parameters

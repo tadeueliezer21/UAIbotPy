@@ -44,7 +44,7 @@ def _vector_field_rn_python(p, curve, alpha, const_vel):
 
     vec_n, vec_t, min_dist, ind_min = _compute_ntd(curve, p)
 
-    fun_g = _INVHALFPI * atan(alpha * min_dist)
+    fun_g = _INVHALFPI * atan(alpha * np.sqrt(min_dist))
     fun_h = sqrt(max(1 - fun_g ** 2, 0))
     abs_const_vel = abs(const_vel)
     sgn = const_vel / (abs_const_vel + 0.00001)

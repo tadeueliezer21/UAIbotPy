@@ -228,7 +228,7 @@ class Simulation:
         self._ldr_urls = ldr_urls
         
         if width==[] or height==[]:
-            if Utils.get_environment() == 'None':
+            if Utils.get_environment() == 'Local':
                 self._width = 960 
                 self._height = 720 
             else:
