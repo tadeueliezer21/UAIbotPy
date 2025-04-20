@@ -120,7 +120,3 @@ def _control_demo_1():
 
 import os
 
-sim = _control_demo_1()
-current_folder = os.path.dirname(os.path.abspath(__file__))           
-sim.save(current_folder,"test_vf")
-
