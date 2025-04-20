@@ -1,8 +1,14 @@
 from utils import *
 import numpy as np
-from graphics.model3d import *
 from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
 from typing import Optional, Tuple, List
+
+from uaibot.graphics.model3d  import *
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from uaibot.graphics.model3d import Model3D
+
 
 class RigidObject:
     """

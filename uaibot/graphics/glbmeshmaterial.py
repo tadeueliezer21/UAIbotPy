@@ -25,7 +25,7 @@ class GLBMeshMaterial:
     #######################################
 
     @property
-    def opacity(self):
+    def opacity(self) -> float:
         """The object opacity."""
         return self._opacity
 
@@ -33,7 +33,7 @@ class GLBMeshMaterial:
     # Constructor
     #######################################
 
-    def __init__(self, opacity=1):
+    def __init__(self, opacity: float =1) -> "GLBMeshMaterial":
 
         # Error handling
 

@@ -1,7 +1,7 @@
-from simobjects.ball import *
-from simobjects.group import *
-from simobjects.cylinder import *
-from graphics.meshmaterial import *
+from uaibot.simobjects.ball import *
+from uaibot.simobjects.group import *
+from uaibot.simobjects.cylinder import *
+from uaibot.graphics.meshmaterial import *
 from utils import *
 import numpy as np
 from typing import Optional, Tuple, List

@@ -3,9 +3,12 @@ import numpy as np
 from utils_test import *
 # from uaibot.utils import Utils
 
+robot = ub.Robot.create_epson_t6(htm = ub.Utils.trn([1,0,0]))
 
+htm_tg = robot.fkm([1,2,3])
+q_inv = robot.ikm(htm_tg=htm_tg)
 
-
+a = 0
 
 # input1 = [1,2,3]
 # input2 = [[1],[2],[3]]

@@ -1,8 +1,16 @@
 from utils import *
 import numpy as np
-from graphics.meshmaterial import *
-from simobjects.box import *
-from simobjects.pointcloud import *
+
+from uaibot.graphics.meshmaterial import *
+from uaibot.simobjects.box import *
+from uaibot.simobjects.pointcloud import *
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from uaibot.simobjects.pointcloud import PointCloud
+    from uaibot.simobjects.box import Box
+    from uaibot.graphics.meshmaterial import MeshMaterial
+    
 import os
 from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
 from typing import Optional, Tuple, List

@@ -10,7 +10,8 @@ import time
 from pathlib import Path
 import httplib2
 import sys
-
+from uaibot.utils.types import HTMatrix, Matrix, Vector, SimObject
+from typing import Optional, Tuple, List
 
 class Simulation:
     """
@@ -105,62 +106,62 @@ class Simulation:
     #######################################
 
     @property
-    def list_of_objects(self):
-        """A list of all objects."""
+    def list_of_objects(self) -> List["SimObject"]:
+        """A list of all sim objects."""
         return self._list_of_objects
 
     @property
-    def list_of_names(self):
+    def list_of_names(self) -> List[str]:
         """A list of all object names."""
         return self._list_of_names
 
     @property
-    def ambient_light_intensity(self):
-        """A list of all object names."""
+    def ambient_light_intensity(self) -> float:
+        """Ambient light intensity."""
         return self._ambient_light_intensity
 
     @property
-    def ldr_urls(self):
+    def ldr_urls(self) -> List[str]:
         """A list of the LDR light urls."""
         return self._ldr_urls
 
     @property
-    def camera_type(self):
+    def camera_type(self) -> str:
         """Type of the camera."""
         return self._camera_type
 
     @property
-    def width(self):
+    def width(self) -> int:
         """Width, in pixels, of the canvas"""
         return self._width
 
     @property
-    def height(self):
+    def height(self) -> int:
         """Height, in pixels, of the canvas"""
         return self._height
 
     @property
-    def show_world_frame(self):
+    def show_world_frame(self) -> bool:
         """If the world frame is shown"""
         return self._show_world_frame
 
     @property
-    def show_grid(self):
+    def show_grid(self) -> bool:
         """If the grid in the world is shown"""
         return self._show_grid
 
     @property
-    def load_screen_color(self):
+    def load_screen_color(self) -> str:
         """Loading screen color"""
         return self._load_screen_color
 
     @property
-    def background_color(self):
+    def background_color(self) -> str:
         """Color of the background of the scenario"""
         return self._background_color
 
     @property
-    def camera_start_pose(self):
+    def camera_start_pose(self) -> List[float]:
         """The camera starting pose. The first three elements are the starting camera position, the next three ones
         is the starting point in which the camera is looking at and the last one is the zoom"""
         return self._camera_start_pose
@@ -169,9 +170,12 @@ class Simulation:
     # Constructor
     #######################################
 
-    def __init__(self, obj_list=[], ambient_light_intensity=4, ldr_urls=None, camera_type="perspective", width=[],
-                 height=[], show_world_frame = True, show_grid = True, load_screen_color="#19bd39", background_color="#F5F6FA",
-                 camera_start_pose = None):
+    def __init__(self, obj_list: List["SimObject"]=[], ambient_light_intensity: float =4, 
+                 ldr_urls: Optional[List[str]] = None, camera_type: str ="perspective", 
+                 width: Optional[int] =[], height: Optional[int] = [], 
+                 show_world_frame: bool = True, show_grid: bool = True, 
+                 load_screen_color: str ="#19bd39", background_color: str ="#F5F6FA",
+                 camera_start_pose: Optional[List[float]] = None) -> "Simulation":
 
         if not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0:
             raise Exception("The parameter 'ambient_light_intensity' should be a nonnegative float.")
@@ -271,7 +275,7 @@ class Simulation:
     #######################################
 
     @staticmethod
-    def create_sim_factory(objects=[]):
+    def create_sim_factory(objects: List["SimObject"] =[]) -> "Simulation":
         """
     Create an environment of a factory.
     Factory panorama taken from:
@@ -314,8 +318,9 @@ class Simulation:
         sim.add(light4)
 
         return sim
+    
     @staticmethod
-    def create_sim_mountain(objects=[]):
+    def create_sim_mountain(objects: List["SimObject"] =[]) -> "Simulation":
         """
     Create an environment of a mountain.
     Outside panorama taken from:
@@ -361,7 +366,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_hill(objects=[]):
+    def create_sim_hill(objects: List["SimObject"] =[]) -> "Simulation":
         """
     Create an environment of a hill.
     Outside panorama taken from:
@@ -412,7 +417,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_orchard_road(objects=[]):
+    def create_orchard_road(objects: List["SimObject"] =[]) -> "Simulation":
         """
     Create an environment of an orchard road.
     Outside panorama taken from:
@@ -458,7 +463,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid(objects=[]):
+    def create_sim_grid(objects: List["SimObject"] =[]) -> "Simulation":
         """
     Create an environment of a grid.
 
@@ -528,7 +533,7 @@ class Simulation:
         return sim
             
     @staticmethod
-    def create_sim_lesson(objects=[]):
+    def create_sim_lesson(objects: List["SimObject"] =[]) -> "Simulation":
         """
     Create an environment for embedding into the lessons slides.
 
@@ -561,9 +566,11 @@ class Simulation:
 
         return sim
 
-    def set_parameters(self, ambient_light_intensity=None, ldr_urls=None, camera_type=None, width=None,
-                 height=None, show_world_frame = None, show_grid = None, load_screen_color=None, background_color=None,
-                 camera_start_pose = None):
+    def set_parameters(self, ambient_light_intensity: Optional[float]= None, ldr_urls: Optional[str] =None, 
+                       camera_type: Optional[str] =None, width: Optional[int] =None,
+                 height: Optional[int] = None, show_world_frame: Optional[bool] = None, 
+                 show_grid: Optional[bool] = None, load_screen_color: Optional[str] = None, 
+                 background_color: Optional[str] = None, camera_start_pose: Optional[List[float]] = None) -> None:
         """
       Change the simulation parameters.
 
@@ -759,12 +766,12 @@ class Simulation:
 
         return string
 
-    def run(self):
+    def run(self) -> None:
         """Run simulation."""
 
         display(HTML(self.gen_code()))
 
-    def save(self, address, file_name):
+    def save(self, address: str, file_name: str) -> None:
         """
     Save the simulation as a self-contained HTML file.
 
@@ -798,7 +805,7 @@ class Simulation:
                 self.scan_group(obj)
                 
             
-    def add(self, obj_sim):
+    def add(self, obj_sim: List["SimObject"]) -> None:
         """
     Add an object to the simulation. It should be an object that
     can be simulated (Utils.is_a_obj_sim(obj) is true).

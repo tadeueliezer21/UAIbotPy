@@ -282,22 +282,22 @@ class MeshMaterial:
     #######################################
 
     @property
-    def opacity(self):
+    def opacity(self) -> float:
         """The object opacity."""
         return self._opacity
 
     @property
-    def shadow_side(self):
+    def shadow_side(self) -> str:
         """Which side of faces casts shadows."""
         return self._shadow_side
 
     @property
-    def side(self):
+    def side(self) -> str:
         """Which side of faces will be rendered."""
         return self._side
 
     @property
-    def transparent(self):
+    def transparent(self) -> bool:
         """If the object is transparent."""
         return self._transparent
 

@@ -1,7 +1,7 @@
 from utils import *
 from graphics.meshmaterial import *
 import numpy as np
-
+from uaibot.utils.types import HTMatrix, Matrix, Vector, SimObject
 
 
 
@@ -34,22 +34,22 @@ class Model3D:
     #######################################
 
     @property
-    def url(self):
+    def url(self) -> str:
         """The 3d model url."""
         return self._url
 
     @property
-    def scale(self):
+    def scale(self) -> float:
         """The object scale."""
         return self._scale
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return self._htm
 
     @property
-    def mesh_material(self):
+    def mesh_material(self) -> "MeshMaterial":
         """The model mesh material."""
         return self._mesh_material
 
@@ -57,7 +57,8 @@ class Model3D:
     # Constructor
     #######################################
 
-    def __init__(self, url="", scale=1, htm=np.identity(4), mesh_material=None):
+    def __init__(self, url: str ="", scale: float =1, htm: HTMatrix =np.identity(4), 
+                 mesh_material: Optional["MeshMaterial"]=None) -> "Model3D":
 
         # Error handling
         

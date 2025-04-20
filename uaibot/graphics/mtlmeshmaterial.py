@@ -30,12 +30,12 @@ class MTLMeshMaterial:
 
 
     @property
-    def url(self):
+    def url(self) -> str:
         """The 3d model url."""
         return self._url
 
     @property
-    def opacity(self):
+    def opacity(self) -> float:
         """The object opacity."""
         return self._opacity
 
@@ -43,7 +43,7 @@ class MTLMeshMaterial:
     # Constructor
     #######################################
 
-    def __init__(self, url="", opacity=1):
+    def __init__(self, url: str ="", opacity: float =1) -> "MTLMeshMaterial":
 
         # Error handling
 
