@@ -275,17 +275,77 @@ class PointCloud:
 
     # Compute distance to an object
     def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+        """
+    Compute Euclidean distance or differentiable distance between two objects.
+    
+    If h>0 or eps > 0, it computes the Euclidean distance and it uses GJK's algorithm.
+    
+    Else, it computes the differentiable distance through Generalized Alternating Projection (GAP).
+    See the paper 'A Differentiable Distance Metric for Robotics Through Generalized Alternating Projection'.
+    This only works in c++ mode, though.
+    
+    
+    Parameters
+    ----------
+    obj : an object of type 'MetricObject' (see Utils.IS_METRIC)
+        The other object for which we want to compute the distance.
+        
+    p_init : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array) or None
+        Initial point for closest point in this object. If 'None', is set to random.
+        (default: None).
+    
+    tol : positive float
+        Convergence criterion of GAP: it stops when ||a[k+1]-a[k]|| < tol.
+        Only valid when h > 0 or eps > 0.
+        (default: 0.001m).   
+
+    no_iter_max : positive int 
+        Maximum number of iterations of GAP.
+        Only valid when h > 0 or eps > 0.
+        (default: 20 iterations). 
+
+    h : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    eps : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    mode : string
+    'c++' for the c++ implementation, 'python' for the python implementation
+    and 'auto' for automatic ('c++' is available, else 'python').
+    (default: 'auto').
+                                                    
+    Returns
+    -------
+    point_this : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in this object.
+
+    point_other : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in the other object.
+
+    distance : float
+        Euclidean or differentiable distance.
+        
+    hist_error: list of floats
+        History of convergence error.    
+                
+    """        
+        
         return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
     
     # Compute the projection of a point into an object
-    def projection(self, point, h=0, eps = 0, mode='auto'):
+    def projection(self, point, h=0, eps = 0, mode='auto') -> Tuple[np.matrix, float]:
         """
     The projection of a point in the object, that is, the
     closest point in the object to a point 'point'.
 
     Parameters
     ----------
-    point : 3D vector
+    point : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
         The point for which the projection will be computed.
 
     h : positive float
@@ -298,7 +358,7 @@ class PointCloud:
         
     Returns
     -------
-     proj_point : 3D vector
+     proj_point : 3 x 1 numpy matrix
         The projection of the point 'point' in the object.
 
      d : positive float

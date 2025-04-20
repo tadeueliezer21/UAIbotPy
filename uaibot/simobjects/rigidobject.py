@@ -109,7 +109,7 @@ class RigidObject:
     ----------
     time: positive float
         The timestamp of the animation frame, in seconds.
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy array
         The object's configuration
         (default: the same as the current HTM).
 
@@ -145,7 +145,7 @@ class RigidObject:
 
     Parameters
     ----------
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy array
         The object's configuration
         (default: the same as the current HTM).
 

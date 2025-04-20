@@ -42,7 +42,7 @@ class Utils:
 
     @staticmethod
     def cvt(input: Matrix) -> np.matrix:
-        if isinstance(input, list):
+        if isinstance(input, list) or isinstance(input, tuple):
             if all(isinstance(x, (int, float)) for x in input):
                 return np.matrix(input, dtype=np.float64).reshape(-1, 1)
             elif all(isinstance(x, list) for x in input):
@@ -75,7 +75,7 @@ class Utils:
       
       Parameters
       ----------
-      v : a 3D vector
+      v : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
           The vector for which the S matrix will be created.
 
       Returns
@@ -96,7 +96,7 @@ class Utils:
       
       Parameters
       ----------
-      axis : a 3D vector
+      axis : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
           The axis of rotation.
       
       angle: float
@@ -121,7 +121,7 @@ class Utils:
       
       Parameters
       ----------
-      vector : a 3D vector
+      vector : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
           The displacement vector.
       
       Returns
@@ -236,7 +236,7 @@ class Utils:
       
       Parameters
       ----------
-      htm: 4X4 numpy array or nested list 
+      htm: 4X4 numpy matrix
           Homogeneous transformation matrix of the rotation.
 
       Returns
@@ -263,7 +263,7 @@ class Utils:
       
       Parameters
       ----------
-      htm: 4X4 numpy array or nested list 
+      htm: 4X4 numpy matrix
           Homogeneous transformation matrix of the rotation.
 
       Returns
@@ -340,7 +340,7 @@ class Utils:
       
       Parameters
       ----------
-      A: nxm numpy array
+      A: a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
           The matrix to compute the damped pseudoinverse.
       
       eps: positive float
@@ -364,11 +364,11 @@ class Utils:
       
       Parameters
       ----------
-      A: nxm numpy array
-          Matrix.
+      A: a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
+          A Matrix.
           
-      b: nx1 numpy array
-          Vector.
+      b: a nD vector (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
+          b Vector.
                 
       eps: positive float
           The damping factor.
@@ -532,7 +532,29 @@ class Utils:
 
     @staticmethod
     def solve_qp(H: Matrix, f: Vector, A: Matrix, b: Vector) -> np.matrix:
-        #Solves u^THu/2 + f^Tu subject to Au>=b
+        """
+      Solve the convex quadratic optimization problem
+      min_u 0.5*u'Hu + f'u such that Au<=b.
+      
+      Parameters
+      ----------
+      H : a matrix ((n,n)-element list/tuple, (n,n)-shaped numpy matrix/numpy array)
+          The H matrix. It should be positive definite.
+
+      f : a nD vector (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
+          The f matrix.      
+
+      A : a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
+          The A matrix.  
+
+      b : a nD vector (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
+          The b matrix.
+                    
+      Returns
+      -------
+      u : nx1 numpy matrix
+          The solution.
+      """
         
         H_cvt = Utils.cvt(H)
         f_cvt = Utils.cvt(f)
@@ -940,7 +962,7 @@ class Utils:
         return minval -(1/h)*np.log(s)
 
     @staticmethod
-    def softselectmin(x: List[Vector], y: List[float], h: float) -> Vector:
+    def softselectmin(x: List[Vector], y: List[float], h: float) -> np.matrix:
         minval = np.min(x)
         s = 0
 
@@ -963,7 +985,7 @@ class Utils:
         return Utils.softmin(x,-h)
 
     @staticmethod
-    def softselectmax(x: List[Vector], y: List[float], h: float) -> Vector:
+    def softselectmax(x: List[Vector], y: List[float], h: float) -> np.matrix:
         return Utils.softselectmin(x,y,-h)
 
     @staticmethod
@@ -981,17 +1003,20 @@ class Utils:
 
 
     @staticmethod
-    def compute_dist_python(obj_a: MetricObject, obj_b: MetricObject, p_a: Vector, 
-                            tol: float =0.001, no_iter_max: int =20) -> Tuple[Vector, Vector, float, List]:
+    def _compute_dist_python(obj_a: MetricObject, obj_b: MetricObject, p_a: Vector, 
+                            tol: float =0.001, no_iter_max: int =20) -> Tuple[np.matrix, np.matrix, float, List]:
 
         converged = False
         i = 0
+        
+        hist_error = []
 
         while (not converged) and i < no_iter_max:
             p_a_ant = p_a
             p_b, _ = obj_b.projection(p_a)
             p_a, _ = obj_a.projection(p_b)
-            converged = np.linalg.norm(p_a - p_a_ant) < tol
+            hist_error.append(np.linalg.norm(p_a - p_a_ant))
+            converged = hist_error[-1] < tol
             i += 1
 
         dist = np.linalg.norm(p_a - p_b)
@@ -999,10 +1024,71 @@ class Utils:
         return p_a, p_b, dist, []
                 
     @staticmethod
-    def compute_dist(obj_a: MetricObject, obj_b: MetricObject, p_a_init: Vector =None, 
+    def compute_dist(obj_a: MetricObject, obj_b: MetricObject, p_a_init: Optional[Vector] = None, 
                      tol: float =0.001, no_iter_max: int=20, h: float=0, 
-                     eps: float = 0, mode: str ='auto') -> Tuple[Vector, Vector, float, List]:
-        # Error handling
+                     eps: float = 0, mode: str ='auto') -> Tuple[np.matrix, np.matrix, float, List]:
+        """
+    Compute Euclidean distance or differentiable distance between two objects.
+    
+    If h>0 or eps > 0, it computes the Euclidean distance and it uses GJK's algorithm.
+    
+    Else, it computes the differentiable distance through Generalized Alternating Projection (GAP).
+    See the paper 'A Differentiable Distance Metric for Robotics Through Generalized Alternating Projection'.
+    This only works in c++ mode, though.
+    
+    
+    Parameters
+    ----------
+    obj_a : an object of type 'MetricObject' (see Utils.IS_METRIC)
+        The first object.
+        
+    obj_b : an object of type 'MetricObject' (see Utils.IS_METRIC)
+        The second object.
+        
+    p_a_init : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array) or None
+        Initial point for closest point in 'obj_a'. If 'None', is set to random.
+        (default: None).
+    
+    tol : positive float
+        Convergence criterion of GAP: it stops when ||a[k+1]-a[k]|| < tol.
+        Only valid when h > 0 or eps > 0.
+        (default: 0.001m).      
+
+    no_iter_max : positive int 
+        Maximum number of iterations of GAP.
+        Only valid when h > 0 or eps > 0.
+        (default: 20 iterations). 
+
+    h : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    eps : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    mode : string
+    'c++' for the c++ implementation, 'python' for the python implementation
+    and 'auto' for automatic ('c++' is available, else 'python').
+    (default: 'auto').
+                                                    
+    Returns
+    -------
+    point_a : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in obj_a.
+
+    point_b : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in obj_b.
+
+    distance : float
+        Euclidean or differentiable distance.
+        
+    hist_error: list of floats
+        History of convergence error.    
+                
+    """
 
         if mode=='python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             if Utils.get_uaibot_type(obj_a) == 'uaibot.PointCloud' or Utils.get_uaibot_type(obj_b) == 'uaibot.PointCloud':
@@ -1066,7 +1152,7 @@ class Utils:
             if h >0 or eps > 0:
                 raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
             
-            return Utils.compute_dist_python(obj_a, obj_b, p_a, tol, no_iter_max)
+            return Utils._compute_dist_python(obj_a, obj_b, p_a, tol, no_iter_max)
         else:
             dist_res = obj_a_cpp.dist_to(obj_b_cpp, h, eps, tol, no_iter_max, p_a)
             return Utils.cvt(dist_res.proj_A), Utils.cvt(dist_res.proj_B), dist_res.dist, dist_res.hist_error

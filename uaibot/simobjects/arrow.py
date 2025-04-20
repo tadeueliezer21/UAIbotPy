@@ -18,6 +18,18 @@ class Arrow:
        The object's color, a HTML - compatible string.
        (default: "red").
 
+   thickness : float
+       The arrow's thickness.
+       (default: 1).
+
+   origin : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
+       The origin of the arrow.
+       (default: [0,0,0]).
+
+   vector : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
+       The vector, starting from the origin, of the arrow.
+       (default: [0,0,0]).
+                     
    """
 
     #######################################

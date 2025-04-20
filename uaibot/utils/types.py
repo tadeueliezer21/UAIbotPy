@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from uaibot.graphics import MeshMaterial
 
 
-Vector: TypeAlias = Union[List[float], npt.NDArray[np.float64], np.matrix]
+Vector: TypeAlias = Union[List[float], Tuple[float], npt.NDArray[np.float64], np.matrix]
 Matrix: TypeAlias = Union[npt.NDArray[np.float64], np.matrix]
 HTMatrix: TypeAlias = np.matrix
 MetricObject: TypeAlias = Union["Ball", "Box", "ConvexPolytope", "Cylinder", "PointCloud"]

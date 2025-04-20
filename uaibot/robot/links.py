@@ -212,7 +212,7 @@ class Link:
     obj: object
         Object to be added.
 
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy array
         The transformation between the link's HTM and the object's HTM
 
     """

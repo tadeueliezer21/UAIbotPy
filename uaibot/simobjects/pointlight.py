@@ -197,7 +197,7 @@ class PointLight:
     Parameters
     ----------
 
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy array
         The object's configuration
         (default: the same as the current HTM).
 

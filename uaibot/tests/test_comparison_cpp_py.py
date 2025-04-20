@@ -3,98 +3,92 @@ import numpy as np
 from utils_test import *
 # from uaibot.utils import Utils
 
-robot = ub.Robot.create_epson_t6(htm = ub.Utils.trn([1,0,0]))
 
-htm_tg = robot.fkm([1,2,3])
-q_inv = robot.ikm(htm_tg=htm_tg)
-
-a = 0
-
-# input1 = [1,2,3]
-# input2 = [[1],[2],[3]]
-# input3 = np.matrix([1,2,3])
-# input4 = np.array([1,2,3])
-# input5 = np.matrix([1,2,3]).T
+input1 = [1,2,3]
+input2 = [[1],[2],[3]]
+input3 = np.matrix([1,2,3])
+input4 = np.array([1,2,3])
+input5 = np.matrix([1,2,3]).T
 
 
-# print(ub.Utils.S(input1))
-# print(ub.Utils.S(input2))
-# print(ub.Utils.S(input3))
-# print(ub.Utils.S(input4))
-# print(ub.Utils.S(input5))
+print(ub.Utils.S(input1))
+print(ub.Utils.S(input2))
+print(ub.Utils.S(input3))
+print(ub.Utils.S(input4))
+print(ub.Utils.S(input5))
 
-# print(ub.Utils.rot(input1,3))
-# print(ub.Utils.rot(input2,3))
-# print(ub.Utils.rot(input3,3))
-# print(ub.Utils.rot(input4,3))
-# print(ub.Utils.rot(input5,3))
+print(ub.Utils.rot(input1,3))
+print(ub.Utils.rot(input2,3))
+print(ub.Utils.rot(input3,3))
+print(ub.Utils.rot(input4,3))
+print(ub.Utils.rot(input5,3))
 
 
-# print(ub.Utils.trn(input2))
-# print(ub.Utils.trn(input3))
-# print(ub.Utils.trn(input4))
-# print(ub.Utils.trn(input5))
+print(ub.Utils.trn(input2))
+print(ub.Utils.trn(input3))
+print(ub.Utils.trn(input4))
+print(ub.Utils.trn(input5))
 
-# print(ub.Utils.inv_htm(ub.Utils.rot(input1,3)*ub.Utils.trn([0,1,2])))
-# print(ub.Utils.inv_htm(ub.Utils.rot(input2,3)*ub.Utils.trn([0,1,2])))
-# print(ub.Utils.inv_htm(ub.Utils.rot(input3,3)*ub.Utils.trn([0,1,2])))
-# print(ub.Utils.inv_htm(ub.Utils.rot(input4,3)*ub.Utils.trn([0,1,2])))
-# print(ub.Utils.inv_htm(ub.Utils.rot(input5,3)*ub.Utils.trn([0,1,2])))
+print(ub.Utils.inv_htm(ub.Utils.rot(input1,3)*ub.Utils.trn([0,1,2])))
+print(ub.Utils.inv_htm(ub.Utils.rot(input2,3)*ub.Utils.trn([0,1,2])))
+print(ub.Utils.inv_htm(ub.Utils.rot(input3,3)*ub.Utils.trn([0,1,2])))
+print(ub.Utils.inv_htm(ub.Utils.rot(input4,3)*ub.Utils.trn([0,1,2])))
+print(ub.Utils.inv_htm(ub.Utils.rot(input5,3)*ub.Utils.trn([0,1,2])))
 
-# a, b = ub.Utils.axis_angle(ub.Utils.inv_htm(ub.Utils.rot(input1,3)*ub.Utils.trn([0,1,2])))
+a, b = ub.Utils.axis_angle(ub.Utils.inv_htm(ub.Utils.rot(input1,3)*ub.Utils.trn([0,1,2])))
 
-# print(a)
-# print(b)
+print(a)
+print(b)
 
-# a, b, c = ub.Utils.euler_angles(ub.Utils.inv_htm(ub.Utils.rot(input1,3)*ub.Utils.trn([0,1,2])))
+a, b, c = ub.Utils.euler_angles(ub.Utils.inv_htm(ub.Utils.rot(input1,3)*ub.Utils.trn([0,1,2])))
 
-# print([a,b,c])
+print([a,b,c])
 
-# A1 = [[-1,-2,3],[4,5,6]]
-# A2 = np.matrix([[-1,-2,3],[4,5,6]])
-# A3 = np.array([[-1,-2,3],[4,5,6]])
+A1 = [[-1,-2,3],[4,5,6]]
+A2 = np.matrix([[-1,-2,3],[4,5,6]])
+A3 = np.array([[-1,-2,3],[4,5,6]])
 
-# b1 = [1,0]
-# b2 = np.matrix([1,0])
-# b3 = np.matrix([1,0]).T
+b1 = [1,0]
+b2 = np.matrix([1,0])
+b3 = np.matrix([1,0]).T
 
-# print(ub.Utils.dp_inv(A1))
-# print(ub.Utils.dp_inv(A2))
-# print(ub.Utils.dp_inv(A3))
+print(ub.Utils.dp_inv(A1))
+print(ub.Utils.dp_inv(A2))
+print(ub.Utils.dp_inv(A3))
 
-# print(ub.Utils.dp_inv_solve(A1, b1))
-# print(ub.Utils.dp_inv_solve(A2, b2))
-# print(ub.Utils.dp_inv_solve(A3, b3))
-# print(ub.Utils.dp_inv_solve(A1, b1, mode='python'))
-# print(ub.Utils.dp_inv_solve(A2, b2, mode='python'))
-# print(ub.Utils.dp_inv_solve(A3, b3, mode='python'))
+print(ub.Utils.dp_inv_solve(A1, b1))
+print(ub.Utils.dp_inv_solve(A2, b2))
+print(ub.Utils.dp_inv_solve(A3, b3))
+print(ub.Utils.dp_inv_solve(A1, b1, mode='python'))
+print(ub.Utils.dp_inv_solve(A2, b2, mode='python'))
+print(ub.Utils.dp_inv_solve(A3, b3, mode='python'))
 
-# H1 = [[2,1],[1,3]]
-# H2 = np.array(H1)
-# H3 = np.matrix(H1)
-# H4 = np.matrix(H1)
+H1 = [[2,1],[1,3]]
+H2 = np.array(H1)
+H3 = np.matrix(H1)
+H4 = np.matrix(H1)
 
-# f1 = [1,2]
-# f2 = np.matrix([1,2])
-# f3 = np.matrix([1,2]).T
-# f4 = np.array([1,2])
+f1 = [1,2]
+f2 = np.matrix([1,2])
+f3 = np.matrix([1,2]).T
+f4 = np.array([1,2])
 
-# A1 = [[1,2],[3,4],[4,5],[5,6]]
-# A2 = np.matrix([[1,2],[3,4],[4,5],[5,6]])
-# A3 = np.array([[1,2],[3,4],[4,5],[5,6]])
-# A4 = np.array([[1,2],[3,4],[4,5],[5,6]])
+A1 = [[1,2],[3,4],[4,5],[5,6]]
+A2 = np.matrix([[1,2],[3,4],[4,5],[5,6]])
+A3 = np.array([[1,2],[3,4],[4,5],[5,6]])
+A4 = np.array([[1,2],[3,4],[4,5],[5,6]])
 
-# b1 = [10,20,30,40]
-# b2 = np.matrix([10,20,30,40])
-# b3 = np.matrix([10,20,30,40]).T
-# b4 = np.array([10,20,30,40])
+b1 = [10,20,30,40]
+b2 = np.matrix([10,20,30,40])
+b3 = np.matrix([10,20,30,40]).T
+b4 = np.array([10,20,30,40])
 
-# print("QP Solver")
+print("QP Solver")
 
-# print(ub.Utils.solve_qp(H1, f1, A1, b1))
-# print(ub.Utils.solve_qp(H2, f2, A2, b2))
-# print(ub.Utils.solve_qp(H3, f3, A3, b3))
-# print(ub.Utils.solve_qp(H4, f4, A4, b4))
+print(ub.Utils.solve_qp(H1, f1, A1, b1))
+print(ub.Utils.solve_qp(H2, f2, A2, b2))
+print(ub.Utils.solve_qp(H3, f3, A3, b3))
+print(ub.Utils.solve_qp(H4, f4, A4, b4))
 
 robot = ub.Robot.create_franka_emika_3()
 
