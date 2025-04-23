@@ -74,7 +74,7 @@ from typing import Optional, Tuple, List
 
 class Robot:
     """
-  A class that contains a robot object in uaibot.
+  A class that contains a robot object in UAIBot.
 
   Parameters
   ----------

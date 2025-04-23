@@ -576,6 +576,22 @@ class Utils:
         
         return Utils.cvt(result[0])
 
+    def null_space(A: Matrix) -> np.matrix:
+        """
+        Compute the null space of the matrix A.
+
+        Parameters:
+        ----------
+        A : a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
+            The matrix to compute the null space.
+
+        Returns
+        -------
+        A_null : m x r numpy matrix
+            The matrix such that its column spam the null space.
+        """
+        return np.matrix(null_space(Utils.cvt(A)))
+
     #######################################
     # Type check and conversion functions
     #######################################

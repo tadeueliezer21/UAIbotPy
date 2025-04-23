@@ -12,6 +12,8 @@ import httplib2
 import sys
 from uaibot.utils.types import HTMatrix, Matrix, Vector, SimObject
 from typing import Optional, Tuple, List
+import os
+import inspect
 
 class Simulation:
     """
@@ -771,19 +773,22 @@ class Simulation:
 
         display(HTML(self.gen_code()))
 
-    def save(self, address: str, file_name: str) -> None:
+    def save(self, address: Optional[str] = None, file_name : str = 'sim') -> None:
         """
     Save the simulation as a self-contained HTML file.
 
     Parameters
     ----------
     address : string
-        The address of the path (example "D:\\").
+        The address of the path (example "D:\\"). Default is 'None', and saves
+        to the folder that the script was run.
+        (default: 'None').
     file_name: string
-        The name of the file ("the .html" extension should not appear)
+        The name of the file ("the .html" extension should not appear).
+        (default: 'sim')
 
     """
-        if not (str(type(address)) == "<class 'str'>"):
+        if (not (str(type(address)) == "<class 'str'>")) and (not address is None):
             raise Exception(
                 "The parameter 'address' should be a string.")
         if not (str(type(file_name)) == "<class 'str'>"):
@@ -791,11 +796,19 @@ class Simulation:
                 "The parameter 'file_name' should be a string.")
 
         try:
-            file = open(address + "/" + file_name + ".html", "w+")
+            
+            if address is None:
+                frame = inspect.stack()[1] 
+                caller_filepath = frame.filename
+                current_folder = os.path.dirname(os.path.abspath(caller_filepath))
+            else:
+                current_folder = address
+
+            file = open(current_folder + "/" + file_name + ".html", "w+")
             file.write(self.gen_code())
             file.close()
         except:
-            raise Exception("Could not open the path '"+address+"' and create the file '"+file_name+".html'.")
+            raise Exception("Could not open the path '"+current_folder+"' and create the file '"+file_name+".html'.")
 
     def scan_group(self, group):
         for obj in group.list_of_objects:
