@@ -559,20 +559,18 @@ class Utils:
           The solution.
       """
         
-        H_cvt = Utils.cvt(H)
-        f_cvt = Utils.cvt(f)
-        A_cvt = Utils.cvt(A)
-        b_cvt = Utils.cvt(b)
+        H_cvt = np.matrix(H)
+        A_cvt = np.matrix(A)
         
-        m = H_cvt.shape[0]
+        m = H_cvt.shape[0]        
         n = A_cvt.shape[0]
     
         H_cvt = 0.5 * (H_cvt + H_cvt.T)  
         
-        fc = np.asarray(f_cvt).reshape((m,))
-        bc =  np.asarray(b_cvt).reshape((n,))
+        f_cvt = np.asarray(f).reshape((m,))
+        b_cvt =  np.asarray(b).reshape((n,))
 
-        result = quadprog.solve_qp(H_cvt, -fc , A_cvt.T, bc, 0)
+        result = quadprog.solve_qp(H_cvt, -f_cvt , A_cvt.T, b_cvt, 0)
         
         return Utils.cvt(result[0])
 
