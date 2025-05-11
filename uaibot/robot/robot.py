@@ -390,7 +390,8 @@ class Robot:
     def ikm(self, htm_target: Optional[HTMatrix]=None, htm_tg: Optional[HTMatrix]=None, 
             htm: Optional[HTMatrix]=None, q0: Optional[Vector]=None, p_tol: float=0.001, 
             a_tol: float =5, no_iter_max: int =200, ignore_orientation: bool = False, 
-            mode: str ='auto') -> Vector:
+            no_tries = 40, check_joint: bool = True, check_auto: bool = True, 
+            obstacles: List[MetricObject]=[], mode: str ='auto') -> Vector:
         """
     Try to solve the inverse kinematic problem for the end-effector, given a
     desired homogeneous transformation matrix. It returns the manipulator
@@ -425,6 +426,18 @@ class Robot:
     ignore_orientation: boolean
         If True, the orientation part of the HTM is ignored. Task is position-only.
         (default: False)
+    no_tries: positive int.
+        How many times the algorithm tries to find a solution.
+        (default: 40)
+    check_joint: boolen
+        If True, consider the joint limits as well.
+        (default: True)
+    check_auto: boolen
+        If True, consider the auto collision of the robot.
+        (default: True)
+    obstacles: list of 'MetricObject' objects
+        List of objects as obstacles to consider.
+        (default: Empty list)
     mode : string
         'c++' for the c++ implementation, 'python' for the python implementation
         and 'auto' for automatic ('c++' is available, else 'python')
@@ -449,7 +462,8 @@ class Robot:
             raise ValueError("Missing required argument: 'htm_tg'")    
         
     
-        return _ikm(self, htm_tg, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation, mode)
+        return _ikm(self, htm_tg, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation, 
+                    no_tries, check_joint, check_auto, obstacles, mode)
 
     def jac_geo(self, q: Optional[Vector] = None, axis: str ='eef', htm : Optional[HTMatrix]=None, 
                 mode: str ='auto') -> Tuple[np.matrix,HTMatrix]:

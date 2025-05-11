@@ -142,13 +142,26 @@ print("Testing IK  ")
 
 max_error = 0
 no_fail = 0
+
+obs = ub.Ball(htm = ub.Utils.trn([0.5,0,0.6]),radius=0.25)
 for i in range(NO_TRY):
-    q_input = [np.random.randn() for j in range(7)]
+    q_input = np.matrix(robot.q)
+    
+    cont = True
+    
+    while cont:
+        for i in range(7):
+            q_input[i,0] = robot.joint_limit[i,0]+np.random.rand()*(robot.joint_limit[i,1]-robot.joint_limit[i,0])
+            
+        ok, _, _ = robot.check_free_config(q=q_input, obstacles=[obs])
+        cont = not ok
+
+    
     htm_rand = robot.fkm(q_input)
     
     try:
-        q_inv_cpp = robot.ikm(htm_tg = htm_rand, mode='c++')
-        q_inv_py = robot.ikm(htm_tg = htm_rand, mode='python')
+        q_inv_cpp = robot.ikm(htm_tg = htm_rand, mode='c++', obstacles=[obs])
+        q_inv_py = robot.ikm(htm_tg = htm_rand, mode='python', obstacles=[obs])
         
         error_cpp = np.linalg.norm(htm_rand-robot.fkm(q_inv_cpp))
         error_py = np.linalg.norm(htm_rand-robot.fkm(q_inv_py))

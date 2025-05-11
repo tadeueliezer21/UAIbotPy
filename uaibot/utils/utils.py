@@ -11,7 +11,7 @@ from .types import *
 from typing import Callable
 import urllib.request
 import io
-
+import hashlib
 import os
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
@@ -561,16 +561,16 @@ class Utils:
           The solution.
       """
         
-        H_cvt = np.matrix(H)
-        A_cvt = np.matrix(A)
+        H_cvt = np.matrix(H, dtype=np.float64)
+        A_cvt = np.matrix(A, dtype=np.float64)
         
         m = H_cvt.shape[0]        
         n = A_cvt.shape[0]
     
         H_cvt = 0.5 * (H_cvt + H_cvt.T)  
         
-        f_cvt = np.asarray(f).reshape((m,))
-        b_cvt =  np.asarray(b).reshape((n,))
+        f_cvt = np.array(np.asarray(f).reshape((m,)), dtype=np.float64)
+        b_cvt =  np.array(np.asarray(b).reshape((n,)), dtype=np.float64)
 
         result = quadprog.solve_qp(H_cvt, -f_cvt , A_cvt.T, b_cvt, 0)
         
@@ -607,6 +607,7 @@ class Utils:
         
         'all_obs': a list of UAIBot objects representing the obstacles.
         'q0': the initial configuration.
+        'htm_base': the initial pose for the base.
         'htm_tg': the target HTML for the end-effector.
         
 
@@ -618,17 +619,33 @@ class Utils:
         -------
         all_problems : dictionary
             The dictionary with all the problems.
-        """        
+        """          
+        
+        
+        def load_npz_from_url_cached(url, cache_dir=".cache"):
+            os.makedirs(cache_dir, exist_ok=True)
+            
+            # Create a unique filename based on the URL hash
+            url_hash = hashlib.sha256(url.encode()).hexdigest()
+            local_path = os.path.join(cache_dir, f"{url_hash}.npz")
 
-        def load_npz_from_url(url):
+            # If cached, load from disk
+            if os.path.exists(local_path):
+                return np.load(local_path, allow_pickle=True)
+
+            # Else, download and save
             with urllib.request.urlopen(url) as response:
                 data = response.read()
-            return np.load(io.BytesIO(data), allow_pickle=True)
+            with open(local_path, 'wb') as f:
+                f.write(data)
+            
+            return np.load(local_path, allow_pickle=True)
 
-        allproblems_1 = load_npz_from_url("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_1.npz")
-        allproblems_2 = load_npz_from_url("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_2.npz")
-        allproblems_3 = load_npz_from_url("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_3.npz")
-        allproblems_4 = load_npz_from_url("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_4.npz")
+
+        allproblems_1 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_1.npz")
+        allproblems_2 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_2.npz")
+        allproblems_3 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_3.npz")
+        allproblems_4 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_4.npz")
           
                         
         allproblems_1 = allproblems_1['arr_0'].item()
