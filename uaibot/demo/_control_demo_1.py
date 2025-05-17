@@ -66,7 +66,7 @@ def _control_demo_1():
 
     s = [i / 1000 for i in range(1000)]
 
-    target_curve = ub.Utils.interpolate(points)(s)
+    target_curve = ub.Utils.interpolate(points, is_closed = True)(s)
     target_curve_mod = []
     for p in target_curve:
         target_curve_mod.append(np.matrix([p[0,0], y_c, p[1,0]]).T)
@@ -117,6 +117,8 @@ def _control_demo_1():
     plt.show()
                 
     return sim
+
+
 
 
 

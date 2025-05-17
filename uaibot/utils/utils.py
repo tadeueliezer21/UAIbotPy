@@ -406,7 +406,7 @@ class Utils:
                  
 
     @staticmethod
-    def interpolate(points: List[Vector]) -> Callable[[List[float]], List[np.matrix]]:
+    def interpolate(points: List[Vector], is_closed : bool =False) -> Callable[[List[float]], List[np.matrix]]:
         """
       Create a function handle that generates an one-time differentiable interpolated data from 'points'.
 
@@ -426,6 +426,10 @@ class Utils:
       ----------
       points: a list of nD vectors (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
           Points to be interpolated.
+          
+      is_closed: bool
+          If the curve is closed or not (that is, f(0)=f(1)).
+          (default: False)
 
       Returns
       -------
@@ -436,83 +440,72 @@ class Utils:
         if not Utils.is_a_list_vector(points):
             raise Exception("The parameter 'points' should be a list of vectors with the same dimension.")
 
-        def aux_interpolate_single(arg_points):
 
+        def aux_interpolate_single(arg_points):
             def int_aux_simp(arg_t, arg_n, arg_c):
-                tn = arg_n * (arg_t % 1)
-                ti = floor(tn)
-                coef = arg_c[4 * ti: 4 * ti + 5]
-                return coef[0] + coef[1] * tn + coef[2] * tn ** 2 + coef[3] * tn ** 3
+                tn = arg_n * (arg_t % 1 if is_closed else min(max(arg_t, 0), 1))
+                ti = min(floor(tn), arg_n - 1)
+                tloc = tn - ti
+                coef = arg_c[4 * ti:4 * ti + 4]
+                return coef[0] + coef[1] * tloc + coef[2] * tloc**2 + coef[3] * tloc**3
 
             def int_aux(arg_t, arg_n, arg_c):
-                return [int_aux_simp(tt, arg_n, arg_c) for tt in arg_t] if str(
-                    type(arg_t)) == "<class 'list'>" else int_aux_simp(arg_t, arg_n, arg_c)
+                return [int_aux_simp(tt, arg_n, arg_c) for tt in arg_t] if isinstance(arg_t, list) else int_aux_simp(arg_t, arg_n, arg_c)
 
             n = len(arg_points)
-            xn = np.array(arg_points).tolist()
-            xn.append(arg_points[0])
+            num_segments = n if is_closed else n - 1
+            A_rows = []
+            b_vals = []
 
-            t = range(n + 1)
-            A = np.zeros((3 * n, 4 * n))
-            b = np.zeros((3 * n, 1))
+            # Interpolation constraints (value at start and end of each segment)
+            for i in range(num_segments):
+                row_start = np.zeros(4 * num_segments)
+                row_end = np.zeros(4 * num_segments)
+                row_start[4 * i:4 * i + 4] = [1, 0, 0, 0]
+                row_end[4 * i:4 * i + 4] = [1, 1, 1, 1]
+                A_rows.append(row_start)
+                b_vals.append(arg_points[i])
+                A_rows.append(row_end)
+                b_vals.append(arg_points[(i + 1) % n if is_closed else i + 1])
 
-            # Equality at initial points
-            for p in range(n):
-                A[p, 4 * p] = 1
-                A[p, 4 * p + 1] = t[p]
-                A[p, 4 * p + 2] = t[p] ** 2
-                A[p, 4 * p + 3] = t[p] ** 3
-                b[p] = xn[p]
-            # Equality at final points
-            for p in range(n):
-                A[n + p, 4 * p] = 1
-                A[n + p, 4 * p + 1] = t[p + 1]
-                A[n + p, 4 * p + 2] = t[p + 1] ** 2
-                A[n + p, 4 * p + 3] = t[p + 1] ** 3
-                b[n + p] = xn[p + 1]
-            # Equality of the derivative in the initial points
-            for p in range(n):
-                if not (p == n - 1):
-                    A[2 * n + p, 4 * p] = 0
-                    A[2 * n + p, 4 * p + 1] = 1
-                    A[2 * n + p, 4 * p + 2] = 2 * t[p + 1]
-                    A[2 * n + p, 4 * p + 3] = 3 * t[p + 1] ** 2
-                    A[2 * n + p, 4 * (p + 1)] = -0
-                    A[2 * n + p, 4 * (p + 1) + 1] = -1
-                    A[2 * n + p, 4 * (p + 1) + 2] = -2 * t[p + 1]
-                    A[2 * n + p, 4 * (p + 1) + 3] = -3 * t[p + 1] ** 2
-                else:
-                    A[2 * n + p, 4 * p] = 0
-                    A[2 * n + p, 4 * p + 1] = 1
-                    A[2 * n + p, 4 * p + 2] = 2 * t[p + 1]
-                    A[2 * n + p, 4 * p + 3] = 3 * t[p + 1] ** 2
-                    A[2 * n + p, 0] = -0
-                    A[2 * n + p, 1] = -1
-                    A[2 * n + p, 2] = 0
-                    A[2 * n + p, 3] = 0
+            # Derivative continuity at junctions (including wraparound if closed)
+            for i in range(num_segments):
+                i_next = (i + 1) % num_segments
+                if not is_closed and i == num_segments - 1:
+                    break  # skip final derivative constraint for open curve
+                row = np.zeros(4 * num_segments)
+                row[4 * i + 1:4 * i + 4] = [1, 2, 3]
+                row[4 * i_next + 1:4 * i_next + 4] = [-1, 0, 0]
+                A_rows.append(row)
+                b_vals.append(0)
 
-            # Create the objective function
+            # Assemble matrices
+            A = np.vstack(A_rows)
+            b = np.array(b_vals).reshape(-1, 1)
 
-            H = np.zeros((0, 0))
-            for p in range(n):
-                M = np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 4, 6 * ((p + 1) ** 2 - p ** 2)],
-                              [0, 0, 6 * ((p + 1) ** 2 - p ** 2), 12 * ((p + 1) ** 3 - p ** 3)]])
-                nn = np.shape(H)[0]
-                H = np.block([[H, np.zeros((nn, 4))], [np.zeros((4, nn)), M]])
+            # Regularizer: minimize integral of second derivative squared
+            H = np.zeros((4 * num_segments, 4 * num_segments))
+            for i in range(num_segments):
+                H_i = np.array([
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 0, 4, 6],
+                    [0, 0, 6, 12]
+                ])
+                H[4 * i:4 * i + 4, 4 * i:4 * i + 4] = H_i
 
-            # Solve the optimization problem
-            m1 = np.shape(A)[0]
-            m2 = np.shape(A)[1]
+            # Solve constrained minimization via KKT system
+            m = A.shape[0]
+            KKT = np.block([
+                [H, A.T],
+                [A, np.zeros((m, m))]
+            ])
+            rhs = np.vstack([np.zeros((4 * num_segments, 1)), b])
+            sol = np.linalg.solve(KKT, rhs)
 
-            G = np.block([[H, np.transpose(A)], [A, np.zeros((m1, m1))]])
-            g = np.block([[np.zeros((m2, 1))], [b]])
-            y = np.linalg.solve(G, g)
-            c = y[0: np.shape(H)[0]]
-            c = c.reshape((1, np.shape(H)[0]))[0].tolist()
+            c = sol[:4 * num_segments].flatten().tolist()
+            return lambda s: int_aux(s, num_segments, c)
 
-            # Create the function
-            f = lambda ts: int_aux(ts, n, c)
-            return f
 
         def aux_interpolate_multiple(arg_points, t):
 
@@ -534,6 +527,7 @@ class Utils:
                 return list_of_points[0]
 
         return lambda t: aux_interpolate_multiple(points, t)
+
 
     @staticmethod
     def solve_qp(H: Matrix, f: Vector, A: Matrix, b: Vector) -> np.matrix:

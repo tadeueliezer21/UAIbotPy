@@ -67,8 +67,7 @@ def _ikm(self, htm_tg, htm = None, q0=None, p_tol=0.005, a_tol=5, no_iter_max=20
         
         if success: 
             ok, _, _ = self.check_free_config(Utils.cvt(q), htm, obstacles,
-                                check_joint, check_auto,
-                                tol=0.0005, dist_tol=0.005, no_iter_max=20, mode = mode)
+                                check_joint, check_auto, mode = mode)
             if ok:
                 return Utils.cvt(q) 
  
