@@ -9,7 +9,7 @@ if os.environ['CPP_SO_FOUND']=="1":
 _INVHALFPI = 0.63660
 _EPS = 1/10000000
 
-def _vector_field_rn(q, curve, alpha, const_vel, mode='auto'):
+def _vector_field_rn(q, curve, alpha, const_vel, is_closed, gamma, mode='auto'):
 
     n = np.shape(curve[0])[0]
 
@@ -32,14 +32,14 @@ def _vector_field_rn(q, curve, alpha, const_vel, mode='auto'):
     # end error handling
 
     if mode=='python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-        return _vector_field_rn_python(Utils.cvt(q), curve, alpha, const_vel)
+        return _vector_field_rn_python(Utils.cvt(q), curve, alpha, const_vel, is_closed, gamma)
     else:
-        vf_res =  ub_cpp.vectorfield_rn(Utils.cvt(q), curve, alpha, const_vel)
+        vf_res =  ub_cpp.vectorfield_rn(Utils.cvt(q), curve, alpha, const_vel, is_closed, gamma)
         return Utils.cvt(vf_res.twist), vf_res.dist, vf_res.index
 
 
 
-def _vector_field_rn_python(p, curve, alpha, const_vel):
+def _vector_field_rn_python(p, curve, alpha, const_vel, is_closed, gamma):
 
 
     vec_n, vec_t, min_dist, ind_min = _compute_ntd(curve, p)
@@ -48,8 +48,15 @@ def _vector_field_rn_python(p, curve, alpha, const_vel):
     fun_h = sqrt(max(1 - fun_g ** 2, 0))
     abs_const_vel = abs(const_vel)
     sgn = const_vel / (abs_const_vel + 0.00001)
+    
+    if is_closed:
+        mult = 1
+    else:
+        per =  ind_min/len(curve)
+        mult = min(gamma * (1.0-per),1.0)
+    
 
-    return abs_const_vel * (fun_g * vec_n + sgn * fun_h * vec_t), min_dist, ind_min
+    return abs_const_vel * (fun_g * vec_n + mult * sgn * fun_h * vec_t), min_dist, ind_min
 
 
 def _compute_ntd(curve, p):

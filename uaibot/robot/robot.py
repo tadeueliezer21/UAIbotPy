@@ -587,7 +587,7 @@ class Robot:
     #######################################
     @staticmethod
     def vector_field(q, curve: List[Vector], alpha: float =1, 
-                     const_vel: float =1, mode: str ='auto') -> Tuple[np.matrix,float,int]:
+                     const_vel: float =1, is_closed: bool = True, gamma: float=10, mode: str ='auto') -> Tuple[np.matrix,float,int]:
         """
     Computes the vector field presented in 
     
@@ -596,8 +596,17 @@ class Robot:
     IEEE Transactions on Robotics (2021)". 
     
     The vector field has constant velocity and use the function 
-    G(u) = (2/pi)*atan(alpha*sqrt(u)).
-
+    G(p) = (2/pi)*atan(alpha*sqrt(Dist(p))).
+    
+    in which "Dist(p)" is the Euclidean distance to the curve and alpha>0 a parameter.
+    
+    If the curve is not closed, the circulation component is modulated by:
+    
+    R(p) = min(gamma*(1.0 - s(p)),1.0)
+    
+    in which s(p) in [0,1] is the fraction of the curve travelled at the point p*(p) 
+    (i.e., the closest point to the curve to point p) and gamma>0.
+    
 
     Parameters
     ----------
@@ -617,6 +626,16 @@ class Robot:
         The constant velocity of the vector field. The signal of this number 
         controls the direction of rotation 
         (default: 1).
+        
+    is_closed: bool
+        If the curve is closed or not.
+        (default: True)
+        
+    gamma: positive float
+        The parameter of the function that sends the circulation 
+        component to zero when close to the end of the curve. 
+        Only active when it 'is_closed' is True.
+        (default: 0.5)
 
     mode : string
         'c++' for the c++ implementation, 'python' for the python implementation
@@ -635,7 +654,7 @@ class Robot:
         The index of the closest point to the curve.
     """
 
-        return _vector_field_rn(q, curve, alpha, const_vel, mode)
+        return _vector_field_rn(q, curve, alpha, const_vel, is_closed, gamma, mode)
  
     def task_function(self, htm_target: Optional[HTMatrix]=None, 
                       htm_tg: Optional[HTMatrix]=None, q: Optional[None]=None, 
