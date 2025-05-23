@@ -348,17 +348,17 @@ class Simulation:
         ground = Box(name="ground", width=100, depth=100, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=1, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=1, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=1, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=1, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/green_"
         ldr_list = [ldr_url + "px.jpg", ldr_url + "nx.jpg", ldr_url + "py.jpg", ldr_url + "ny.jpg", ldr_url + "pz.jpg",
                     ldr_url + "nz.jpg"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -399,17 +399,17 @@ class Simulation:
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=1, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=1, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=1, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=1, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/hill_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -445,17 +445,17 @@ class Simulation:
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=1, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=1, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=1, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=1, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/orchard_road_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
