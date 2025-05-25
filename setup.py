@@ -15,13 +15,14 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 def ensure_pybind11():
-    try:
-        import pybind11
-        print(f"Pybind11 already installed: {pybind11.__version__}")
-    except ImportError:
-        print("Installing pybind11 before compilation...")
-        print(sys.executable)
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pybind11"])
+    pass
+#     try:
+#         import pybind11
+#         print(f"Pybind11 already installed: {pybind11.__version__}")
+#     except ImportError:
+#         print("Installing pybind11 before compilation...")
+#         print(sys.executable)
+#         subprocess.check_call([sys.executable, "-m", "pip", "install", "pybind11"])
 
 class CMakeBuild(build_ext):
     """Runs CMake and Make to build the shared library."""
@@ -30,26 +31,49 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         python_include_dir = sysconfig.get_path("include")
         python_library_dir = sysconfig.get_config_var("LIBDIR")
+        
+        # MODIFIED 19/05 DOCKER TESTS vv
+        # python_lib_name = sysconfig.get_config_var('INSTSONAME') or \
+        #              f"libpython{sysconfig.get_config_var('VERSION')}.so"
+        # python_library_dir = os.path.join(
+        #     sysconfig.get_config_var('LIBDIR'),
+        #     python_lib_name
+        # )
+        ###
 
 
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPython3_EXECUTABLE={sys.executable}",
-            f"-DPYTHON_INCLUDE_DIR={python_include_dir}",
-            f"-DPYTHON_LIBRARY={python_library_dir}",
+            f"-DPython3_INCLUDE_DIR={python_include_dir}",
+            f"-DPython3_LIBRARY_DIR={python_library_dir}",
             "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_MAKE_PROGRAM=make",
+            f"-DPython3_ROOT_DIR={os.path.dirname(os.path.dirname(sys.executable))}",
         ]
 
 
         build_temp = os.path.join(self.build_temp, ext.name)
         os.makedirs(build_temp, exist_ok=True)
 
-        # Run CMake configuration
-        subprocess.run(["cmake", ext.sourcedir] + cmake_args, cwd=build_temp, check=True)
+        try:
+            # Run CMake configuration
+            subprocess.run(["cmake", ext.sourcedir] + cmake_args, 
+                        cwd=build_temp, 
+                        check=True,
+                        capture_output=True,  # This captures the output
+                        text=True)
+            
+            # Compile the C++ extension
+            subprocess.run(["cmake", "--build", ".", "--config", "Release"],
+                        cwd=build_temp,
+                        check=True,
+                        capture_output=True,  # This captures the output
+                        text=True)
         
-        # Compile the C++ extension
-        subprocess.run(["cmake", "--build", ".", "--config", "Release"], cwd=build_temp, check=True)
-        
+        except subprocess.CalledProcessError as e:
+            print(f"CMake configuration failed with output:\n{e.stdout}\n{e.stderr}")
+            raise
         # Explicitly copy the built library to the expected location
         lib_name = f"{ext.name}{sysconfig.get_config_var('EXT_SUFFIX')}"
         src_path = os.path.join(extdir, lib_name)
