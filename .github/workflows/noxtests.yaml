@@ -44,5 +44,5 @@ jobs:
     
     - name: Run Nox
       env:
-      GITHUB_PYTHON_VERSION: ${{ matrix.python-version }}
+        GITHUB_PYTHON_VERSION: ${{ matrix.python-version }}
       run: nox
