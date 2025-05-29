@@ -84,10 +84,14 @@ class Robot:
       (default: 'genRobot').
 
   htm_base_0 : 4x4 numpy matrix
-      The robot base's configuration.
+      The transformation between the robot's base and the first DH frame.
       (default: 4x4 identity matrix).
 
-  list_base_3d_obj : list of 'uaibot.Model3D' objects
+  htm_n_eef : 4x4 numpy matrix
+      The transformation between the last DH and the end-effector.
+      (default: 4x4 identity matrix).
+
+  list_object_3d_base : list of 'uaibot.Model3D' objects
       The list of 3d models of the base of the robot.
       If set to None, there is no base 3d object.
       (default: None).

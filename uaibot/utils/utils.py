@@ -528,47 +528,66 @@ class Utils:
 
         return lambda t: aux_interpolate_multiple(points, t)
 
-
     @staticmethod
-    def solve_qp(H: Matrix, f: Vector, A: Matrix, b: Vector) -> np.matrix:
+    def solve_qp(H: Matrix, f: Vector, A: Matrix = None, b: Vector = None, A_eq: Matrix = None, b_eq: Vector = None) -> np.matrix:
         """
-      Solve the convex quadratic optimization problem
-      min_u 0.5*u'Hu + f'u such that Au<=b.
-      
-      Parameters
-      ----------
-      H : a matrix ((n,n)-element list/tuple, (n,n)-shaped numpy matrix/numpy array)
-          The H matrix. It should be positive definite.
+        Solve the convex quadratic optimization problem:
+        min_u 0.5 * u'Hu + f'u such that A_eq * u = b_eq and A * u >= b.
+        
+        Parameters
+        ----------
+        H : (n,n)-shaped matrix (list/tuple/np.matrix/np.ndarray)
+            The H matrix. Must be symmetric positive definite.
 
-      f : a nD vector (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
-          The f matrix.      
+        f : (n,)-shaped vector (list/tuple/np.matrix/np.ndarray)
+            The f vector.
 
-      A : a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
-          The A matrix.  
+        A : (m,n)-shaped matrix or 'None', optional
+            Inequality constraint matrix (Au >= b). Pass 'None' to omit.
 
-      b : a nD vector (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
-          The b matrix.
-                    
-      Returns
-      -------
-      u : nx1 numpy matrix
-          The solution.
-      """
+        b : (m,)-shaped vector or 'None', optional
+            RHS of inequality constraints. Pass 'None' to omit.
+
+        A_eq : (p,n)-shaped matrix or 'None', optional
+            Equality constraint matrix (A_eq * u = b_eq). Pass 'None' to omit.
+
+        b_eq : (p,)-shaped vector or 'None', optional
+            RHS of equality constraints. Pass 'None' to omit.
+        
+        Returns
+        -------
+        u : (n,1) numpy matrix
+            The solution.
+        """
         
         H_cvt = np.matrix(H, dtype=np.float64)
-        A_cvt = np.matrix(A, dtype=np.float64)
-        
-        m = H_cvt.shape[0]        
-        n = A_cvt.shape[0]
-    
-        H_cvt = 0.5 * (H_cvt + H_cvt.T)  
-        
-        f_cvt = np.array(np.asarray(f).reshape((m,)), dtype=np.float64)
-        b_cvt =  np.array(np.asarray(b).reshape((n,)), dtype=np.float64)
+        H_cvt = 0.5 * (H_cvt + H_cvt.T)  # Ensure symmetry
+        f_cvt = np.array(np.asarray(f).reshape((-1,)), dtype=np.float64)
 
-        result = quadprog.solve_qp(H_cvt, -f_cvt , A_cvt.T, b_cvt, 0)
-        
+        # Handle empty A and b
+        if (A is None) or (b is None):
+            A_ineq = np.empty((0, H_cvt.shape[0]))
+            b_ineq = np.empty((0,))
+        else:
+            A_ineq = np.matrix(A, dtype=np.float64)
+            b_ineq = np.array(np.asarray(b).reshape((-1,)), dtype=np.float64)
+
+        # Handle empty A_eq and b_eq
+        if (A_eq is None) or (b_eq is None):
+            A_eq_cvt = np.empty((0, H_cvt.shape[0]))
+            b_eq_cvt = np.empty((0,))
+        else:
+            A_eq_cvt = np.matrix(A_eq, dtype=np.float64)
+            b_eq_cvt = np.array(np.asarray(b_eq).reshape((-1,)), dtype=np.float64)
+
+        # Stack constraints and compute meq
+        G = np.vstack([A_eq_cvt, A_ineq])  
+        h = np.hstack([b_eq_cvt, b_ineq])
+        meq = A_eq_cvt.shape[0]
+
+        result = quadprog.solve_qp(H_cvt, -f_cvt, G.T, h, meq)
         return Utils.cvt(result[0])
+
 
     def null_space(A: Matrix) -> np.matrix:
         """
