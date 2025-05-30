@@ -2,6 +2,7 @@ import numpy as np
 from utils import *
 from graphics.texture import *
 from utils import *
+from .texture import *
 
 class MeshMaterial:
     """
@@ -738,6 +739,64 @@ class MeshMaterial:
     # Methods
     #######################################
 
+
+    @staticmethod
+    def create_glass(color : Optional[str] = None)-> "MeshMaterial":
+        
+        if color is None:
+            return MeshMaterial(metalness = 0.9, roughness = 0.05, clearcoat = 1,
+                            reflectivity = 0.2,  env_map_intensity=  0.9, side='DoubleSide',
+                            refraction_ratio= 0.985, ior = 1, opacity=0.5)
+        else:
+            return MeshMaterial(metalness = 0.9, roughness = 0.05, clearcoat = 1,
+                            reflectivity = 0.2,  env_map_intensity=  0.9, side='DoubleSide',
+                            refraction_ratio= 0.985, ior = 1, opacity=0.5, color = color)            
+ 
+    @staticmethod
+    def create_colored_metal(color : str = 'white')-> "MeshMaterial":
+   
+        texture = Texture(
+            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/white.png',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
+
+        return MeshMaterial(metalness=0.9, clearcoat=0.5, roughness=0.0, 
+                            flat_shading=True, normal_scale=[1, 1], 
+                            texture_map=texture, color=color)
+
+
+    @staticmethod
+    def create_gold()-> "MeshMaterial":
+   
+        texture = Texture(
+            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/gold_metal.png',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
+
+        return MeshMaterial(metalness=0.9, clearcoat=0.5, roughness=0.0, 
+                            flat_shading=True, normal_scale=[1, 1], 
+                            texture_map=texture)
+
+    @staticmethod
+    def create_wood()-> "MeshMaterial":
+   
+        texture = Texture(
+            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/wood_1.jpg',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
+
+        return MeshMaterial(metalness=0, roughness=1.0, 
+                            flat_shading=True, normal_scale=[1, 1], 
+                            texture_map=texture)
+
+    @staticmethod
+    def create_rough_metal()-> "MeshMaterial":
+   
+        texture = Texture(
+            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/rough_metal.jpg',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
+
+        return MeshMaterial(metalness=0.5, roughness=0.5, 
+                            flat_shading=True, normal_scale=[1, 1], 
+                            texture_map=texture)
+                                                 
     def gen_code(self, name):
 
         string = ""

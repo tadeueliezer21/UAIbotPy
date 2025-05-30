@@ -529,7 +529,9 @@ class Utils:
         return lambda t: aux_interpolate_multiple(points, t)
 
     @staticmethod
-    def solve_qp(H: Matrix, f: Vector, A: Matrix = None, b: Vector = None, A_eq: Matrix = None, b_eq: Vector = None) -> np.matrix:
+    def solve_qp(H: Matrix, f: Vector, A: Optional[Matrix] = None, 
+                 b: Optional[Vector] = None, A_eq: Optional[Matrix] = None, 
+                 b_eq: Optional[Vector] = None) -> np.matrix:
         """
         Solve the convex quadratic optimization problem:
         min_u 0.5 * u'Hu + f'u such that A_eq * u = b_eq and A * u >= b.
@@ -560,6 +562,9 @@ class Utils:
             The solution.
         """
         
+        if (A is None) and (A_eq is None):
+            return -np.linalg.inv(Utils.cvt(H))*(Utils.cvt(f))
+        
         H_cvt = np.matrix(H, dtype=np.float64)
         H_cvt = 0.5 * (H_cvt + H_cvt.T)  # Ensure symmetry
         f_cvt = np.array(np.asarray(f).reshape((-1,)), dtype=np.float64)
@@ -588,7 +593,7 @@ class Utils:
         result = quadprog.solve_qp(H_cvt, -f_cvt, G.T, h, meq)
         return Utils.cvt(result[0])
 
-
+    @staticmethod
     def null_space(A: Matrix) -> np.matrix:
         """
         Compute the null space of the matrix A.
@@ -605,6 +610,7 @@ class Utils:
         """
         return np.matrix(null_space(Utils.cvt(A)))
     
+    @staticmethod
     def get_fishbotics_mp_problems() -> dict:
         """
         Gets a set of many motion planning problems from the 'FishBotics' dataset.
