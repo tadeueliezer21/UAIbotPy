@@ -35,7 +35,8 @@ class TestBall:
         assert ball_copy.radius == default_ball.radius
         assert np.allclose(ball_copy.htm, default_ball.htm)
         assert ball_copy.color == default_ball.color
-        assert ball_copy.mass == default_ball.mass
+        # This parameter was removed in the latest version
+        # assert ball_copy.mass == default_ball.mass
 
     @pytest.mark.parametrize("mode", ["c++", "python"])
     def test_aabb(self, default_ball, mode):
