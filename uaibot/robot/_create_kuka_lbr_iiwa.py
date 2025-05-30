@@ -1,6 +1,7 @@
 from utils import *
 
 from graphics.meshmaterial import *
+from graphics.glbmeshmaterial import *
 from graphics.model3d import *
 
 from simobjects.ball import *
@@ -77,81 +78,78 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
     htm7 = np.matrix([[1., 0., 0., 0.], [0., 0., -1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]])
     htm8 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, -1., 0.], [0., 1., 0.0008, -0.17], [0., 0., 0., 1.]])
     
+    default_material_0 = MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
+                     color=color, opacity=opacity)
+    default_material_1 = MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#707070",
+                         opacity=opacity)
+    
     base_3d_obj = [Model3D(
-        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/base_link.dae',
+        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_base_link.glb',
         scale,
         htm1 ,
-        MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
-                     color=color, opacity=opacity))]
+        GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)]
 
     link_3d_obj = []
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_1.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_1.glb',
             scale,
             htm2,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
         ]
     )
 
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_2.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_2.glb',
             scale,
             htm3,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
         ]
     )
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_3.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_3.glb',
             scale,
             htm4,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
         ]
     )
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_4.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_4.glb',
             scale,
             htm5,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
         ]
     )
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_5.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_5.glb',
             scale,
             htm6 ,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
         ]
     )
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_6.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_6.glb',
             scale,
             htm7,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
         ]
     )
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/link_7.dae',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_7.glb',
             scale,
             htm8,
-            MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#707070",
-                         opacity=opacity))
+            GLBMeshMaterial(opacity=opacity) if color == '' else default_material_1)
         ]
     )
 

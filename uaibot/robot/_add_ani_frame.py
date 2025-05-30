@@ -25,7 +25,7 @@ def _add_ani_frame(self, time, q=None, htm=None, enforce_joint_limits=False):
         raise Exception("The parameter 'enforce_joint_limits' must be a boolean.")
 
     # end error handling
-    self._q = np.matrix(q).reshape((n, 1))
+    self._q = Utils.cvt(q)
 
     if enforce_joint_limits:
         for i in range(len(self.links)):
@@ -47,4 +47,4 @@ def _add_ani_frame(self, time, q=None, htm=None, enforce_joint_limits=False):
     if len(self.attached_objects) > 0:
         htm = self.fkm(q, 'eef', htm)
         for obj in self.attached_objects:
-            obj[0].add_ani_frame(time, htm @ obj[1])
+            obj[0].add_ani_frame(time, htm * obj[1])

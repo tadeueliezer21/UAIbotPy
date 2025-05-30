@@ -16,9 +16,9 @@ def _constrained_control_demo_1():
     point_link = ub.Ball(color='red',radius=0.02)
     point_obj = ub.Ball(color='blue',radius=0.02)
     robot = ub.Robot.create_franka_emika_3()
-    htm_des = ub.Utils.trn([0.45,0.31,0.7])*ub.Utils.rotx(-np.pi/2)
-    frame_des = ub.Frame(htm_des, size=0.1)
-    sim = ub.Simulation.create_sim_grid([pc, robot, point_link, point_obj, frame_des])
+    htm_tg = ub.Utils.trn([0.45,0.31,0.7])*ub.Utils.rotx(-np.pi/2)
+    frame_tg = ub.Frame(htm_tg, size=0.1)
+    sim = ub.Simulation.create_sim_grid([pc, robot, point_link, point_obj, frame_tg])
     sim.set_parameters(width=500,height=500,load_screen_color='#191919',background_color='#191919')
 
     #Define F function for control
@@ -85,7 +85,7 @@ def _constrained_control_demo_1():
         
         #Get task function data
         
-        r, Jr = robot.task_function(htm_des, q=qr)
+        r, Jr = robot.task_function(htm_tg, q=qr)
         
         #Create the optimization problem
         A =    np.matrix(np.vstack( (A_obj, A_auto, A_joint) ) )

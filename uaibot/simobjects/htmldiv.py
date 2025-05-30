@@ -25,17 +25,17 @@ class HTMLDiv:
     #######################################
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The name of the object."""
         return self._name
 
     @property
-    def html_text(self):
+    def html_text(self) -> str:
         """The HTML string representing the text. HTML markup is allowed here."""
         return self._html_text
 
     @property
-    def style(self):
+    def style(self) -> str:
         """The CSS style string."""
         return self._style
 
@@ -43,7 +43,7 @@ class HTMLDiv:
     # Constructor
     #######################################
 
-    def __init__(self, name="", html_text="Text", style=""):
+    def __init__(self, name: str ="", html_text: str ="Text", style: str ="")-> "HTMLDiv":
 
         # Error handling
 
@@ -87,7 +87,7 @@ class HTMLDiv:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, html_text=None, style=None):
+    def add_ani_frame(self, time: float, html_text: Optional[str] =None, style: Optional[str] = None) -> None:
         """
 
     """
@@ -111,7 +111,7 @@ class HTMLDiv:
         self._frames.append([time, html_text, style])
 
     # Set config. Restart animation queue
-    def set_ani_frame(self, html_text=None, style=None):
+    def set_ani_frame(self, html_text: Optional[str] =None, style: Optional[str] = None) -> None:
         """
 
     """

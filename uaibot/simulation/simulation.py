@@ -15,7 +15,10 @@ import time
 from pathlib import Path
 import httplib2
 import sys
-
+from uaibot.utils.types import HTMatrix, Matrix, Vector, SimObject
+from typing import Optional, Tuple, List
+import os
+import inspect
 
 class Simulation:
     """
@@ -110,73 +113,87 @@ class Simulation:
     #######################################
 
     @property
-    def list_of_objects(self):
-        """A list of all objects."""
+    def list_of_objects(self) -> List["SimObject"]:
+        """A list of all sim objects."""
         return self._list_of_objects
 
     @property
-    def list_of_names(self):
+    def list_of_names(self) -> List[str]:
         """A list of all object names."""
         return self._list_of_names
 
     @property
-    def ambient_light_intensity(self):
-        """A list of all object names."""
+    def ambient_light_intensity(self) -> float:
+        """Ambient light intensity."""
         return self._ambient_light_intensity
 
     @property
-    def ldr_urls(self):
+    def ldr_urls(self) -> List[str]:
         """A list of the LDR light urls."""
         return self._ldr_urls
 
     @property
-    def camera_type(self):
+    def camera_type(self) -> str:
         """Type of the camera."""
         return self._camera_type
 
     @property
-    def width(self):
+    def width(self) -> int:
         """Width, in pixels, of the canvas"""
         return self._width
 
     @property
-    def height(self):
+    def height(self) -> int:
         """Height, in pixels, of the canvas"""
         return self._height
 
     @property
-    def show_world_frame(self):
+    def show_world_frame(self) -> bool:
         """If the world frame is shown"""
         return self._show_world_frame
 
     @property
-    def show_grid(self):
+    def show_grid(self) -> bool:
         """If the grid in the world is shown"""
         return self._show_grid
 
     @property
-    def load_screen_color(self):
+    def load_screen_color(self) -> str:
         """Loading screen color"""
         return self._load_screen_color
 
     @property
-    def background_color(self):
+    def background_color(self) -> str:
         """Color of the background of the scenario"""
         return self._background_color
 
     @property
-    def camera_start_pose(self):
+    def camera_start_pose(self) -> List[float]:
         """The camera starting pose. The first three elements are the starting camera position, the next three ones
         is the starting point in which the camera is looking at and the last one is the zoom"""
         return self._camera_start_pose
+    
+    @property
+    def pixel_ratio(self) -> float:
+        """Relate to the resolution. Make this number smaller to ahve a performance boost"""
+        return self._pixel_ratio
 
+    @property
+    def anti_aliasing(self) -> bool:
+        """If the animation uses anti aliasing. Make this number smaller to ahve a performance boost"""
+        return self._anti_aliasing
+    
     #######################################
     # Constructor
     #######################################
 
-    def __init__(self, obj_list=[], ambient_light_intensity=4, ldr_urls=None, camera_type="perspective", width=[],
-                 height=[], show_world_frame = True, show_grid = True, load_screen_color="#19bd39", background_color="#F5F6FA",
-                 camera_start_pose = None):
+    def __init__(self, obj_list: List["SimObject"]=[], ambient_light_intensity: float =4, 
+                 ldr_urls: Optional[List[str]] = None, camera_type: str ="perspective", 
+                 width: Optional[int] =[], height: Optional[int] = [], 
+                 show_world_frame: bool = True, show_grid: bool = True, 
+                 load_screen_color: str ="#19bd39", background_color: str ="#F5F6FA",
+                 camera_start_pose: Optional[List[float]] = None,
+                 pixel_ratio : float = 1.0, anti_aliasing: bool = True) -> "Simulation":
 
         if not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0:
             raise Exception("The parameter 'ambient_light_intensity' should be a nonnegative float.")
@@ -222,6 +239,12 @@ class Simulation:
         if not Utils.is_a_vector(camera_start_pose,7):
             raise Exception("The parameter 'camera_start_pose' should be either None or a 7 element vector.")
 
+        if not Utils.is_a_number(pixel_ratio) or pixel_ratio < 0 or pixel_ratio>1:
+            raise Exception("The parameter 'pixel_ratio' should be a float number between 0 and 1.")
+
+        if not str(type(anti_aliasing)) == "<class 'bool'>":
+            raise Exception("The parameter 'anti_aliasing' must be a boolean.")
+                
         self._list_of_objects = []
         self._list_of_names = []
         self._ambient_light_intensity = ambient_light_intensity
@@ -229,7 +252,7 @@ class Simulation:
         self._ldr_urls = ldr_urls
         
         if width==[] or height==[]:
-            if Utils.get_environment() == 'None':
+            if Utils.get_environment() == 'Local':
                 self._width = 960 
                 self._height = 720 
             else:
@@ -244,6 +267,8 @@ class Simulation:
         self._load_screen_color = load_screen_color
         self._background_color = background_color
         self._camera_start_pose = np.array(camera_start_pose).tolist()
+        self._pixel_ratio = pixel_ratio
+        self._anti_aliasing = anti_aliasing
    
              
         #Add reference frame
@@ -276,7 +301,7 @@ class Simulation:
     #######################################
 
     @staticmethod
-    def create_sim_factory(objects=[]):
+    def create_sim_factory(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of a factory.
     Factory panorama taken from:
@@ -302,16 +327,16 @@ class Simulation:
         ground = Box(name="ground", width=6, depth=6, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=2.5, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=2.5, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=2.5, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=2.5, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/factory_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "nz.png",
                     ldr_url + "nz.png"]
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -319,8 +344,9 @@ class Simulation:
         sim.add(light4)
 
         return sim
+    
     @staticmethod
-    def create_sim_mountain(objects=[]):
+    def create_sim_mountain(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of a mountain.
     Outside panorama taken from:
@@ -346,17 +372,17 @@ class Simulation:
         ground = Box(name="ground", width=100, depth=100, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/green_"
         ldr_list = [ldr_url + "px.jpg", ldr_url + "nx.jpg", ldr_url + "py.jpg", ldr_url + "ny.jpg", ldr_url + "pz.jpg",
                     ldr_url + "nz.jpg"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -366,7 +392,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_hill(objects=[]):
+    def create_sim_hill(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of a hill.
     Outside panorama taken from:
@@ -397,17 +423,17 @@ class Simulation:
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/hill_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -417,7 +443,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_orchard_road(objects=[]):
+    def create_orchard_road(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of an orchard road.
     Outside panorama taken from:
@@ -443,17 +469,17 @@ class Simulation:
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/orchard_road_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -463,7 +489,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid(objects=[]):
+    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
         """
     Create an environment of a grid.
 
@@ -503,11 +529,11 @@ class Simulation:
         wall4 = Box(width=size, depth=0.005, height=size, htm=Utils.trn([0, -size/2, size/2]),
                      mesh_material=mesh_ground)
                         
-        light1 = PointLight(name="light1", color="white", intensity=10, htm=Utils.trn([-2,-2, 5.0]))
-        light2 = PointLight(name="light2", color="white", intensity=10, htm=Utils.trn([-2, 2, 5.0]))
-        light3 = PointLight(name="light3", color="white", intensity=10, htm=Utils.trn([ 2,-2, 5.0]))
-        light4 = PointLight(name="light4", color="white", intensity=10, htm=Utils.trn([ 2, 2, 5.0]))
-        light5 = PointLight(name="light5", color="white", intensity=10, htm=Utils.trn([ 0,0,5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-2,-2, 5.0]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-2, 2, 5.0]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 2,-2, 5.0]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 2, 2, 5.0]))
+        light5 = PointLight(name="light5", color="white", intensity=light_intensity, htm=Utils.trn([ 0,0,5]))
 
         
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/"
@@ -518,7 +544,7 @@ class Simulation:
 
 
 
-        sim = Simulation(objects, ambient_light_intensity=2, show_grid=False)
+        sim = Simulation(objects, ambient_light_intensity=light_intensity, show_grid=False)
         sim.add(ground)
         sim.add(wall1)
         sim.add(wall2)
@@ -533,7 +559,7 @@ class Simulation:
         return sim
             
     @staticmethod
-    def create_sim_lesson(objects=[]):
+    def create_sim_lesson(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment for embedding into the lessons slides.
 
@@ -550,14 +576,14 @@ class Simulation:
 
 
                             
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.0]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.0]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.0]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.0]))
-        light5 = PointLight(name="light5", color="white", intensity=10, htm=Utils.trn([ 0,0,5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.0]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.0]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.0]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.0]))
+        light5 = PointLight(name="light5", color="white", intensity=light_intensity, htm=Utils.trn([ 0,0,5]))
 
 
-        sim = Simulation(objects, ambient_light_intensity=0, show_grid=False)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, show_grid=False)
         sim.add(light1)
         sim.add(light2)
         sim.add(light3)
@@ -566,9 +592,12 @@ class Simulation:
 
         return sim
 
-    def set_parameters(self, ambient_light_intensity=None, ldr_urls=None, camera_type=None, width=None,
-                 height=None, show_world_frame = None, show_grid = None, load_screen_color=None, background_color=None,
-                 camera_start_pose = None):
+    def set_parameters(self, ambient_light_intensity: Optional[float]= None, ldr_urls: Optional[str] =None, 
+                       camera_type: Optional[str] =None, width: Optional[int] =None,
+                 height: Optional[int] = None, show_world_frame: Optional[bool] = None, 
+                 show_grid: Optional[bool] = None, load_screen_color: Optional[str] = None, 
+                 background_color: Optional[str] = None, camera_start_pose: Optional[List[float]] = None,
+                 pixel_ratio : Optional[float] = None, anti_aliasing: Optional[bool] = None) -> None:
         """
       Change the simulation parameters.
 
@@ -626,6 +655,14 @@ class Simulation:
           The final one is the camera zoom.
           If None, does not change the current value.
           (default: None).
+          
+      pixel_ratio: float between 0 and 1, or None
+          A parameter that sets the resolution. Can be reduced from 1 to reduce the rendering load.
+          (default: None).
+          
+      anti_aliasing: boolean, or None
+          If anti_aliasing is used in rendering or not.
+          (default: None).
       """
 
         if (not ambient_light_intensity is None) and (not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0):
@@ -666,6 +703,12 @@ class Simulation:
         if (not camera_start_pose is None) and (not Utils.is_a_vector(camera_start_pose,7)):
             raise Exception("The parameter 'camera_start_pose' should be either None or a 7 element vector.")
 
+        if (not pixel_ratio is None) and (not Utils.is_a_number(pixel_ratio) or pixel_ratio < 0 or pixel_ratio>1):
+            raise Exception("The parameter 'pixel_ratio' should be a float number between 0 and 1.")
+
+        if (not anti_aliasing is None) and (not str(type(anti_aliasing)) == "<class 'bool'>"):
+            raise Exception("The parameter 'anti_aliasing' must be a boolean.")
+        
         if not ambient_light_intensity is None:
             self._ambient_light_intensity = ambient_light_intensity
 
@@ -705,11 +748,32 @@ class Simulation:
 
         if not camera_start_pose is None:
             self._camera_start_pose = np.array(camera_start_pose).tolist()
+           
+        if not pixel_ratio is None: 
+            self._pixel_ratio = pixel_ratio
+            
+        if not anti_aliasing is None:     
+            self._anti_aliasing = anti_aliasing
 
+
+        
     def gen_code(self):
         """Generate code for injection."""
 
         string = Simulation._STRJAVASCRIPT
+        
+        aa_value = 'true' if self.anti_aliasing else 'false'
+        string = string.replace(
+            'antialias: true',
+            f'antialias: {aa_value}'
+        )
+
+        # Replace window.devicePixelRatio
+        string = string.replace(
+            'window.devicePixelRatio',
+            f'window.devicePixelRatio*{self.pixel_ratio}'
+        )
+        
 
         for obj in self.list_of_objects:
             if Utils.get_uaibot_type(obj) == "uaibot.HTMLDiv":
@@ -764,24 +828,27 @@ class Simulation:
 
         return string
 
-    def run(self):
+    def run(self) -> None:
         """Run simulation."""
 
         display(HTML(self.gen_code()))
 
-    def save(self, address, file_name):
+    def save(self, address: Optional[str] = None, file_name : str = 'sim') -> None:
         """
     Save the simulation as a self-contained HTML file.
 
     Parameters
     ----------
     address : string
-        The address of the path (example "D:\\").
+        The address of the path (example "D:\\"). Default is 'None', and saves
+        to the folder that the script was run.
+        (default: 'None').
     file_name: string
-        The name of the file ("the .html" extension should not appear)
+        The name of the file ("the .html" extension should not appear).
+        (default: 'sim')
 
     """
-        if not (str(type(address)) == "<class 'str'>"):
+        if (not (str(type(address)) == "<class 'str'>")) and (not address is None):
             raise Exception(
                 "The parameter 'address' should be a string.")
         if not (str(type(file_name)) == "<class 'str'>"):
@@ -789,11 +856,19 @@ class Simulation:
                 "The parameter 'file_name' should be a string.")
 
         try:
-            file = open(address + "/" + file_name + ".html", "w+")
+            
+            if address is None:
+                frame = inspect.stack()[1] 
+                caller_filepath = frame.filename
+                current_folder = os.path.dirname(os.path.abspath(caller_filepath))
+            else:
+                current_folder = address
+
+            file = open(current_folder + "/" + file_name + ".html", "w+")
             file.write(self.gen_code())
             file.close()
         except:
-            raise Exception("Could not open the path '"+address+"' and create the file '"+file_name+".html'.")
+            raise Exception("Could not open the path '"+current_folder+"' and create the file '"+file_name+".html'.")
 
     def scan_group(self, group):
         for obj in group.list_of_objects:
@@ -803,7 +878,7 @@ class Simulation:
                 self.scan_group(obj)
                 
             
-    def add(self, obj_sim):
+    def add(self, obj_sim: List["SimObject"]) -> None:
         """
     Add an object to the simulation. It should be an object that
     can be simulated (Utils.is_a_obj_sim(obj) is true).

@@ -1,5 +1,5 @@
 from utils import *
-
+from typing import Optional, Tuple, List
 
 class Texture:
     """
@@ -80,52 +80,52 @@ class Texture:
     #######################################
 
     @property
-    def url(self):
+    def url(self) -> str:
         """The address of the texture."""
         return self._url
 
     @property
-    def mapping(self):
+    def mapping(self) -> str:
         """The method for mapping of texture."""
         return self._mapping
 
     @property
-    def wrap_s(self):
+    def wrap_s(self) -> str:
         """The method for wrapping in the U coordinate."""
         return self._wrap_s
 
     @property
-    def wrap_t(self):
+    def wrap_t(self) -> str:
         """The method for wrapping in the V coordinate."""
         return self._wrap_t
 
     @property
-    def mag_filter(self):
+    def mag_filter(self) -> str:
         """The method for the magnification filter."""
         return self._mag_filter
 
     @property
-    def min_filter(self):
+    def min_filter(self) -> str:
         """The method for the mignification filter."""
         return self._min_filter
 
     @property
-    def offset(self):
+    def offset(self) -> List[float]:
         """The offset in the texture."""
         return self._offset
 
     @property
-    def repeat(self):
+    def repeat(self) -> List[float]:
         """The repeat pattern."""
         return self._repeat
 
     @property
-    def rotation(self):
+    def rotation(self) -> float:
         """The texture rotation."""
         return self._rotation
 
     @property
-    def center(self):
+    def center(self) -> List[float]:
         """The shifting for the texture center."""
         return self._center
 
@@ -133,9 +133,10 @@ class Texture:
     # Constructor
     #######################################
 
-    def __init__(self, url, mapping="UVMapping", wrap_s="ClampToEdgeWrapping", wrap_t="ClampToEdgeWrapping",
-                 mag_filter="LinearFilter", min_filter="LinearMipmapLinearFilter", offset=[0, 0], repeat=[1, 1],
-                 rotation=0, center=[0, 0]):
+    def __init__(self, url: str, mapping: str ="UVMapping", wrap_s: str ="ClampToEdgeWrapping", 
+                 wrap_t: str ="ClampToEdgeWrapping", mag_filter: str ="LinearFilter", 
+                 min_filter: str ="LinearMipmapLinearFilter", offset: List[float] =[0, 0], 
+                 repeat: List[float]=[1, 1], rotation: float =0, center: List[float] =[0, 0])->"Texture":
 
         image_types = ["png", "bmp", "jpg", "jpeg"]
         mapping_list = ['UVMapping', 'CubeReflectionMapping', 'CubeRefractionMapping',

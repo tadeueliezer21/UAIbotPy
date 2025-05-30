@@ -651,20 +651,19 @@ ProjResult projection_box(float lx, float ly, float lz, Matrix4f htm, Vector3f p
     float cr = 1.2 * (lx * lx / 4 + ly * ly / 4 + lz * lz / 4);
     float R = 0.5 * (x * x + y * y + z * z - cr);
 
-    float alpha = eps;
-    float beta = 3 * eps;
-    float gamma = 1 - 2 * (alpha + beta);
 
-    float F = alpha * R + beta * G;
+    float sigma_esq = maxf(1 - 2 * eps,0);
 
-    float dF_x = alpha * x + beta * dG_x;
-    float dF_y = alpha * y + beta * dG_y;
-    float dF_z = alpha * z + beta * dG_z;
+    float F = eps * R;
 
-    float M = sqrtf(F * F + gamma * G * G);
-    float e_dx = dF_x + (F * dF_x + gamma * G * dG_x) / M;
-    float e_dy = dF_y + (F * dF_y + gamma * G * dG_y) / M;
-    float e_dz = dF_z + (F * dF_z + gamma * G * dG_z) / M;
+    float dF_x = eps * x;
+    float dF_y = eps * y;
+    float dF_z = eps * z;
+
+    float M = sqrtf(F * F + sigma_esq * G * G);
+    float e_dx = dF_x + (F * dF_x + sigma_esq * G * dG_x) / M;
+    float e_dy = dF_y + (F * dF_y + sigma_esq * G * dG_y) / M;
+    float e_dz = dF_z + (F * dF_z + sigma_esq * G * dG_z) / M;
 
     Vector3f pi_transformed;
     pi_transformed[0] = x - e_dx;
@@ -701,20 +700,18 @@ ProjResult projection_cylinder(float radius, float height, Matrix4f htm, Vector3
     float cr = 1.2 * (2 * radius * radius + height * height / 4);
     float R = 0.5 * (x * x + y * y + z * z - cr);
 
-    float alpha = eps;
-    float beta = 3 * eps;
-    float gamma = 1 - 2 * (alpha + beta);
+    float sigma_esq = maxf(1 - 2 * eps,0);
 
-    float F = alpha * R + beta * G;
+    float F = eps * R;
 
-    float dF_x = alpha * x + beta * dG_r * (x / radius_xy);
-    float dF_y = alpha * y + beta * dG_r * (y / radius_xy);
-    float dF_z = alpha * z + beta * dG_z;
+    float dF_x = eps * x;
+    float dF_y = eps * y;
+    float dF_z = eps * z;
 
-    float M = sqrtf(F * F + gamma * G * G);
-    float e_dx = dF_x + (F * dF_x + gamma * G * dG_r * (x / radius_xy)) / M;
-    float e_dy = dF_y + (F * dF_y + gamma * G * dG_r * (y / radius_xy)) / M;
-    float e_dz = dF_z + (F * dF_z + gamma * G * dG_z) / M;
+    float M = sqrtf(F * F + sigma_esq * G * G);
+    float e_dx = dF_x + (F * dF_x + sigma_esq * G * dG_r * (x / radius_xy)) / M;
+    float e_dy = dF_y + (F * dF_y + sigma_esq * G * dG_r * (y / radius_xy)) / M;
+    float e_dz = dF_z + (F * dF_z + sigma_esq * G * dG_z) / M;
 
     Vector3f pi_transformed;
     pi_transformed[0] = x - e_dx;
@@ -834,16 +831,14 @@ ProjResult projection_convexpolytope(MatrixXf A, VectorXf b, Matrix4f htm, Vecto
         float cr = 1.2 * (lx * lx / 4 + ly * ly / 4 + lz * lz / 4);
         float R = 0.5 * ((point_transformed-center).squaredNorm()- cr);
 
-        float alpha = eps;
-        float beta = 3 * eps;
-        float gamma = 1 - 2 * (alpha + beta);
+        float sigma_esq = maxf(1 - 2 * eps,0);
 
-        float F = alpha * R + beta * G;
+        float F = eps * R;
 
-        Vector3f grad_F = alpha * (point_transformed-center) + beta * grad_G;
+        Vector3f grad_F = eps * (point_transformed-center);
 
-        float M = sqrtf(F * F + gamma * G * G);
-        Vector3f grad_e = grad_F + (F*grad_F + gamma * G * grad_G)/M;
+        float M = sqrtf(F * F + sigma_esq * G * G);
+        Vector3f grad_e = grad_F + (F*grad_F + sigma_esq * G * grad_G)/M;
 
         pi_transformed = point_transformed - grad_e;
         pr.dist = sqrtf(2 * (F + M));
@@ -1820,8 +1815,8 @@ vector<FKResult> Manipulator::fk(const vector<VectorXf> &q, const vector<Matrix4
                     p_j_ant = (ind_cols > 0) ? fkres.get_p_dh(ind_cols - 1) : htm_0.block<3, 1>(0, 3);
                     z_j_ant = (ind_cols > 0) ? fkres.get_z_dh(ind_cols - 1) : htm_0.block<3, 1>(0, 2);
 
-                    v = (joint_type[ind_links] == 0) ? z_j_ant.cross(p_i - p_j_ant) : z_j_ant;
-                    w = (joint_type[ind_links] == 0) ? z_j_ant : Vector3f::Zero();
+                    v = (joint_type[ind_cols] == 0) ? z_j_ant.cross(p_i - p_j_ant) : z_j_ant;
+                    w = (joint_type[ind_cols] == 0) ? z_j_ant : Vector3f::Zero();
 
                     for (int ind_rows = 0; ind_rows < 3; ind_rows++)
                     {

@@ -398,7 +398,7 @@ vector<VectorXf> quadratic_interp_vec(vector<VectorXf> x, int N);
 
 PrimDistResult dist_line(vector<Vector3f> a0, vector<Vector3f> a1, vector<Vector3f> b0, vector<Vector3f> b1);
 
-VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alpha, float const_velocity);
+VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alpha, float const_velocity, bool is_closed, float gamma);
 
 VectorXf dp_inv_solve(const MatrixXf& A, const VectorXf& b, float eps);
 

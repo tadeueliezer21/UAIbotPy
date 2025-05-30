@@ -5,7 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Qt5Agg')  
-
+import os
 
 
 print("Running Object to Robot smooth distance test")
@@ -147,5 +147,5 @@ print("Test was a success!")
     
     
 
-        
-sim.save("/home/vinicius/Desktop/uaibot_paper/uaibot_files_paper/testing","test_o2o_smooth")
+current_folder = os.path.dirname(os.path.abspath(__file__))
+sim.save(current_folder,"test_o2o_smooth")

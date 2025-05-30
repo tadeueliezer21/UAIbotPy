@@ -2,11 +2,12 @@ import os
 import sys
 import subprocess
 import setuptools
+import sysconfig
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 from setuptools.command.develop import develop
-import sysconfig
+from pathlib import Path
 
 class CMakeExtension(Extension):
     """Defines a CMake extension for compiling C++ code."""
@@ -94,10 +95,18 @@ class CustomDevelop(develop):
         self.run_command("build_ext")
         develop.run(self)
 
+# Recursively collect all files in myfolder
+# data_files = []
+# for root, _, files in os.walk("c_implementation"):
+#     for file in files:
+#         data_files.append(os.path.join(root, file))
+
+data_files = [str(file.relative_to("uaibot")) for file in Path("uaibot/c_implementation").rglob("*") if file.is_file()]
+
 #Setup the installation
 setup(
     name="uaibot",
-    version="0.1.0",
+    version="1.2.2",
     author="Vinicius Goncalves et al",
     author_email="vinicius.marianog@gmail.com",
     description="Uaibot, online robotic simulator",
@@ -117,9 +126,11 @@ setup(
     # package_data={
     #     "simulation": ["**/*.js"], 
     # },
+
     package_data={
         "uaibot.simulation": ["*.js"], 
-    },    
+        "uaibot": data_files
+    },
      
     zip_safe=False,
     python_requires=">=3.6",

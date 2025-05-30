@@ -2,6 +2,7 @@ import numpy as np
 from utils import *
 
 from graphics.meshmaterial import *
+from graphics.mtlmeshmaterial import *
 from graphics.model3d import *
 
 from simobjects.ball import *
@@ -19,8 +20,8 @@ def _create_franka_emika_3(htm, name, color, opacity):
         raise Exception(
             "The parameter 'name' should be a string. Only characters 'a-z', 'A-Z', '0-9' and '_' are allowed. It should not begin with a number.")
 
-    if not Utils.is_a_color(color):
-        raise Exception("The parameter 'color' should be a HTML-compatible color.")
+    if not Utils.is_a_color(color) and not color=='':
+        raise Exception("The parameter 'color' should be a HTML-compatible color or empty.")
 
     if (not Utils.is_a_number(opacity)) or opacity < 0 or opacity > 1:
         raise Exception("The parameter 'opacity' should be a float between 0 and 1.")
@@ -78,95 +79,100 @@ def _create_franka_emika_3(htm, name, color, opacity):
     htm5 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, 1., 0.], [0., -1., 0.0008, 0.], [0., 0., 0., 1.]])
     htm6 = np.matrix([[1., 0., 0., -0.088], [0., 0.0008, 1., 0.], [0., -1., 0.0008, 0.], [0., 0., 0., 1.]])
     htm7 = np.matrix([[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., -0.177], [0., 0., 0., 1.]])
+    htm8 = np.matrix([[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., -0.067], [0., 0., 0., 1.]])  
 
     link_3d_obj = []
+    
+    default_material = MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],color=color, opacity=opacity)
 
     base_3d_obj = [Model3D(
-        'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link0.obj',
+        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link0.obj',
         scale,
         np.identity(4),
-        MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
-                     color=color, opacity=opacity))]
-
+        MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link0.mtl', 
+                        opacity=opacity) if color=='' else default_material) ]
+    
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link1.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link1.obj',
             scale,
             htm1,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link1.mtl',
+                         opacity=opacity) if color=='' else default_material)
         ]
     )
-
+        
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link2.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link2.obj',
             scale,
             htm2,
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link2.mtl',
+                         opacity=opacity) if color=='' else default_material)
         ]
     )
+    
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link3.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link3.obj',
             scale,
             htm3, 
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link3.mtl',
+                         opacity=opacity) if color=='' else default_material)
         ]
     )
 
+ 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link4.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link4.obj',
             scale,
             htm4, 
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link4.mtl',
+                         opacity=opacity) if color=='' else default_material)
         ]
     )
-
+            
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link5.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link5.obj',
             scale,
             htm5, 
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link5.mtl',
+                         opacity=opacity) if color=='' else default_material)
         ]
     )
+ 
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link6.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link6.obj',
             scale,
             htm6, 
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link6.mtl',
+                         opacity=opacity) if color=='' else default_material)
         ]
     )
 
 
     link_3d_obj.append(
         [Model3D(
-            'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/link7.obj',
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link7.obj',
             scale,
             htm7, 
-            MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity)),
-            Model3D(
-                'https://raw.githubusercontent.com/viniciusmgn/uaibot_content/master/contents/FrankaErmika/hand.obj',
-                scale,
-                Utils.trn([0, 0, -0.107+0.05-0.01]) * Utils.rotx(0),  # 0.333+0.295
-                MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                             opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/link7.mtl',
+                         opacity=opacity) if color=='' else default_material),
+        Model3D(
+            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/hand.obj',
+            scale,
+            htm8,  
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/FrankaErmika/hand.mtl',
+                            opacity=opacity) if color=='' else default_material)
         ]
     )
-
-
+    
     # Create links
 
     links = []

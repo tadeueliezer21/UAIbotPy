@@ -19,7 +19,7 @@ def _jac_ana(self, q=None, htm=None):
         raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
     # end error handling
 
-    jac_geo, htm_eef = self.jac_geo(q,'eef',htm)
+    jac_geo, htm_eef = self.jac_geo(Utils.cvt(q),'eef',htm)
 
     alpha, beta, gamma = Utils.euler_angles(htm_eef)
 

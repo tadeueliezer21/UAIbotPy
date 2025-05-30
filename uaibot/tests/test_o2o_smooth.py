@@ -5,6 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Qt5Agg')  
+import os
 
 print("Running Object to Object Smooth Distance Test")
 
@@ -20,7 +21,7 @@ sum_time = 0
 max_time = 0
 cross_error_max = 0
 N=100
-eps=0.02, 
+eps=0.08, 
 h=0.1
 dmin0=0.2
 dmin=0.05
@@ -71,7 +72,7 @@ for k in range(No):
 
     for i in range(Nt):
         t += dt
-        p1, p2, d, _ = ub.Utils.compute_dist(obj1, obj2, no_iter_max=50, eps=0.02, h=0.1)
+        p1, p2, d, _ = ub.Utils.compute_dist(obj1, obj2, no_iter_max=2000, eps=0.02, h=0.1, tol=1e-5)
         p1_0, p2_0, d0, _ = ub.Utils.compute_dist(obj1, obj2)
         
         projball1.add_ani_frame(t,ub.Utils.trn(p1))
@@ -127,5 +128,5 @@ print("Test was a success!")
     
     
 
-        
-sim.save("/home/vinicius/Desktop/uaibot_paper/uaibot_files_paper/testing","test_o2o_smooth")
+current_folder = os.path.dirname(os.path.abspath(__file__))           
+sim.save(current_folder,"test_o2o_smooth")

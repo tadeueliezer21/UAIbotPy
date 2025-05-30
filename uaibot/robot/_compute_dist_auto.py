@@ -96,12 +96,12 @@ def _compute_dist_auto(self, q=None, old_dist_struct=None, tol=0.0005, no_iter_m
         if h >0 or eps > 0:
             raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
          
-        return _compute_dist_auto_python(self, q, old_dist_struct, tol, no_iter_max, max_dist)
+        return _compute_dist_auto_python(self, Utils.cvt(q), old_dist_struct, tol, no_iter_max, max_dist)
     else:
         
 
         old_dsra = _diststructrobotauto_py2cpp(old_dist_struct)       
-        new_dsra = self.cpp_robot.compute_dist_auto(q, old_dsra, tol, no_iter_max, max_dist, h+1e-6, eps+1e-6)
+        new_dsra = self.cpp_robot.compute_dist_auto(Utils.cvt(q), old_dsra, tol, no_iter_max, max_dist, h+1e-6, eps+1e-6)
 
         return _diststructrobotauto_cpp2py(new_dsra, self)
 
@@ -111,7 +111,7 @@ def _compute_dist_auto_python(self, q=None, old_dist_struct=None, tol=0.0005, no
 
     dist_struct = DistStructRobotAuto(self)
 
-    jac_dh, mth_dh = self.jac_geo(q, "dh")
+    jac_dh, mth_dh = self.jac_geo(q, "dh", mode = "python")
 
     col_object_copy = []
 

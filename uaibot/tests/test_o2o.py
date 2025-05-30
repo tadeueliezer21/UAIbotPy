@@ -2,6 +2,7 @@ from utils_test import *
 import uaibot as ub
 import time
 import sys
+import os
 
 print("Running Object to Object Distance Test")
 
@@ -103,5 +104,5 @@ print("Test was a success!")
     
     
 
-        
-sim.save("/home/vinicius/Desktop/uaibot_paper/uaibot_files_paper/testing","test_o2o")
+current_folder = os.path.dirname(os.path.abspath(__file__))           
+sim.save(current_folder,"test_o2o")

@@ -7,7 +7,11 @@ from scipy.linalg import null_space
 from httplib2 import *
 import sys
 import quadprog
-
+from .types import *
+from typing import Callable
+import urllib.request
+import io
+import hashlib
 import os
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
@@ -20,17 +24,9 @@ class Utils:
     # Constants
     #######################################
 
-    _PI = 3.1415926
-    _SQRTHALFPI = 1.2533141
-    _SQRT2 = 1.4142135
-    _CONSTJA = 2.7889
-    _CONSTI0HAT1 = 0.24273
-    _CONSTI0HAT2 = 0.43023
-
-    UAIBOT_NAME_TYPES = ['uaibot.', 'cylinder.', 'box.', 'ball.', 'convexpolytope.', 'robot.', 'simulation.', 'meshmaterial.',
-                             'texture.', 'pointlight.', 'frame.', 'model3d.', 'links.', 'pointcloud.', 'vector.', 'rigidobject.',
-                             '.group', '.htmldiv', 'CPP_GeometricPrimitives', 'CPP_DistStructRobotObj','CPP_AABB', '.Pedestrian', 
-                             '.ObstacleColumn', '.ObstacleThinWall']
+    UAIBOT_NAME_TYPES = ['uaibot.', 'cylinder.', 'box.', 'ball.', 'convexpolytope.', 'robot.', 'simulation.', 'meshmaterial.', 'mtlmeshmaterial.',
+                             'glbmeshmaterial.', 'texture.', 'pointlight.', 'frame.', 'model3d.', 'links.', 'pointcloud.', 'arrow.', 'rigidobject.',
+                             '.group', '.htmldiv', 'CPP_GeometricPrimitives', 'CPP_DistStructRobotObj','CPP_AABB']
 
     IS_SIMPLE = ['uaibot.Ball', 'uaibot.Box', 'uaibot.Cylinder', 'uaibot.ConvexPolytope']
     
@@ -40,15 +36,41 @@ class Utils:
                     'uaibot.RigidObject', 'uaibot.Group', 'uaibot.Robot', 'uaibot.PointLight']
 
     IS_OBJ_SIM = ['uaibot.Ball', 'uaibot.Box', 'uaibot.Cylinder', 'uaibot.ConvexPolytope', 'uaibot.Robot',
-                  'uaibot.PointLight', 'uaibot.Frame', 'uaibot.PointCloud', 'uaibot.Vector',
-                  'uaibot.RigidObject', 'uaibot.Group', 'uaibot.HTMLDiv', 'uaibot.Pedestrian', 'uaibot.ObstacleColumn', 'uaibot.ObstacleThinWall']
+                  'uaibot.PointLight', 'uaibot.Frame', 'uaibot.PointCloud', 'uaibot.Arrow',
+                  'uaibot.RigidObject', 'uaibot.Group', 'uaibot.HTMLDiv']
 
     #######################################
     # Basic functions
     #######################################
 
     @staticmethod
-    def S(v):
+    def cvt(input: Matrix) -> np.matrix:
+        if isinstance(input, list) or isinstance(input, tuple):
+            if all(isinstance(x, (int, float)) for x in input):
+                return np.matrix(input, dtype=np.float64).reshape(-1, 1)
+            elif all(isinstance(x, list) for x in input):
+                return np.matrix(input, dtype=np.float64)
+            else:
+                raise ValueError("Entry is not a valid matrix.")
+        
+        elif isinstance(input, np.ndarray):
+            if input.ndim == 1:
+                return np.matrix(input.reshape(-1, 1), dtype=np.float64)
+            else:
+                if input.shape[1] > 1:
+                    if input.shape[0]==1:
+                        return np.matrix(input, dtype=np.float64).reshape(-1, 1)
+                    else:
+                        return np.matrix(input, dtype=np.float64)
+                else:
+                    return np.matrix(input, dtype=np.float64)                    
+        else:
+            raise TypeError("Entry is not a valid matrix.")                  
+
+        
+
+    @staticmethod
+    def S(v: Vector) -> np.matrix:
         """
       Returns a 3x3 matrix that implements the cross product for a 3D vector  
       as a matricial product, that is, a matrix S(v) such that for any other 
@@ -56,7 +78,7 @@ class Utils:
       
       Parameters
       ----------
-      v : a 3D vector
+      v : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
           The vector for which the S matrix will be created.
 
       Returns
@@ -64,20 +86,20 @@ class Utils:
       S : 3x3 numpy matrix
           A matrix that implements the cross product with v.
       """
-        vv = np.matrix(v).reshape((3,1))
+        vv = Utils.cvt(v)
         return np.matrix([[0, -vv[2,0], vv[1,0]],
                          [vv[2,0], 0, -vv[0,0]],
                          [-vv[1,0], vv[0,0], 0]])
 
     @staticmethod
-    def rot(axis, angle):
+    def rot(axis: Vector, angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in an axis.
       
       Parameters
       ----------
-      axis : a 3D vector
+      axis : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
           The axis of rotation.
       
       angle: float
@@ -88,21 +110,21 @@ class Utils:
       htm : 4x4 numpy matrix
           The homogeneous transformation matrix.
       """
-        a = np.reshape(axis, (3,))
+        a = Utils.cvt(axis)
         a = a / np.linalg.norm(a)
         K = Utils.S(a)
-        Q = np.identity(3) + sin(angle) * K + (1 - cos(angle)) * (K @ K)
+        Q = np.identity(3) + sin(angle) * K + (1 - cos(angle)) * (K * K)
         return np.hstack([np.vstack([Q, np.matrix([0, 0, 0])]), np.matrix([[0], [0], [0], [1]])])
 
     @staticmethod
-    def trn(vector):
+    def trn(vector: Vector) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the displacement
       of a vector
       
       Parameters
       ----------
-      vector : a 3D vector
+      vector : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
           The displacement vector.
       
       Returns
@@ -110,14 +132,14 @@ class Utils:
       htm : 4x4 numpy matrix
           The homogeneous transformation matrix.
       """
-        v = np.matrix(vector).reshape((3,1))
+        v = Utils.cvt(vector)
         return np.matrix([[1, 0, 0, v[0,0]],
                          [0, 1, 0, v[1,0]],
                          [0, 0, 1, v[2,0]],
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def rotx(angle):
+    def rotx(angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in the 'x' axis.
@@ -138,7 +160,7 @@ class Utils:
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def roty(angle):
+    def roty(angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in the 'y' axis.
@@ -159,7 +181,7 @@ class Utils:
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def rotz(angle):
+    def rotz(angle: float) -> HTMatrix:
         """
       Homogeneous transformation matrix that represents the rotation of an
       angle in the 'z' axis.
@@ -180,7 +202,7 @@ class Utils:
                          [0, 0, 0, 1]])
 
     @staticmethod
-    def htm_rand(trn_min=[0.,0.,0.], trn_max = [1.,1.,1.], rot=np.pi/2):
+    def htm_rand(trn_min: float =[0.,0.,0.], trn_max: float = [1.,1.,1.], rot: float =np.pi/2) -> HTMatrix:
         """
       Returns a random homogeneous transformation matrix.
 
@@ -210,14 +232,14 @@ class Utils:
         return Utils.trn([x,y,z]) * Utils.rotx(ax) * Utils.roty(ay) * Utils.rotz(az)
 
     @staticmethod
-    def inv_htm(htm):
+    def inv_htm(htm: HTMatrix) -> HTMatrix:
         """
       Given a homogeneous transformation matrix, compute its inverse.
       It is faster than using numpy.linalg.inv in the case of HTMs.
       
       Parameters
       ----------
-      htm: 4X4 numpy array or nested list 
+      htm: 4X4 numpy matrix
           Homogeneous transformation matrix of the rotation.
 
       Returns
@@ -236,14 +258,14 @@ class Utils:
         return inv_htm
 
     @staticmethod
-    def axis_angle(htm):
+    def axis_angle(htm: Matrix) -> Tuple[np.matrix, float]:
         """
       Given an homogeneous transformation matrix representing a rotation, 
       return the rotation axis angle.
       
       Parameters
       ----------
-      htm: 4X4 numpy array or nested list 
+      htm: 4X4 numpy matrix
           Homogeneous transformation matrix of the rotation.
 
       Returns
@@ -254,6 +276,7 @@ class Utils:
       angle : float
           The rotation angle, in radians.        
       """
+      
         Q = htm[0:3, 0:3]
         trace = Q[0, 0] + Q[1, 1] + Q[2, 2]
         angle = acos((trace - 1) / 2)
@@ -275,7 +298,7 @@ class Utils:
         return axis, angle
 
     @staticmethod
-    def euler_angles(htm):
+    def euler_angles(htm: Matrix) -> Tuple[float, float, float]:
         """
         Computer the Euler angles of a rotation matrix.
         Find alpha, beta and gamma such that.
@@ -313,13 +336,13 @@ class Utils:
 
 
     @staticmethod
-    def dp_inv(A, eps = 0.001):
+    def dp_inv(A: Matrix, eps: float = 0.001) -> np.matrix:
         """
       Compute the damped pseudoinverse of the matrix 'mat'.
       
       Parameters
       ----------
-      A: nxm numpy array
+      A: a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
           The matrix to compute the damped pseudoinverse.
       
       eps: positive float
@@ -331,23 +354,23 @@ class Utils:
       pinvA: mxn numpy array
           The damped pseudoinverse of 'mat'.
       """
-        A_int = np.matrix(A)
-        n = np.shape(A)[1]
+        A_int =  Utils.cvt(A)
+        n = np.shape(A_int)[1]
         return np.linalg.inv(A_int.T * A_int + eps * np.identity(n)) * A_int.T
 
     @staticmethod
-    def dp_inv_solve(A, b, eps = 0.001, mode='auto'):
+    def dp_inv_solve(A: Matrix, b: Vector, eps: float = 0.001, mode: str ='auto') -> np.matrix:
         """
       Solve the problem of minimizing ||A*x-b||^2 + eps*||x||^2
       It is the same as dp_inv(A,eps)*b, but faster
       
       Parameters
       ----------
-      A: nxm numpy array
-          Matrix.
+      A: a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
+          A Matrix.
           
-      b: nx1 numpy array
-          Vector.
+      b: a nD vector (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
+          b Vector.
                 
       eps: positive float
           The damping factor.
@@ -362,75 +385,27 @@ class Utils:
         if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
             raise Exception("c++ mode is set, but .so file was not loaded!")
 
-        n, m = A.shape
+        A_cvt = Utils.cvt(A)
+        b_cvt = Utils.cvt(b)
+        n, m = A_cvt.shape
         
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             
             M = np.block([
-                [eps * np.eye(m), -A.T],
-                [A, np.eye(n)]
+                [eps * np.eye(m), -A_cvt.T],
+                [A_cvt, np.eye(n)]
             ])
             
-            rhs = np.concatenate((np.zeros((m,1)), b))
+            rhs = np.concatenate((np.zeros((m,1)), b_cvt))
             solution = np.linalg.solve(M, rhs)
             
-            return np.matrix(solution[:m]).reshape((n,1))
+            return Utils.cvt(solution[:m])
         else:
-            return np.matrix(ub_cpp.dp_inv_solve(A,b,eps)).reshape((n,1))
+            return Utils.cvt(ub_cpp.dp_inv_solve(A_cvt,b_cvt,eps))
                  
 
     @staticmethod
-    def hierarchical_solve(mat_a, mat_b, eps=0.001):
-        """
-      Solve the lexicographical unconstrained quadratic optimization problem
-
-      lexmin_x ||mat_a[i]*x - b[i]||² + eps*||x||²
-
-      with lower indexes having higher priority than higher indexes.
-
-      Parameters
-      ----------
-      mat_a: A list of matrices (double arrays or numpy matrices).
-          The matrices mat_a[i]. All must have the same number of columns.
-
-      mat_b: A list of column vectors (double arrays or numpy matrices).
-          The vectors mat_b[i]. The number of rows of mat_b[i] must be equal to the number
-          of rows of mat_a[i].
-
-      eps: positive float
-          Damping parameter.
-          (default: 0.001).
-
-      Returns
-      -------
-      x: numpy column vector
-          The solution x. For positive eps, the solution is always unique.
-      """
-
-
-        x_sol = Utils.dp_inv(mat_a[0], eps) * mat_b[0]
-
-        if len(mat_a) > 1:
-
-            null_mat_a = null_space(mat_a[0])
-
-            if np.shape(null_mat_a)[1] > 0:
-                mat_a_mod = []
-                mat_b_mod = []
-                for i in range(1, len(mat_a)):
-                    mat_a_mod.append(mat_a[i] * null_mat_a)
-                    mat_b_mod.append(mat_b[i] - mat_a[i] * x_sol)
-
-                y_sol = Utils.hierarchical_solve(mat_a_mod, mat_b_mod, eps)
-                return x_sol + null_mat_a * y_sol
-            else:
-                return x_sol
-        else:
-            return x_sol
-
-
-    @staticmethod
-    def interpolate(points):
+    def interpolate(points: List[Vector], is_closed : bool =False) -> Callable[[List[float]], List[np.matrix]]:
         """
       Create a function handle that generates an one-time differentiable interpolated data from 'points'.
 
@@ -439,106 +414,97 @@ class Utils:
       f(i/m) = points[i]. This function is once differentiable and periodic with period 1, so f(t+k)=f(t) for
       an integer k.
 
-      The function can also use a n x m numpy array or lists as 'points'. In this case, f(t) is a n dimensional
-      column vector in which its i-th entry is the same as computing f_i = interpolate(points[i]) and then
-      computing f_i(t).
+      The function can also use a n x m numpy array or lists as 'points'. In this case, f(t) is a n x 1 
+      numpy vector.
 
-      Finally, t can be a list of k elements instead of just a scalar. In this case, f(t) is a n x k numpy matrix
-      in which the element at row i and column j is the same as computing f_i = interpolate(points[i]) and then
-      computing f_i(t[k]).
+      Finally, t can be a list of k elements instead of just a scalar. In this case, f(t) is a list of n x 1 numpy 
+      matrices, in which the k-th element is the same as computing f(t[k]).
 
 
       Parameters
       ----------
-      points: a n x m numpy array or lists
+      points: a list of nD vectors (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
           Points to be interpolated.
+          
+      is_closed: bool
+          If the curve is closed or not (that is, f(0)=f(1)).
+          (default: False)
 
       Returns
       -------
       f: function handle
-          The function handle that implements the interpolation.
+          The function handle that implements the interpolation. 
       """
 
-        if not Utils.is_a_matrix(points):
-            raise Exception("The parameter 'points' should be a n x m numpy array of numbers.")
+        if not Utils.is_a_list_vector(points):
+            raise Exception("The parameter 'points' should be a list of vectors with the same dimension.")
+
 
         def aux_interpolate_single(arg_points):
-
             def int_aux_simp(arg_t, arg_n, arg_c):
-                tn = arg_n * (arg_t % 1)
-                ti = floor(tn)
-                coef = arg_c[4 * ti: 4 * ti + 5]
-                return coef[0] + coef[1] * tn + coef[2] * tn ** 2 + coef[3] * tn ** 3
+                tn = arg_n * (arg_t % 1 if is_closed else min(max(arg_t, 0), 1))
+                ti = min(floor(tn), arg_n - 1)
+                tloc = tn - ti
+                coef = arg_c[4 * ti:4 * ti + 4]
+                return coef[0] + coef[1] * tloc + coef[2] * tloc**2 + coef[3] * tloc**3
 
             def int_aux(arg_t, arg_n, arg_c):
-                return [int_aux_simp(tt, arg_n, arg_c) for tt in arg_t] if str(
-                    type(arg_t)) == "<class 'list'>" else int_aux_simp(arg_t, arg_n, arg_c)
+                return [int_aux_simp(tt, arg_n, arg_c) for tt in arg_t] if isinstance(arg_t, list) else int_aux_simp(arg_t, arg_n, arg_c)
 
             n = len(arg_points)
-            xn = np.array(arg_points).tolist()
-            xn.append(arg_points[0])
+            num_segments = n if is_closed else n - 1
+            A_rows = []
+            b_vals = []
 
-            t = range(n + 1)
-            A = np.zeros((3 * n, 4 * n))
-            b = np.zeros((3 * n, 1))
+            # Interpolation constraints (value at start and end of each segment)
+            for i in range(num_segments):
+                row_start = np.zeros(4 * num_segments)
+                row_end = np.zeros(4 * num_segments)
+                row_start[4 * i:4 * i + 4] = [1, 0, 0, 0]
+                row_end[4 * i:4 * i + 4] = [1, 1, 1, 1]
+                A_rows.append(row_start)
+                b_vals.append(arg_points[i])
+                A_rows.append(row_end)
+                b_vals.append(arg_points[(i + 1) % n if is_closed else i + 1])
 
-            # Equality at initial points
-            for p in range(n):
-                A[p, 4 * p] = 1
-                A[p, 4 * p + 1] = t[p]
-                A[p, 4 * p + 2] = t[p] ** 2
-                A[p, 4 * p + 3] = t[p] ** 3
-                b[p] = xn[p]
-            # Equality at final points
-            for p in range(n):
-                A[n + p, 4 * p] = 1
-                A[n + p, 4 * p + 1] = t[p + 1]
-                A[n + p, 4 * p + 2] = t[p + 1] ** 2
-                A[n + p, 4 * p + 3] = t[p + 1] ** 3
-                b[n + p] = xn[p + 1]
-            # Equality of the derivative in the initial points
-            for p in range(n):
-                if not (p == n - 1):
-                    A[2 * n + p, 4 * p] = 0
-                    A[2 * n + p, 4 * p + 1] = 1
-                    A[2 * n + p, 4 * p + 2] = 2 * t[p + 1]
-                    A[2 * n + p, 4 * p + 3] = 3 * t[p + 1] ** 2
-                    A[2 * n + p, 4 * (p + 1)] = -0
-                    A[2 * n + p, 4 * (p + 1) + 1] = -1
-                    A[2 * n + p, 4 * (p + 1) + 2] = -2 * t[p + 1]
-                    A[2 * n + p, 4 * (p + 1) + 3] = -3 * t[p + 1] ** 2
-                else:
-                    A[2 * n + p, 4 * p] = 0
-                    A[2 * n + p, 4 * p + 1] = 1
-                    A[2 * n + p, 4 * p + 2] = 2 * t[p + 1]
-                    A[2 * n + p, 4 * p + 3] = 3 * t[p + 1] ** 2
-                    A[2 * n + p, 0] = -0
-                    A[2 * n + p, 1] = -1
-                    A[2 * n + p, 2] = 0
-                    A[2 * n + p, 3] = 0
+            # Derivative continuity at junctions (including wraparound if closed)
+            for i in range(num_segments):
+                i_next = (i + 1) % num_segments
+                if not is_closed and i == num_segments - 1:
+                    break  # skip final derivative constraint for open curve
+                row = np.zeros(4 * num_segments)
+                row[4 * i + 1:4 * i + 4] = [1, 2, 3]
+                row[4 * i_next + 1:4 * i_next + 4] = [-1, 0, 0]
+                A_rows.append(row)
+                b_vals.append(0)
 
-            # Create the objective function
+            # Assemble matrices
+            A = np.vstack(A_rows)
+            b = np.array(b_vals).reshape(-1, 1)
 
-            H = np.zeros((0, 0))
-            for p in range(n):
-                M = np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 4, 6 * ((p + 1) ** 2 - p ** 2)],
-                              [0, 0, 6 * ((p + 1) ** 2 - p ** 2), 12 * ((p + 1) ** 3 - p ** 3)]])
-                nn = np.shape(H)[0]
-                H = np.block([[H, np.zeros((nn, 4))], [np.zeros((4, nn)), M]])
+            # Regularizer: minimize integral of second derivative squared
+            H = np.zeros((4 * num_segments, 4 * num_segments))
+            for i in range(num_segments):
+                H_i = np.array([
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 0, 4, 6],
+                    [0, 0, 6, 12]
+                ])
+                H[4 * i:4 * i + 4, 4 * i:4 * i + 4] = H_i
 
-            # Solve the optimization problem
-            m1 = np.shape(A)[0]
-            m2 = np.shape(A)[1]
+            # Solve constrained minimization via KKT system
+            m = A.shape[0]
+            KKT = np.block([
+                [H, A.T],
+                [A, np.zeros((m, m))]
+            ])
+            rhs = np.vstack([np.zeros((4 * num_segments, 1)), b])
+            sol = np.linalg.solve(KKT, rhs)
 
-            G = np.block([[H, np.transpose(A)], [A, np.zeros((m1, m1))]])
-            g = np.block([[np.zeros((m2, 1))], [b]])
-            y = np.linalg.solve(G, g)
-            c = y[0: np.shape(H)[0]]
-            c = c.reshape((1, np.shape(H)[0]))[0].tolist()
+            c = sol[:4 * num_segments].flatten().tolist()
+            return lambda s: int_aux(s, num_segments, c)
 
-            # Create the function
-            f = lambda ts: int_aux(ts, n, c)
-            return f
 
         def aux_interpolate_multiple(arg_points, t):
 
@@ -547,36 +513,168 @@ class Utils:
                     "The parameter of the interpolation function must be either a number or a list of numbers.")
 
             y = np.zeros((0, len(t) if Utils.is_a_vector(t) else 1))
-            for i in range(np.shape(arg_points)[0]):
-                fun = aux_interpolate_single(arg_points[i])
+            for i in range(np.shape(Utils.cvt(arg_points[0]))[0]):
+                fun = aux_interpolate_single([Utils.cvt(p)[i,0] for p in arg_points])
                 fun_out = fun(t)
                 fun_out = np.array(fun_out).reshape((1, len(fun_out) if Utils.is_a_vector(fun_out) else 1))
                 y = np.block([[y], [fun_out]])
 
-            return np.matrix(y)
+            list_of_points = [np.matrix(y[:, i].reshape(-1, 1)) for i in range(y.shape[1])]
+            if isinstance(t, list):
+                return list_of_points
+            else:
+                return list_of_points[0]
 
         return lambda t: aux_interpolate_multiple(points, t)
 
     @staticmethod
-    def solve_qp(H, f, A, b):
-        #Solves u^THu/2 + f^Tu subject to Au>=b
+    def solve_qp(H: Matrix, f: Vector, A: Optional[Matrix] = None, 
+                 b: Optional[Vector] = None, A_eq: Optional[Matrix] = None, 
+                 b_eq: Optional[Vector] = None) -> np.matrix:
+        """
+        Solve the convex quadratic optimization problem:
+        min_u 0.5 * u'Hu + f'u such that A_eq * u = b_eq and A * u >= b.
+        
+        Parameters
+        ----------
+        H : (n,n)-shaped matrix (list/tuple/np.matrix/np.ndarray)
+            The H matrix. Must be symmetric positive definite.
+
+        f : (n,)-shaped vector (list/tuple/np.matrix/np.ndarray)
+            The f vector.
+
+        A : (m,n)-shaped matrix or 'None', optional
+            Inequality constraint matrix (Au >= b). Pass 'None' to omit.
+
+        b : (m,)-shaped vector or 'None', optional
+            RHS of inequality constraints. Pass 'None' to omit.
+
+        A_eq : (p,n)-shaped matrix or 'None', optional
+            Equality constraint matrix (A_eq * u = b_eq). Pass 'None' to omit.
+
+        b_eq : (p,)-shaped vector or 'None', optional
+            RHS of equality constraints. Pass 'None' to omit.
+        
+        Returns
+        -------
+        u : (n,1) numpy matrix
+            The solution.
+        """
+        
+        if (A is None) and (A_eq is None):
+            return -np.linalg.inv(Utils.cvt(H))*(Utils.cvt(f))
+        
+        H_cvt = np.matrix(H, dtype=np.float64)
+        H_cvt = 0.5 * (H_cvt + H_cvt.T)  # Ensure symmetry
+        f_cvt = np.array(np.asarray(f).reshape((-1,)), dtype=np.float64)
+
+        # Handle empty A and b
+        if (A is None) or (b is None):
+            A_ineq = np.empty((0, H_cvt.shape[0]))
+            b_ineq = np.empty((0,))
+        else:
+            A_ineq = np.matrix(A, dtype=np.float64)
+            b_ineq = np.array(np.asarray(b).reshape((-1,)), dtype=np.float64)
+
+        # Handle empty A_eq and b_eq
+        if (A_eq is None) or (b_eq is None):
+            A_eq_cvt = np.empty((0, H_cvt.shape[0]))
+            b_eq_cvt = np.empty((0,))
+        else:
+            A_eq_cvt = np.matrix(A_eq, dtype=np.float64)
+            b_eq_cvt = np.array(np.asarray(b_eq).reshape((-1,)), dtype=np.float64)
+
+        # Stack constraints and compute meq
+        G = np.vstack([A_eq_cvt, A_ineq])  
+        h = np.hstack([b_eq_cvt, b_ineq])
+        meq = A_eq_cvt.shape[0]
+
+        result = quadprog.solve_qp(H_cvt, -f_cvt, G.T, h, meq)
+        return Utils.cvt(result[0])
+
+    @staticmethod
+    def null_space(A: Matrix) -> np.matrix:
+        """
+        Compute the null space of the matrix A.
+
+        Parameters:
+        ----------
+        A : a matrix ((n,m)-element list/tuple, (n,m)-shaped numpy matrix/numpy array)
+            The matrix to compute the null space.
+
+        Returns
+        -------
+        A_null : m x r numpy matrix
+            The matrix such that its column spam the null space.
+        """
+        return np.matrix(null_space(Utils.cvt(A)))
     
-        H = 0.5 * (H + H.T)  
-
-        m = H.shape[0]
-        n = A.shape[0]
-
-        f = np.asarray(f).reshape((m,))   
-        b = np.asarray(b).reshape((n,))   
-
-        C = A.T  
+    @staticmethod
+    def get_fishbotics_mp_problems() -> dict:
+        """
+        Gets a set of many motion planning problems from the 'FishBotics' dataset.
+        They were designed for the Franka Emika Panda robot.
+        See: https://github.com/fishbotics/robometrics
         
-        result = quadprog.solve_qp(H, -f, C, b, 0)
         
-        return np.matrix(result[0].reshape((m,1)))
+        It is a dictionary in which each key is the name of the problem.
+        If 'all_problems' is the output of this function, use
+         list(all_problems.keys()) to get the keys (the problem names).
+        
+        Each problem is again a dictionary, which contains the following keys:
+        
+        'all_obs': a list of UAIBot objects representing the obstacles.
+        'q0': the initial configuration.
+        'htm_base': the initial pose for the base.
+        'htm_tg': the target HTML for the end-effector.
+        
+
+        Parameters:
+        ----------
+        None.
+
+        Returns
+        -------
+        all_problems : dictionary
+            The dictionary with all the problems.
+        """          
+        
+        
+        def load_npz_from_url_cached(url, cache_dir=".cache"):
+            os.makedirs(cache_dir, exist_ok=True)
+            
+            # Create a unique filename based on the URL hash
+            url_hash = hashlib.sha256(url.encode()).hexdigest()
+            local_path = os.path.join(cache_dir, f"{url_hash}.npz")
+
+            # If cached, load from disk
+            if os.path.exists(local_path):
+                return np.load(local_path, allow_pickle=True)
+
+            # Else, download and save
+            with urllib.request.urlopen(url) as response:
+                data = response.read()
+            with open(local_path, 'wb') as f:
+                f.write(data)
+            
+            return np.load(local_path, allow_pickle=True)
+
+
+        allproblems_1 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_1.npz")
+        allproblems_2 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_2.npz")
+        allproblems_3 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_3.npz")
+        allproblems_4 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_4.npz")
+          
+                        
+        allproblems_1 = allproblems_1['arr_0'].item()
+        allproblems_2 = allproblems_2['arr_0'].item()
+        allproblems_3 = allproblems_3['arr_0'].item()
+        allproblems_4 = allproblems_4['arr_0'].item()
+        
+        return {**allproblems_1, **allproblems_2, **allproblems_3, **allproblems_4}
 
     #######################################
-    # Type check functions
+    # Type check and conversion functions
     #######################################
 
     @staticmethod
@@ -616,6 +714,7 @@ class Utils:
         return str(type(obj)) == "<class 'int'>" and obj >= 0
 
 
+        
     @staticmethod
     def is_a_matrix(obj, n=None, m=None):
         """
@@ -664,24 +763,75 @@ class Utils:
     @staticmethod
     def is_a_vector(obj, n=None):
         """
-      Check if the argument is a n vector of floats.
-      
+      Check if the argument is a vector of floats.
+      A vector is very flexible. For example, a 3D vector (is_a_vector(x,3)) can be:
+      x1 = [0,1,2]
+      x2 = [[0],[1],[2]]
+      x3 = (0,1,2)
+      x4 = np.matrix([0,1,2])
+      x5 = np.matrix([[0],[1],[2]])
+      x6 = np.array([0,1,2])
+      x7 = np.array([[0],[1],[2]])
+            
       Parameters
       ----------
       obj: object
           Object to be verified.
 
       n: positive int
-          Number of elements
-          (default: it does not matter).
+          Check if the vector is n-dimensional. If 'None', it does not matter.
+          (default: 'None').
 
       Returns
       -------
       is_type: boolean
           If the object is of the type.   
       """
-        return Utils.is_a_matrix(obj, n, 1) or Utils.is_a_matrix(obj, 1, n)
+        try:
+            p = Utils.cvt(obj)
+            if n is None:
+                return np.shape(p)[1] == 1
+            else:
+                return (np.shape(p)[0] == n) and (np.shape(p)[1] == 1)
+        except:
+            return False
+        # return Utils.is_a_matrix(obj, n, 1) or Utils.is_a_matrix(obj, 1, n)
 
+    @staticmethod
+    def is_a_list_vector(obj, n=None):
+        """
+      Check if the argument is a list of vector of floats with the same dimension.
+
+      Parameters
+      ----------
+      obj: object
+          Object to be verified.
+
+      n: positive int
+          Check if all the vectors are n-dimensional. If 'None', it does not matter, 
+          as long as they are equal.
+          (default: 'None').
+
+      Returns
+      -------
+      is_type: boolean
+          If the object is of the type.   
+      """
+              
+        if n is None:
+            try:
+                n_common = np.shape(Utils.cvt(obj[0]))[0]
+            except:
+                return False
+        else:
+            n_common = n
+        
+        for p in obj:
+            if not Utils.is_a_vector(p, n_common):
+                return False
+            
+        return True
+    
     @staticmethod
     def is_a_pd_matrix(obj, n=None):
         """
@@ -873,7 +1023,7 @@ class Utils:
     def is_url_available(url, types):
         """
       Try to access the content of the url 'url'. Also verifies if the content is one of the extensions contained in
-      'types' (e.g, types = ['png', 'bmp', 'jpg', 'jpeg'] for images).
+      'types' (e.g., types = ['png', 'bmp', 'jpg', 'jpeg'] for images).
 
       Never throws an Exception, always returning a string with a message. Returns 'ok!' if and only if the
       url was succesfully acessed and has the correct file type.
@@ -925,81 +1075,8 @@ class Utils:
                     return "Jupyter"
             except ImportError:
                 return "Not in Jupyter/Colab"
-        return "None"
-    
-    #######################################
-    # Distance computation functions
-    #######################################
+        return "Local"
 
-    @staticmethod
-    def softmin(x,h):
-        minval = np.min(x)
-        s=0
-
-        for val in x:
-            s+= exp(-h*(val-minval))
-
-        return minval -(1/h)*np.log(s)
-
-    @staticmethod
-    def softselectmin(x, y, h):
-        minval = np.min(x)
-        s = 0
-
-        coef = []
-        for val in x:
-            coef.append(exp(-(val - minval)/h))
-            s += coef[-1]
-
-        coef = [c/s for c in coef]
-
-        sselect = 0 * y[0]
-        for i in range(len(coef)):
-            sselect += coef[i] * y[i]
-
-        return sselect, minval - h * np.log(s/len(coef))
-
-
-    @staticmethod
-    def softmax(x, h):
-        return Utils.softmin(x,-h)
-
-    @staticmethod
-    def softselectmax(x, y, h):
-        return Utils.softselectmin(x,y,-h)
-
-    @staticmethod
-    def compute_aabbdist(obj1, obj2):
-
-        w1, d1, h1 = obj1.aabb()
-        w2, d2, h2 = obj2.aabb()
-        delta = obj1.htm[0:3, -1] - obj2.htm[0:3, -1]
-
-        dx = max(abs(delta[0, 0]) - (w1 + w2) / 2, 0)
-        dy = max(abs(delta[1, 0]) - (d1 + d2) / 2, 0)
-        dz = max(abs(delta[2, 0]) - (h1 + h2) / 2, 0)
-
-        return np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
-
-
-
-    @staticmethod
-    def compute_dist_python(obj_a, obj_b, p_a, tol=0.001, no_iter_max=20):
-
-        converged = False
-        i = 0
-
-        while (not converged) and i < no_iter_max:
-            p_a_ant = p_a
-            p_b, _ = obj_b.projection(p_a)
-            p_a, _ = obj_a.projection(p_b)
-            converged = np.linalg.norm(p_a - p_a_ant) < tol
-            i += 1
-
-        dist = np.linalg.norm(p_a - p_b)
-
-        return p_a, p_b, dist
-    
     @staticmethod
     def obj_to_cpp(obj, htm=None):
             
@@ -1021,10 +1098,149 @@ class Utils:
                 A = obj.A * Q.transpose()
                 b = obj.b + obj.A * Q.transpose()*p
                 return ub_cpp.CPP_GeometricPrimitives.create_convexpolytope(htm, A, b)
-            
+                
+    #######################################
+    # Distance computation functions
+    #######################################
+
     @staticmethod
-    def compute_dist(obj_a, obj_b, p_a_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
-        # Error handling
+    def softmin(x: List[float], h: float) -> float:
+        minval = np.min(x)
+        s=0
+
+        for val in x:
+            s+= exp(-h*(val-minval))
+
+        return minval -(1/h)*np.log(s)
+
+    @staticmethod
+    def softselectmin(x: List[Vector], y: List[float], h: float) -> np.matrix:
+        minval = np.min(x)
+        s = 0
+
+        coef = []
+        for val in x:
+            coef.append(exp(-(val - minval)/h))
+            s += coef[-1]
+
+        coef = [c/s for c in coef]
+
+        sselect = 0 * y[0]
+        for i in range(len(coef)):
+            sselect += coef[i] * y[i]
+
+        return sselect, minval - h * np.log(s/len(coef))
+
+
+    @staticmethod
+    def softmax(x: List[float], h: float) -> float:
+        return Utils.softmin(x,-h)
+
+    @staticmethod
+    def softselectmax(x: List[Vector], y: List[float], h: float) -> np.matrix:
+        return Utils.softselectmin(x,y,-h)
+
+    @staticmethod
+    def compute_aabbdist(obj1: MetricObject , obj2: MetricObject) -> float:
+
+        box1 = obj1.aabb()
+        box2 = obj2.aabb()
+        delta = box1.htm[0:3, -1] - box2.htm[0:3, -1]
+
+        dx = max(abs(delta[0, 0]) - (box1.width + box2.width) / 2, 0)
+        dy = max(abs(delta[1, 0]) - (box1.depth + box2.depth) / 2, 0)
+        dz = max(abs(delta[2, 0]) - (box1.height + box2.height) / 2, 0)
+
+        return np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+
+
+    @staticmethod
+    def _compute_dist_python(obj_a: MetricObject, obj_b: MetricObject, p_a: Vector, 
+                            tol: float =0.001, no_iter_max: int =20) -> Tuple[np.matrix, np.matrix, float, List]:
+
+        converged = False
+        i = 0
+        
+        hist_error = []
+
+        while (not converged) and i < no_iter_max:
+            p_a_ant = p_a
+            p_b, _ = obj_b.projection(p_a)
+            p_a, _ = obj_a.projection(p_b)
+            hist_error.append(np.linalg.norm(p_a - p_a_ant))
+            converged = hist_error[-1] < tol
+            i += 1
+
+        dist = np.linalg.norm(p_a - p_b)
+
+        return p_a, p_b, dist, []
+                
+    @staticmethod
+    def compute_dist(obj_a: MetricObject, obj_b: MetricObject, p_a_init: Optional[Vector] = None, 
+                     tol: float =0.001, no_iter_max: int=20, h: float=0, 
+                     eps: float = 0, mode: str ='auto') -> Tuple[np.matrix, np.matrix, float, List]:
+        """
+    Compute Euclidean distance or differentiable distance between two objects.
+    
+    If h>0 or eps > 0, it computes the Euclidean distance and it uses GJK's algorithm.
+    
+    Else, it computes the differentiable distance through Generalized Alternating Projection (GAP).
+    See the paper 'A Differentiable Distance Metric for Robotics Through Generalized Alternating Projection'.
+    This only works in c++ mode, though.
+    
+    
+    Parameters
+    ----------
+    obj_a : an object of type 'MetricObject' (see Utils.IS_METRIC)
+        The first object.
+        
+    obj_b : an object of type 'MetricObject' (see Utils.IS_METRIC)
+        The second object.
+        
+    p_a_init : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array) or None
+        Initial point for closest point in 'obj_a'. If 'None', is set to random.
+        (default: None).
+    
+    tol : positive float
+        Convergence criterion of GAP: it stops when ||a[k+1]-a[k]|| < tol.
+        Only valid when h > 0 or eps > 0.
+        (default: 0.001m).      
+
+    no_iter_max : positive int 
+        Maximum number of iterations of GAP.
+        Only valid when h > 0 or eps > 0.
+        (default: 20 iterations). 
+
+    h : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    eps : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    mode : string
+    'c++' for the c++ implementation, 'python' for the python implementation
+    and 'auto' for automatic ('c++' is available, else 'python').
+    (default: 'auto').
+                                                    
+    Returns
+    -------
+    point_a : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in obj_a.
+
+    point_b : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in obj_b.
+
+    distance : float
+        Euclidean or differentiable distance.
+        
+    hist_error: list of floats
+        History of convergence error.    
+                
+    """
 
         if mode=='python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             if Utils.get_uaibot_type(obj_a) == 'uaibot.PointCloud' or Utils.get_uaibot_type(obj_b) == 'uaibot.PointCloud':
@@ -1058,11 +1274,11 @@ class Utils:
         if p_a_init is None:
             if ((mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1')) and h >= 1e-5:
                 dist_res = obj_a_cpp.dist_to(obj_b_cpp, 0.0, 0.0, tol, no_iter_max, np.matrix([0,0,0]).reshape((3,1)))
-                p_a = np.matrix(dist_res.proj_A).reshape((3,1))
+                p_a = Utils.cvt(dist_res.proj_A)
             else:
-                p_a = np.random.uniform(-3, 3, size=(3,))
+                p_a = Utils.cvt(np.random.uniform(-3, 3, size=(3,)))
         else:
-            p_a = np.array(p_a_init)
+            p_a = Utils.cvt(p_a_init)
 
 
         if not (p_a_init is None or Utils.is_a_vector(p_a_init, 3)):
@@ -1088,10 +1304,10 @@ class Utils:
             if h >0 or eps > 0:
                 raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
             
-            return Utils.compute_dist_python(obj_a, obj_b, p_a_init, tol, no_iter_max)
+            return Utils._compute_dist_python(obj_a, obj_b, p_a, tol, no_iter_max)
         else:
             dist_res = obj_a_cpp.dist_to(obj_b_cpp, h, eps, tol, no_iter_max, p_a)
-            return np.matrix(dist_res.proj_A).reshape((3,1)), np.matrix(dist_res.proj_B).reshape((3,1)), dist_res.dist, dist_res.hist_error
+            return Utils.cvt(dist_res.proj_A), Utils.cvt(dist_res.proj_B), dist_res.dist, dist_res.hist_error
 
 
 

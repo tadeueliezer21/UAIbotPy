@@ -175,8 +175,17 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Ignore environment folder
-py311
-
 *.pkl
 *.npy
+testing/
+new_experiment/
+anim_class/
+paper_script/
+uaibot/tests/test_control.html
+uaibot/tests/test_diff_smooth.html
+uaibot/tests/test_free_config.html
+uaibot/tests/test_o2o.html
+uaibot/tests/test_o2o_smooth.html
+uaibot/tests/control.html
+*.html
+.vscode/
