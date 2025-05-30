@@ -167,7 +167,17 @@ class Simulation:
         """The camera starting pose. The first three elements are the starting camera position, the next three ones
         is the starting point in which the camera is looking at and the last one is the zoom"""
         return self._camera_start_pose
+    
+    @property
+    def pixel_ratio(self) -> float:
+        """Relate to the resolution. Make this number smaller to ahve a performance boost"""
+        return self._pixel_ratio
 
+    @property
+    def anti_aliasing(self) -> bool:
+        """If the animation uses anti aliasing. Make this number smaller to ahve a performance boost"""
+        return self._anti_aliasing
+    
     #######################################
     # Constructor
     #######################################
@@ -177,7 +187,8 @@ class Simulation:
                  width: Optional[int] =[], height: Optional[int] = [], 
                  show_world_frame: bool = True, show_grid: bool = True, 
                  load_screen_color: str ="#19bd39", background_color: str ="#F5F6FA",
-                 camera_start_pose: Optional[List[float]] = None) -> "Simulation":
+                 camera_start_pose: Optional[List[float]] = None,
+                 pixel_ratio : float = 1.0, anti_aliasing: bool = True) -> "Simulation":
 
         if not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0:
             raise Exception("The parameter 'ambient_light_intensity' should be a nonnegative float.")
@@ -223,6 +234,12 @@ class Simulation:
         if not Utils.is_a_vector(camera_start_pose,7):
             raise Exception("The parameter 'camera_start_pose' should be either None or a 7 element vector.")
 
+        if not Utils.is_a_number(pixel_ratio) or pixel_ratio < 0 or pixel_ratio>1:
+            raise Exception("The parameter 'pixel_ratio' should be a float number between 0 and 1.")
+
+        if not str(type(anti_aliasing)) == "<class 'bool'>":
+            raise Exception("The parameter 'anti_aliasing' must be a boolean.")
+                
         self._list_of_objects = []
         self._list_of_names = []
         self._ambient_light_intensity = ambient_light_intensity
@@ -245,6 +262,8 @@ class Simulation:
         self._load_screen_color = load_screen_color
         self._background_color = background_color
         self._camera_start_pose = np.array(camera_start_pose).tolist()
+        self._pixel_ratio = pixel_ratio
+        self._anti_aliasing = anti_aliasing
    
              
         #Add reference frame
@@ -572,7 +591,8 @@ class Simulation:
                        camera_type: Optional[str] =None, width: Optional[int] =None,
                  height: Optional[int] = None, show_world_frame: Optional[bool] = None, 
                  show_grid: Optional[bool] = None, load_screen_color: Optional[str] = None, 
-                 background_color: Optional[str] = None, camera_start_pose: Optional[List[float]] = None) -> None:
+                 background_color: Optional[str] = None, camera_start_pose: Optional[List[float]] = None,
+                 pixel_ratio : Optional[float] = None, anti_aliasing: Optional[bool] = None) -> None:
         """
       Change the simulation parameters.
 
@@ -630,6 +650,14 @@ class Simulation:
           The final one is the camera zoom.
           If None, does not change the current value.
           (default: None).
+          
+      pixel_ratio: float between 0 and 1, or None
+          A parameter that sets the resolution. Can be reduced from 1 to reduce the rendering load.
+          (default: None).
+          
+      anti_aliasing: boolean, or None
+          If anti_aliasing is used in rendering or not.
+          (default: None).
       """
 
         if (not ambient_light_intensity is None) and (not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0):
@@ -670,6 +698,12 @@ class Simulation:
         if (not camera_start_pose is None) and (not Utils.is_a_vector(camera_start_pose,7)):
             raise Exception("The parameter 'camera_start_pose' should be either None or a 7 element vector.")
 
+        if (not pixel_ratio is None) and (not Utils.is_a_number(pixel_ratio) or pixel_ratio < 0 or pixel_ratio>1):
+            raise Exception("The parameter 'pixel_ratio' should be a float number between 0 and 1.")
+
+        if (not anti_aliasing is None) and (not str(type(anti_aliasing)) == "<class 'bool'>"):
+            raise Exception("The parameter 'anti_aliasing' must be a boolean.")
+        
         if not ambient_light_intensity is None:
             self._ambient_light_intensity = ambient_light_intensity
 
@@ -709,11 +743,32 @@ class Simulation:
 
         if not camera_start_pose is None:
             self._camera_start_pose = np.array(camera_start_pose).tolist()
+           
+        if not pixel_ratio is None: 
+            self._pixel_ratio = pixel_ratio
+            
+        if not anti_aliasing is None:     
+            self._anti_aliasing = anti_aliasing
 
+
+        
     def gen_code(self):
         """Generate code for injection."""
 
         string = Simulation._STRJAVASCRIPT
+        
+        aa_value = 'true' if self.anti_aliasing else 'false'
+        string = string.replace(
+            'antialias: true',
+            f'antialias: {aa_value}'
+        )
+
+        # Replace window.devicePixelRatio
+        string = string.replace(
+            'window.devicePixelRatio',
+            f'window.devicePixelRatio*{self.pixel_ratio}'
+        )
+        
 
         for obj in self.list_of_objects:
             if Utils.get_uaibot_type(obj) == "uaibot.HTMLDiv":
