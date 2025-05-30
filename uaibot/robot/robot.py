@@ -295,7 +295,7 @@ class Robot:
             string += "R" if self._links[i].joint_type == 0 else "P"
 
         string += "\n"
-        string += " Current configuration: " + str([round(num, 3) for num in np.ndarray.tolist(self.q)]) + "\n"
+        string += " Current configuration: " + str([round(num[0,0], 3) for num in self.q]) + "\n"
         string += " Current base HTM: \n" + str(self.htm) + "\n"
         string += " Current end-effector HTM: \n" + str(self.fkm())
         return string

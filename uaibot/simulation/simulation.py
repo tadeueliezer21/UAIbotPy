@@ -277,7 +277,7 @@ class Simulation:
     #######################################
 
     @staticmethod
-    def create_sim_factory(objects: List["SimObject"] =[]) -> "Simulation":
+    def create_sim_factory(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of a factory.
     Factory panorama taken from:
@@ -303,16 +303,16 @@ class Simulation:
         ground = Box(name="ground", width=6, depth=6, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=2.5, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=2.5, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=2.5, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=2.5, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/factory_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "nz.png",
                     ldr_url + "nz.png"]
 
-        sim = Simulation(objects, ambient_light_intensity=5, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -322,7 +322,7 @@ class Simulation:
         return sim
     
     @staticmethod
-    def create_sim_mountain(objects: List["SimObject"] =[]) -> "Simulation":
+    def create_sim_mountain(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of a mountain.
     Outside panorama taken from:
@@ -348,17 +348,17 @@ class Simulation:
         ground = Box(name="ground", width=100, depth=100, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=1, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=1, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=1, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=1, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/green_"
         ldr_list = [ldr_url + "px.jpg", ldr_url + "nx.jpg", ldr_url + "py.jpg", ldr_url + "ny.jpg", ldr_url + "pz.jpg",
                     ldr_url + "nz.jpg"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=2, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -368,7 +368,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_hill(objects: List["SimObject"] =[]) -> "Simulation":
+    def create_sim_hill(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of a hill.
     Outside panorama taken from:
@@ -399,17 +399,17 @@ class Simulation:
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=1, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=1, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=1, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=1, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/hill_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=2, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -419,7 +419,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_orchard_road(objects: List["SimObject"] =[]) -> "Simulation":
+    def create_orchard_road(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of an orchard road.
     Outside panorama taken from:
@@ -445,17 +445,17 @@ class Simulation:
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
 
-        light1 = PointLight(name="light1", color="white", intensity=1, htm=Utils.trn([-1,-1, 1.5]))
-        light2 = PointLight(name="light2", color="white", intensity=1, htm=Utils.trn([-1, 1, 1.5]))
-        light3 = PointLight(name="light3", color="white", intensity=1, htm=Utils.trn([ 1,-1, 1.5]))
-        light4 = PointLight(name="light4", color="white", intensity=1, htm=Utils.trn([ 1, 1, 1.5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/orchard_road_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
 
-        sim = Simulation(objects, ambient_light_intensity=2, ldr_urls=ldr_list)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
         sim.add(light1)
         sim.add(light2)
@@ -465,7 +465,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid(objects: List["SimObject"] =[]) -> "Simulation":
+    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
         """
     Create an environment of a grid.
 
@@ -505,11 +505,11 @@ class Simulation:
         wall4 = Box(width=size, depth=0.005, height=size, htm=Utils.trn([0, -size/2, size/2]),
                      mesh_material=mesh_ground)
                         
-        light1 = PointLight(name="light1", color="white", intensity=6, htm=Utils.trn([-2,-2, 5.0]))
-        light2 = PointLight(name="light2", color="white", intensity=6, htm=Utils.trn([-2, 2, 5.0]))
-        light3 = PointLight(name="light3", color="white", intensity=6, htm=Utils.trn([ 2,-2, 5.0]))
-        light4 = PointLight(name="light4", color="white", intensity=6, htm=Utils.trn([ 2, 2, 5.0]))
-        light5 = PointLight(name="light5", color="white", intensity=6, htm=Utils.trn([ 0,0,5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-2,-2, 5.0]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-2, 2, 5.0]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 2,-2, 5.0]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 2, 2, 5.0]))
+        light5 = PointLight(name="light5", color="white", intensity=light_intensity, htm=Utils.trn([ 0,0,5]))
 
         
         ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/"
@@ -520,7 +520,7 @@ class Simulation:
 
 
 
-        sim = Simulation(objects, ambient_light_intensity=2, show_grid=False)
+        sim = Simulation(objects, ambient_light_intensity=light_intensity, show_grid=False)
         sim.add(ground)
         sim.add(wall1)
         sim.add(wall2)
@@ -535,7 +535,7 @@ class Simulation:
         return sim
             
     @staticmethod
-    def create_sim_lesson(objects: List["SimObject"] =[]) -> "Simulation":
+    def create_sim_lesson(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment for embedding into the lessons slides.
 
@@ -552,14 +552,14 @@ class Simulation:
 
 
                             
-        light1 = PointLight(name="light1", color="white", intensity=4, htm=Utils.trn([-1,-1, 1.0]))
-        light2 = PointLight(name="light2", color="white", intensity=4, htm=Utils.trn([-1, 1, 1.0]))
-        light3 = PointLight(name="light3", color="white", intensity=4, htm=Utils.trn([ 1,-1, 1.0]))
-        light4 = PointLight(name="light4", color="white", intensity=4, htm=Utils.trn([ 1, 1, 1.0]))
-        light5 = PointLight(name="light5", color="white", intensity=10, htm=Utils.trn([ 0,0,5]))
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.0]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.0]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.0]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.0]))
+        light5 = PointLight(name="light5", color="white", intensity=light_intensity, htm=Utils.trn([ 0,0,5]))
 
 
-        sim = Simulation(objects, ambient_light_intensity=0, show_grid=False)
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, show_grid=False)
         sim.add(light1)
         sim.add(light2)
         sim.add(light3)

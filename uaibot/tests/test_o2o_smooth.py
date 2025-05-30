@@ -72,7 +72,7 @@ for k in range(No):
 
     for i in range(Nt):
         t += dt
-        p1, p2, d, _ = ub.Utils.compute_dist(obj1, obj2, no_iter_max=50, eps=0.02, h=0.1)
+        p1, p2, d, _ = ub.Utils.compute_dist(obj1, obj2, no_iter_max=2000, eps=0.02, h=0.1, tol=1e-5)
         p1_0, p2_0, d0, _ = ub.Utils.compute_dist(obj1, obj2)
         
         projball1.add_ani_frame(t,ub.Utils.trn(p1))
