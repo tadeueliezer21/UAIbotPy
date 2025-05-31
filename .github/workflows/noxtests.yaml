@@ -12,23 +12,26 @@ jobs:
   nox:
     name: ${{ matrix.os }} - py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.mustwork || true }} # Allow jobs to continue even if one fails, unless mustwork is set to true
+    continue-on-error: ${{ matrix.optional || true }} # Allow jobs to continue even if one fails, unless optional is false
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
         include:
-          # Mark specific combinations as mustwork
+          # Mark specific combinations as not optional
           - os: ubuntu-22.04
             python-version: "3.11"
-            mustwork: true
+            optional: false
           - os: ubuntu-22.04
             python-version: "3.12"
+            optional: false
           - os: ubuntu-latest
             python-version: "3.11"
+            optional: false
           - os: ubuntu-latest
             python-version: "3.12"
+            optional: false
 
     steps:
     - uses: actions/checkout@v4
