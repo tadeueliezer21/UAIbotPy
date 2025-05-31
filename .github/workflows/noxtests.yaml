@@ -8,8 +8,15 @@ on:
   pull_request:
     branches: [ main ]
 
-defaults: &nox-steps
-  steps:
+jobs:
+  # Ubuntu Jobs
+  ubuntu_22_04_py310:
+    name: Ubuntu 22.04 - Python 3.10
+    runs-on: ubuntu-22.04
+    env:
+      PYTHON_VERSION: "3.10"
+    # <<: *nox-steps
+    steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v5
@@ -22,63 +29,131 @@ defaults: &nox-steps
       env:
         GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
-jobs:
-  # Ubuntu Jobs
-  ubuntu_22_04_py310:
-    name: Ubuntu 22.04 - Python 3.10
-    runs-on: ubuntu-22.04
-    env:
-      PYTHON_VERSION: "3.10"
-    <<: *nox-steps
-
   ubuntu_22_04_py311:
     name: Ubuntu 22.04 - Python 3.11
     runs-on: ubuntu-22.04
     env:
       PYTHON_VERSION: "3.11"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   ubuntu_22_04_py312:
     name: Ubuntu 22.04 - Python 3.12
     runs-on: ubuntu-22.04
     env:
       PYTHON_VERSION: "3.12"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   ubuntu_22_04_py313:
     name: Ubuntu 22.04 - Python 3.13
     runs-on: ubuntu-22.04
     env:
       PYTHON_VERSION: "3.13"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   ubuntu_latest_py310:
     name: Ubuntu Latest - Python 3.10
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.10"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   ubuntu_latest_py311:
     name: Ubuntu Latest - Python 3.11
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.11"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   ubuntu_latest_py312:
     name: Ubuntu Latest - Python 3.12
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.12"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   ubuntu_latest_py313:
     name: Ubuntu Latest - Python 3.13
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.13"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   # macOS Jobs
   macos_py310:
@@ -86,28 +161,72 @@ jobs:
     runs-on: macos-latest
     env:
       PYTHON_VERSION: "3.10"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   macos_py311:
     name: macOS - Python 3.11
     runs-on: macos-latest
     env:
       PYTHON_VERSION: "3.11"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   macos_py312:
     name: macOS - Python 3.12
     runs-on: macos-latest
     env:
       PYTHON_VERSION: "3.12"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   macos_py313:
     name: macOS - Python 3.13
     runs-on: macos-latest
     env:
       PYTHON_VERSION: "3.13"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   # Windows Jobs
   windows_py310:
@@ -115,25 +234,85 @@ jobs:
     runs-on: windows-latest
     env:
       PYTHON_VERSION: "3.10"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   windows_py311:
     name: Windows - Python 3.11
     runs-on: windows-latest
     env:
       PYTHON_VERSION: "3.11"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
   
   windows_py32:
     name: Windows - Python 3.12
     runs-on: windows-latest
     env:
       PYTHON_VERSION: "3.12"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   windows_py313:
     name: Windows - Python 3.13
     runs-on: windows-latest
     env:
       PYTHON_VERSION: "3.13"
-    <<: *nox-steps
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install Nox
+      run: pip install nox
+    - name: Run Nox
+      run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+
+
+# Anchors not supported in GitHub Actions yet. Left here for future reference.
+# defaults: &nox-steps
+#   steps:
+#     - uses: actions/checkout@v4
+#     - name: Set up Python ${{ env.PYTHON_VERSION }}
+#       uses: actions/setup-python@v5
+#       with:
+#         python-version: ${{ env.PYTHON_VERSION }}
+#     - name: Install Nox
+#       run: pip install nox
+#     - name: Run Nox
+#       run: nox
+#       env:
+#         GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
