@@ -7,18 +7,6 @@
 [![PyPI Version](https://img.shields.io/pypi/v/uaibot)](https://pypi.org/project/uaibot/)
 <!-- [![GitHub Release](https://img.shields.io/github/v/release/your-username/your-repo)](https://github.com/your-username/your-repo/releases) -->
 
-## Compatibility
-
-<center>
-
-| Platform/Python      | 3.10 | 3.11 | 3.12 | 3.13 |
-|----------------|------|------|------|----------|
-| **Ubuntu 22.04** | ![Ubuntu 22.04 (py3.10)][ubuntu-22.04-3.10]  | ![Ubuntu 22.04 (py3.11)][ubuntu-22.04-3.11]   | ![Ubuntu 22.04 (py3.12)][ubuntu-22.04-3.12]   | ![Ubuntu 22.04 (py3.13)][ubuntu-22.04-3.13] |
-| **Ubuntu 24.04** | ![Ubuntu 24.04 (py3.10)][ubuntu-latest-3.10] | ![Ubuntu 24.04 (py3.11)][ubuntu-latest-3.11]  | ![Ubuntu 24.04 (py3.12)][ubuntu-latest-3.12]  | ![Ubuntu 24.04 (py3.13)][ubuntu-latest-3.13] |
-| **macOS**        | ![MacOS (py3.10)][macos-latest-3.10]         | ![MacOS (py3.11)][macos-latest-3.11]   | ![MacOS (py3.12)][macos-latest-3.12]   | ![MacOS (py3.13)][macos-latest-3.13] |
-| **Windows**      | ![Windows (py3.10)][windows-latest-3.10]     | ![Windows (py3.11)][windows-latest-3.11] | ![Windows (py3.12)][windows-latest-3.12] | ![Windows (py3.13)][windows-latest-3.13] |
-
-</center>
 <h2>Introduction</h2>
 
 UAIBot is a web-based Python robotic simulator developed by <strong>Vinicius Mariano Gonçalves</strong>  (Electrical Engineering Department, Federal University of Minas Gerais, Brazil) and his students. 
