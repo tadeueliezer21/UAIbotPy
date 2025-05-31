@@ -2,11 +2,11 @@ name: Nox Tests
 
 on:
   push:
-    branches:
-      - main
-      - 'feature/*'
+    # While there is no branch name pattern specified, this workflow will run on all branches.
+    # branches:
+    #   - main
+    #   - 'feature/*'
   pull_request:
-    branches: [ main ]
 
 jobs:
   nox:
