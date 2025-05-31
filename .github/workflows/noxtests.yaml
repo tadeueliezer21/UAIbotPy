@@ -30,6 +30,7 @@ jobs:
           #   python-version: "3.13"
           # - os: windows-latest
           #   python-version: "3.13"
+    id: nox-${{ matrix.os }}-py${{ matrix.python-version }}
 
     steps:
     - uses: actions/checkout@v4
