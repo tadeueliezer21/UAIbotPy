@@ -47,15 +47,15 @@ body:
     attributes:
       label: Expected Behavior
       placeholder: "What should have happened?"
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: actual
     attributes:
       label: Actual Behavior
       placeholder: "What actually happened?"
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: "Error message:"
