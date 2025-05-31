@@ -109,19 +109,19 @@ It is supposed to be a robotic manipulator in front of a mountain. Mountains, al
 
 [Johnata Brayan](http://setpointcapybara.com/site/) (Electrical Engineering student, UFMG)
 
-[ubuntu-22.04-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-22.04-py3.10
-[ubuntu-22.04-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-22.04-py3.11
-[ubuntu-22.04-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-22.04-py3.12
-[ubuntu-22.04-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-22.04-py3.13
-[ubuntu-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-latest-py3.10
-[ubuntu-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-latest-py3.11
-[ubuntu-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-latest-py3.12
-[ubuntu-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-ubuntu-latest-py3.13
-[macos-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-macos-latest-py3.10
-[macos-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-macos-latest-py3.11
-[macos-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-macos-latest-py3.12
-[macos-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-macos-latest-py3.13
-[windows-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-windows-latest-py3.10
-[windows-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-macos-latest-py3.11
-[windows-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-macos-latest-py3.12
-[windows-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=nox-macos-latest-py3.13
+[ubuntu-22.04-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py310
+[ubuntu-22.04-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py311
+[ubuntu-22.04-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py312
+[ubuntu-22.04-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py313
+[ubuntu-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py310
+[ubuntu-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py311
+[ubuntu-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py312
+[ubuntu-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py313
+[macos-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py310
+[macos-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py311
+[macos-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py312
+[macos-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py313
+[windows-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py310
+[windows-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py311
+[windows-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py312
+[windows-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py313

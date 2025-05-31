@@ -8,42 +8,132 @@ on:
   pull_request:
     branches: [ main ]
 
-jobs:
-  nox:
-    name: Nox (${{ matrix.python-version }}, ${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-22.04, ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-        exclude:
-          # Python 3.13 isn't available on Ubuntu 20.04
-          - os: ubuntu-20.04
-            python-version: "3.13"
-          
-          # Python 3.13 might not be available on other platforms yet
-          # Remove these excludes when 3.13 becomes available
-          # - os: ubuntu-latest
-          #   python-version: "3.13"
-          # - os: macos-latest
-          #   python-version: "3.13"
-          # - os: windows-latest
-          #   python-version: "3.13"
-    id: nox-${{ matrix.os }}-py${{ matrix.python-version }}
-
-    steps:
+defaults: &nox-steps
+  steps:
     - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
-    
+        python-version: ${{ env.PYTHON_VERSION }}
     - name: Install Nox
       run: pip install nox
-    
     - name: Run Nox
-      env:
-        GITHUB_PYTHON_VERSION: ${{ matrix.python-version }}
       run: nox
+      env:
+        GITHUB_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+
+jobs:
+  # Ubuntu Jobs
+  ubuntu_22_04_py310:
+    name: Ubuntu 22.04 - Python 3.10
+    runs-on: ubuntu-22.04
+    env:
+      PYTHON_VERSION: "3.10"
+    <<: *nox-steps
+
+  ubuntu_22_04_py311:
+    name: Ubuntu 22.04 - Python 3.11
+    runs-on: ubuntu-22.04
+    env:
+      PYTHON_VERSION: "3.11"
+    <<: *nox-steps
+
+  ubuntu_22_04_py312:
+    name: Ubuntu 22.04 - Python 3.12
+    runs-on: ubuntu-22.04
+    env:
+      PYTHON_VERSION: "3.12"
+    <<: *nox-steps
+
+  ubuntu_22_04_py313:
+    name: Ubuntu 22.04 - Python 3.13
+    runs-on: ubuntu-22.04
+    env:
+      PYTHON_VERSION: "3.13"
+    <<: *nox-steps
+
+  ubuntu_latest_py310:
+    name: Ubuntu Latest - Python 3.10
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.10"
+    <<: *nox-steps
+
+  ubuntu_latest_py311:
+    name: Ubuntu Latest - Python 3.11
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.11"
+    <<: *nox-steps
+
+  ubuntu_latest_py312:
+    name: Ubuntu Latest - Python 3.12
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.12"
+    <<: *nox-steps
+
+  ubuntu_latest_py313:
+    name: Ubuntu Latest - Python 3.13
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.13"
+    <<: *nox-steps
+
+  # macOS Jobs
+  macos_py310:
+    name: macOS - Python 3.10
+    runs-on: macos-latest
+    env:
+      PYTHON_VERSION: "3.10"
+    <<: *nox-steps
+
+  macos_py311:
+    name: macOS - Python 3.11
+    runs-on: macos-latest
+    env:
+      PYTHON_VERSION: "3.11"
+    <<: *nox-steps
+
+  macos_py312:
+    name: macOS - Python 3.12
+    runs-on: macos-latest
+    env:
+      PYTHON_VERSION: "3.12"
+    <<: *nox-steps
+
+  macos_py313:
+    name: macOS - Python 3.13
+    runs-on: macos-latest
+    env:
+      PYTHON_VERSION: "3.13"
+    <<: *nox-steps
+
+  # Windows Jobs
+  windows_py310:
+    name: Windows - Python 3.10
+    runs-on: windows-latest
+    env:
+      PYTHON_VERSION: "3.10"
+    <<: *nox-steps
+
+  windows_py311:
+    name: Windows - Python 3.11
+    runs-on: windows-latest
+    env:
+      PYTHON_VERSION: "3.11"
+    <<: *nox-steps
+  
+  windows_py32:
+    name: Windows - Python 3.12
+    runs-on: windows-latest
+    env:
+      PYTHON_VERSION: "3.12"
+    <<: *nox-steps
+
+  windows_py313:
+    name: Windows - Python 3.13
+    runs-on: windows-latest
+    env:
+      PYTHON_VERSION: "3.13"
+    <<: *nox-steps
