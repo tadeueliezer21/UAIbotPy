@@ -91,25 +91,11 @@ If you know Portuguese, you can also see my [Robotic Manipulator course](https:/
 
 <h2>What is exactly the logo of "UAIBot"???</h2>
 
-It is supposed to be a robotic manipulator in front of a mountain. Mountains, along with the aforementioned "Uai", are one of the symbols of the state of Minas Gerais, Brazil. 
+It is supposed to be a robotic manipulator in front of a mountain. Mountains, along with the aforementioned "Uai", are one of the symbols of the state of Minas Gerais, Brazil.
 
 <h2>Collaborators</h2>
 
 [Johnata Brayan](http://setpointcapybara.com/site/) (Electrical Engineering student, UFMG)
 
-[ubuntu-22.04-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py310
-[ubuntu-22.04-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py311
-[ubuntu-22.04-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py312
-[ubuntu-22.04-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_22_04_py313
-[ubuntu-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py310
-[ubuntu-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py311
-[ubuntu-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py312
-[ubuntu-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=ubuntu_latest_py313
-[macos-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py310
-[macos-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py311
-[macos-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py312
-[macos-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=macos_py313
-[windows-latest-3.10]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py310
-[windows-latest-3.11]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py311
-[windows-latest-3.12]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py312
-[windows-latest-3.13]: https://img.shields.io/github/actions/workflow/status/fbartelt/UAIbotPy/noxtests.yaml?label=&job=windows_py313
+## Contributing
+We welcome contributions! Please read our [Contribution Guidelines](.github/CONTRIBUTING.md) before submitting changes.
