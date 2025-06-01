@@ -25,7 +25,7 @@ def map_color(color):
 
     return colors
 
-def _create_jaco(htm=np.identity(4), name='jaco', color=None, opacity=1):
+def _create_jaco(htm=np.identity(4), name='', color=None, opacity=1, eef_frame_visible=True):
     colors = map_color(color)
     color1, color2, color3 = colors
 
@@ -229,8 +229,19 @@ def _create_jaco(htm=np.identity(4), name='jaco', color=None, opacity=1):
         
     links = []
     for i in range(n):
-        links.append(Link(i, theta=link_info[0, i], d=link_info[1, i], alpha=link_info[2, i], a=link_info[3, i], joint_type=link_info[4, i],
-                          list_model_3d=link_3d_obj[i], com_coordinates=com_coordinates[i], mass=list_mass[i], inertia_matrix=list_inertia_mat[i]))
+        links.append(
+            Link(i,
+                 theta=link_info[0, i],
+                 d=link_info[1, i],
+                 alpha=link_info[2, i],
+                 a=link_info[3, i],
+                 joint_type=link_info[4, i],
+                 list_model_3d=link_3d_obj[i],
+                #  com_coordinates=com_coordinates[i], # DEPRECATED PARAMETERS IN UAIBOT>=1.2.2
+                #  mass=list_mass[i],
+                #  inertia_matrix=list_inertia_mat[i],
+            )
+        )
 
     htm_n_eef = Utils.rotz(-pi) * Utils.rotx(0.3056*pi) * \
         Utils.rotx(0.3056*pi) * Utils.trn([0, 0, 0.052])
@@ -238,9 +249,27 @@ def _create_jaco(htm=np.identity(4), name='jaco', color=None, opacity=1):
     htm_base_0 = Utils.trn([0, 0, 0])
 
     # Create joint limits
-    joint_limits = np.matrix([[-3*np.pi, 3*np.pi], [-np.deg2rad(47), np.deg2rad(266)],
-                              [-np.deg2rad(19), np.deg2rad(322)
-                               ], [-3*np.pi, 3*np.pi],
-                              [-3*np.pi, 3*np.pi], [-3*np.pi, 3*np.pi]])
+    joint_limits = np.matrix(
+        [
+            [-3*np.pi, 3*np.pi],
+            [-np.deg2rad(47), np.deg2rad(266)],
+            [-np.deg2rad(19), np.deg2rad(322)],
+            [-3*np.pi, 3*np.pi],
+            [-3*np.pi, 3*np.pi],
+            [-3*np.pi, 3*np.pi]
+        ]
+    )
+    
+    robot_ = rb.Robot(
+        name,
+        links,
+        base_3d_obj,
+        htm,
+        htm_base_0,
+        htm_n_eef,
+        q0,
+        eef_frame_visible=eef_frame_visible,
+        joint_limits=joint_limits,
+    )
 
-    return links, base_3d_obj, htm_base_0, htm_n_eef, q0, joint_limits
+    return robot_

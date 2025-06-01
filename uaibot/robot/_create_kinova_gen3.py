@@ -17,7 +17,7 @@ joint limits, as this initial configuration is outside the joint limits.
 """
 
 def _create_kinova_gen3(
-    htm, name="Kinova_Gen3_7DoF", color="#e6e1e1", opacity=1.0, eef_frame_visible=True
+    htm, name="", color="#e6e1e1", opacity=1.0, eef_frame_visible=True
 ):
     """Model: https://www.kinovarobotics.com/resources Gen3 CAD model (7DoF) [p. 230]
     Parameters: https://www.kinovarobotics.com/resources GEN3 User Guide
@@ -452,9 +452,9 @@ def _create_kinova_gen3(
                 a=link_info[3][i],
                 joint_type=link_info[4][i],
                 list_model_3d=link_3d_obj[i],
-                com_coordinates=list_com[i],
-                mass=list_mass[i],
-                inertia_matrix=list_inertia_mat[i],
+                # com_coordinates=list_com[i], # DEPRECATED PARAMETERS IN UAIBOT>=1.2.2
+                # mass=list_mass[i],
+                # inertia_matrix=list_inertia_mat[i],
             )
         )
 
