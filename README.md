@@ -4,8 +4,11 @@
     <img src="https://viniciusmgn.github.io/aulas_manipuladores/presentation/images/aula1/logouaibot.svg" alt="UAIBot Logo"/>
 </p>
 
-[![PyPI Version](https://img.shields.io/pypi/v/uaibot)](https://pypi.org/project/uaibot/)
-<!-- [![GitHub Release](https://img.shields.io/github/v/release/your-username/your-repo)](https://github.com/your-username/your-repo/releases) -->
+[![PyPI Version](https://img.shields.io/pypi/v/uaibot?logo=pypi&logoColor=white&label=PyPI)](https://pypi.org/project/uaibot/)
+[![GitHub Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FUAIbot%2FUAIbotPy%2Frefs%2Fheads%2Fmain%2Fpyproject.toml&query=%24.project.version&prefix=v&logo=github&label=GitHub&labelColor=gray&color=blue)](https://github.com/UAIbot/UAIbotPy)
+<!-- For testing only
+[![GitHub Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffbartelt%2FUAIbotPy%2Ffeature%2Fpython-support%2Fpyproject.toml&query=%24.project.version&prefix=v&logo=github&label=GitHub&labelColor=gray&color=blue)](https://github.com/UAIbot/UAIbotPy) -->
+
 
 <h2>Introduction</h2>
 

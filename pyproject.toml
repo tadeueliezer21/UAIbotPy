@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uaibot"
-version = "1.2.2"
+version = "1.2.3"
 description = "Uaibot, online robotic simulator"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,7 +19,7 @@ authors = [
 dependencies = [
     "colour>=0.1.5",
     "httplib2>=0.20.4",
-    "ipython>=8.0.1",
+    "ipython>=7.34",
     "matplotlib>=3.10.0",
     "numpy>=1.24",
     "pybind11>=2.10",
