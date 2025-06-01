@@ -10,6 +10,7 @@
 #include "nanoflann.hpp"
 #include <queue>
 #include <chrono>
+#include <random>
 
 #include "declarations.h"
 
@@ -2315,3 +2316,186 @@ DistStructRobotAuto Manipulator::compute_dist_auto(VectorXf q, DistStructRobotAu
 
     return dsra;
 }
+
+// -----------------------------------------------------------------------------
+// ------------------------- VECTOR FIELD ON SE(3) -----------------------------
+// -----------------------------------------------------------------------------
+
+// Global constants for the default delta and ds values
+double c_delta = 0.001;
+double c_ds = 0.001;
+// Approximate value for theta=0 in SE(3) EE distance
+double c_maxCosTheta = 0.999;
+// Upper bound for theta approximately zero for se3::exp
+double c_theta_zero = 1e-6;
+
+std::tuple<Eigen::Matrix3d, Eigen::Vector3d, Eigen::Matrix3d, double, double, double, double> EEdistSE3Variables(const Eigen::Matrix4d& X) {
+  // Compute the variables used in the explicit EEdistance function in SE(3)
+  Eigen::MatrixXd Z = X;
+  Eigen::Matrix3d Q = Z.block<3, 3>(0, 0);
+  Eigen::Vector3d t = Z.block<3, 1>(0, 3);
+  double cos_theta = 0.5 * (Q.trace() - 1);
+  double sin_theta = 1.0 / (2.0 * sqrt(2)) * (Q - Q.inverse()).norm();
+  double theta = atan2(sin_theta, cos_theta);
+  cos_theta = cos(theta);
+  sin_theta = sin(theta);
+
+  double alpha;
+  if (cos_theta > c_maxCosTheta) {
+    alpha = -(1.0 / 12);
+  } else {
+    alpha =
+        (2.0 - 2 * cos_theta - pow(theta, 2)) / (4.0 * pow((1 - cos_theta), 2));
+  }
+  Eigen::Matrix3d M = alpha * (Q + Q.inverse()) +
+                      (1 - 2 * alpha) * Eigen::Matrix3d::Identity();
+  return std::make_tuple(Q, t, M, theta, cos_theta, sin_theta, alpha);
+}
+
+double EEdistance(const Eigen::Matrix4d V, const Eigen::Matrix4d W) {
+  Eigen::Matrix4d Z = V.inverse() * W;
+  // auto [Q, t, M, theta, cos_theta, sin_theta, alpha] = EEdistSE3Variables(Z);
+  std::tuple<Eigen::Matrix3d, Eigen::Vector3d, Eigen::Matrix3d, double, double, double, double> res_ = EEdistSE3Variables(Z);
+  Eigen::Matrix3d Q;
+  Eigen::Vector3d t;
+  Eigen::Matrix3d M;
+  double theta;
+  double cos_theta;
+  double sin_theta;
+  double alpha;
+  std::tie(Q, t, M, theta, cos_theta, sin_theta, alpha) = res_;
+
+  double distance = sqrt(2.0 * pow(theta, 2) + t.transpose() * M * t);
+  return distance;
+}
+
+std::tuple<double, int> ECdistance(const Eigen::MatrixXd& state, const vector<Eigen::Matrix4d>& curve) {
+  Eigen::Matrix4d V = state;
+  int ind_min = 0;
+  double min_distance = 1e6;
+  for (int i = 0; i < curve.size(); i++) {
+    double distance = EEdistance(state, curve.at(i));
+    if (distance < min_distance) {
+      min_distance = distance;
+      ind_min = i;
+    }
+  }
+  return {min_distance, ind_min};
+}
+
+Eigen::Matrix4d SmapSE3(const Eigen::VectorXd xi){
+  Eigen::MatrixXd S_ = Eigen::Matrix4d::Zero();
+
+  // Portion of Lie algebra related to SO(3)
+  S_(0, 1) = -xi(5);
+  S_(0, 2) = xi(4);
+  S_(1, 2) = -xi(3);
+  S_ = S_ - S_.transpose().eval();
+
+  S_(0, 3) = xi(0);
+  S_(1, 3) = xi(1);
+  S_(2, 3) = xi(2);
+
+  return S_;
+}
+
+Eigen::VectorXd invSmapSE3(const Eigen::Matrix4d A){
+  Eigen::VectorXd xi = Eigen::VectorXd::Zero(6);
+
+  xi(0) = A(0, 3);
+  xi(1) = A(1, 3);
+  xi(2) = A(2, 3);
+  xi(3) = -A(1, 2);
+  xi(4) = A(0, 2);
+  xi(5) = -A(0, 1);
+
+  return xi;
+}
+
+Eigen::Matrix4d expSE3(const Eigen::Matrix4d X){
+  Eigen::Matrix3d A = X.block<3, 3>(0, 0);
+  Eigen::Vector3d v = X.block<3, 1>(0, 3);
+  Eigen::Matrix4d result = Eigen::Matrix4d::Identity();
+  float theta = sqrt(pow(A(1, 0), 2) + pow(A(0, 2), 2) + pow(A(2, 1), 2));
+  // If theta is close to zero, use the first order approximation
+  if (theta < c_theta_zero) {
+    Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
+    result.block<3, 3>(0, 0) = R;
+    result.block<3, 1>(0, 3) = v;
+  } 
+  else {
+    Eigen::Matrix3d R = Eigen::Matrix3d::Identity() + (sin(theta) / theta) * A +
+                        ((1 - cos(theta)) / pow(theta, 2)) * A * A;
+    Eigen::Matrix3d U = Eigen::Matrix3d::Identity() +
+                        ((1 - cos(theta)) / pow(theta, 2)) * A +
+                        ((theta - sin(theta)) / pow(theta, 3)) * A * A;
+    result.block<3, 3>(0, 0) = R;
+    result.block<3, 1>(0, 3) = U * v;
+  }
+  return result;
+}
+
+// TODO: Implement explicit analytic computation of the L operator (normal component)
+VectorFieldResult vectorfield_SE3(const Eigen::Matrix4d& state, const vector<Eigen::Matrix4d>& curve, float kt1, float kt2, float kt3, float kn1, float kn2,
+                                  const vector<Eigen::MatrixXd>& curve_derivative, double delta, double ds)
+{
+  // auto [min_distance, closest_index] = ECdistance(state, curve);
+  std::tuple<double, int> res_ = ECdistance(state, curve);
+  double min_distance;
+  int closest_index;
+  std::tie(min_distance, closest_index) = res_;
+  Eigen::Matrix4d closest_point = curve.at(closest_index);
+
+  // Normal component
+  int m = 6;
+  Eigen::VectorXd normal = Eigen::VectorXd::Zero(m);
+  Eigen::MatrixXd I = Eigen::MatrixXd::Identity(m, m);
+  // L-operator wrt V of EEdistance
+  Eigen::VectorXd LvDhat = Eigen::VectorXd::Zero(m);
+
+  for (int i = 0; i < m; i++) {
+    Eigen::MatrixXd variation = expSE3(SmapSE3(I.col(i)) * delta) * state;
+    double dDistance = EEdistance(variation, closest_point);
+    LvDhat(i) = (dDistance - min_distance) / (delta);
+  }
+  normal = -LvDhat;
+  
+  // Tangent Component
+  Eigen::MatrixXd dHd;
+  if (curve_derivative.size() > 0) {
+    dHd = curve_derivative.at(closest_index);
+  } 
+  else {
+    if (closest_index == curve.size() - 1) {
+      // If the closest point is the last point on the curve, the next point
+      // is the first point (closed curve).
+      dHd = (curve.at(0) - closest_point) / ds;
+    } 
+    else {
+      Eigen::MatrixXd next_point = curve.at(closest_index + 1);
+      dHd = (next_point - closest_point) / ds;
+    }
+  }
+  Eigen::VectorXd tangent = invSmapSE3(dHd * closest_point.inverse());
+
+  double eps = 1e-3;
+
+  double dist_mod = sqrt(min_distance + pow(eps, 2)) - eps;
+
+  double kn = kn1 * std::tanh(kn2 * dist_mod);
+  double kt = kt1 * (1 - kt2 * std::tanh(kt3 * dist_mod));
+  
+  // double kt = kt1 * (1 - kt2 * std::tanh(kt3 * min_distance));
+  // double kn = kn1 * std::tanh(kn2 * min_distance);
+
+  VectorFieldResult vfr;
+  Eigen::VectorXd twist = kt * tangent + kn * normal;
+  vfr.twist = twist.cast<float>();
+  vfr.dist = min_distance;
+  vfr.index = closest_index;
+  return vfr;
+}
+
+// -----------------------------------------------------------------------------
+// ------------------------- VECTOR FIELD ON SE(3) END -------------------------
+// -----------------------------------------------------------------------------

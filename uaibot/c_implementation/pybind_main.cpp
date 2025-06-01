@@ -225,4 +225,7 @@ PYBIND11_MODULE(uaibot_cpp_bind, m)
 
      m.def("vectorfield_rn", &vectorfield_rn, py::arg("q"), py::arg("q_path"), py::arg("alpha"), py::arg("const_velocity"), py::arg("is_closed"), py::arg("gamma"));
      m.def("dp_inv_solve", &dp_inv_solve, py::arg("A"), py::arg("b"), py::arg("eps"));
+     m.def("vectorfield_SE3", &vectorfield_SE3, py::arg("state"), py::arg("curve"), py::arg("kt1"), py::arg("kt2"),
+           py::arg("kt3"), py::arg("kn1"), py::arg("kn2"), py::arg("curve_derivative")=std::vector<Eigen::MatrixXd>(),
+           py::arg("delta") = c_delta, py::arg("ds")=c_ds);
 }
