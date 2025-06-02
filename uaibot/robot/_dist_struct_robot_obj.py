@@ -1,35 +1,41 @@
 import numpy as np
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
+from .robot import *
 
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .robot import Robot
+    
 class DistStructLinkObj:
 
     @property
-    def link_number(self):
+    def link_number(self) -> int:
         """The index of the link in which the collision point is."""
         return self._link_number
 
     @property
-    def link_col_obj_number(self):
+    def link_col_obj_number(self) -> int:
         """The index of the collision object of the link in which the collision point is."""
         return self._link_col_obj_number
 
     @property
-    def distance(self):
+    def distance(self) -> float:
         """The distance (in meters) between the link and the object."""
         return self._distance
 
     @property
-    def point_link(self):
+    def point_link(self) -> np.matrix:
         """The closest point (witness) in the link. Written in scenario coordinates and in meters."""
         return np.matrix(self._point_link)
 
     @property
-    def point_object(self):
+    def point_object(self) -> np.matrix:
         """The closest point (witness) in the object. Written in scenario coordinates and in meters."""
         return np.matrix(self._point_object)
 
     @property
-    def jac_distance(self):
+    def jac_distance(self) -> np.matrix:
         """The Jacobian of the distance in the robot's configuration space."""
         return np.matrix(self._jac_distance)
 
@@ -37,7 +43,8 @@ class DistStructLinkObj:
     # Constructor
     #######################################
 
-    def __init__(self, link_number, link_col_obj_number, distance, point_link, point_object, jac_distance):
+    def __init__(self, link_number: int, link_col_obj_number: int, distance: float, 
+                 point_link: np.matrix, point_object: np.matrix, jac_distance: np.matrix) -> "DistStructLinkObj":
 
         self._link_number = link_number
         self._link_col_obj_number = link_col_obj_number
@@ -69,31 +76,31 @@ class DistStructRobotObj:
     #######################################
 
     @property
-    def obj(self):
+    def obj(self) -> MetricObject:
         """Return the associated object."""
         return self._obj
 
     @property
-    def robot(self):
+    def robot(self) -> "Robot":
         """Return the associated robot."""
         return self._robot
 
     @property
-    def jac_dist_mat(self):
+    def jac_dist_mat(self) -> np.matrix:
         """
 		Return the matrix in which each row we have the distance Jacobian (gradient) for each robot link.
 		"""
         return np.matrix(self._jac_dist_mat)
 
     @property
-    def dist_vect(self):
+    def dist_vect(self) -> np.matrix:
         """
 		Return the column vector in which each row we have the distance for each robot link.
 		"""
         return np.matrix(self._dist_vect).reshape((self.no_items, 1))
 
     @property
-    def no_items(self):
+    def no_items(self) -> int:
         """Return the number of items."""
         return self._no_items
 
@@ -104,7 +111,7 @@ class DistStructRobotObj:
     # Constructor
     #######################################
 
-    def __init__(self, obj, robot):
+    def __init__(self, obj: MetricObject, robot: "Robot") -> "DistStructRobotObj":
 
         self._obj = obj
         self._robot = robot
@@ -140,14 +147,14 @@ class DistStructRobotObj:
         self._no_items += 1
 
 
-    def get_item(self, link_number, link_col_obj_number):
+    def get_item(self, link_number: int, link_col_obj_number: int) -> "DistStructLinkObj":
         for dist_info in self._list_info:
             if link_number == dist_info.link_number and link_col_obj_number == dist_info.link_col_obj_number:
                 return dist_info
 
         raise Exception("Item not found!")
 
-    def get_closest_item(self):
+    def get_closest_item(self) -> "DistStructLinkObj":
         minimum_distance = float('inf')
         index_minimum = -1
         for i in range(self._no_items):

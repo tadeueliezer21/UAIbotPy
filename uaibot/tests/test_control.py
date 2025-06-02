@@ -4,6 +4,9 @@ import requests
 from io import BytesIO
 import matplotlib.pyplot as plt
 import sys
+import os
+
+
 
 #sim = ub.Demo.constrained_control_demo_1()
 
@@ -59,5 +62,5 @@ for i in range(1000):
     t+=dt
     
     
-
-sim.save("/home/vinicius/Desktop/uaibot_devel/uaibot_files/testing","control")
+current_folder = os.path.dirname(os.path.abspath(__file__))
+sim.save(current_folder,"control")

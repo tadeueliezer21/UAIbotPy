@@ -1,7 +1,7 @@
 from utils import *
 from graphics.meshmaterial import *
 import numpy as np
-
+from uaibot.utils.types import HTMatrix, Matrix, Vector, SimObject
 
 
 
@@ -19,7 +19,7 @@ class Model3D:
        The scaling parameter of the object.
        (default: 1).
 
-   htm : 4x4 numpy array or 4x4 nested list
+   htm : 4x4 numpy matrix
        The htm of the 3d models. This is used to tune the 'default' htm for the object in the uaibot simulator.
        This is necessary because the 3d model can have a different 'default' pose than the desired one.
        (default: np.identity(4)).
@@ -34,22 +34,22 @@ class Model3D:
     #######################################
 
     @property
-    def url(self):
+    def url(self) -> str:
         """The 3d model url."""
         return self._url
 
     @property
-    def scale(self):
+    def scale(self) -> float:
         """The object scale."""
         return self._scale
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return self._htm
 
     @property
-    def mesh_material(self):
+    def mesh_material(self) -> "MeshMaterial":
         """The model mesh material."""
         return self._mesh_material
 
@@ -57,11 +57,15 @@ class Model3D:
     # Constructor
     #######################################
 
-    def __init__(self, url="", scale=1, htm=np.identity(4), mesh_material=None):
+    def __init__(self, url: str ="", scale: float =1, htm: HTMatrix =np.identity(4), 
+                 mesh_material: Optional["MeshMaterial"]=None) -> "Model3D":
 
         # Error handling
+        
+        ALLOWED_MESHES_TYPES = ["uaibot.MeshMaterial","uaibot.MTLMeshMaterial","uaibot.GLBMeshMaterial"] 
 
-        error = Utils.is_url_available(url, ['obj','stl','dae'])
+
+        error = Utils.is_url_available(url, ['obj','stl','dae','glb'])
         if not (error == "ok!"):
             raise Exception("The parameter 'url' " + error)
 
@@ -71,15 +75,24 @@ class Model3D:
         if not Utils.is_a_number(scale) or scale < 0:
             raise Exception("The parameter 'scale' should be a float.")
 
-        if not (Utils.get_uaibot_type(mesh_material) == "uaibot.MeshMaterial" or (mesh_material is None)):
-            raise Exception("The parameter 'mesh_material' should be a 'uaibot.MeshMaterial' object or 'None'.")
+        if not (Utils.get_uaibot_type(mesh_material) in ALLOWED_MESHES_TYPES or (mesh_material is None)):
+            raise Exception("The parameter 'mesh_material' should be a "+str(ALLOWED_MESHES_TYPES)+" object or 'None'.")
+
+        self._type = url[url.rfind(".")+1:len(url)+1]
+        
+        if (not self._type == 'obj') and  Utils.get_uaibot_type(mesh_material) == "uaibot.MTLMeshMaterial":
+            raise Exception("The parameter 'mesh_material' is a of MTL type, but the object is not of type '.obj'. MTL files are only supported to obj.")
+
+        if (not self._type == 'glb') and  Utils.get_uaibot_type(mesh_material) == "uaibot.GLBMeshMaterial":
+            raise Exception("The parameter 'mesh_material' is a GLB type, but the object is not of type '.glb'.")
+
 
         # end error handling
 
         self._url = url
         self._scale = scale
         self._htm = htm
-        self._type = url[url.rfind(".")+1:len(url)+1]
+        
 
 
         if mesh_material is None:

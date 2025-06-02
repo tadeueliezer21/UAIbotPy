@@ -11,6 +11,8 @@ import {
 import { OrbitControls } from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/controls/OrbitControls.js';
 import { OBJLoader } from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/OBJLoader.js';
 import { STLLoader } from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/STLLoader.js';
+import { MTLLoader } from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/MTLLoader.js';
+import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/GLTFLoader.js';
 import { ColladaLoader } from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/ColladaLoader.js';
 import { GUI } from 'https://cdn.skypack.dev/dat.gui';
 import { ParametricGeometry } from 'https://cdn.skypack.dev/three@0.135.0/examples/jsm/geometries/ParametricGeometry.js'
@@ -481,24 +483,65 @@ class Robot extends Objsim {
 		const objLoader = new OBJLoader(manager);
 		const stlLoader = new STLLoader(manager);
 		const colladaLoader = new ColladaLoader(manager);
+		const mtlLoader = new MTLLoader(manager);
+		const gltfloader = new GLTFLoader(manager);
+
 
 		for (let i = 0; i < obj.length; i++) {
 
 
 			if (obj[i].type == "obj") {
-				objLoader.load(obj[i].url, (root) => {
-					root.scale.set(obj[i].scale, obj[i].scale, obj[i].scale);
-					root.applyMatrix4(obj[i].matrix)
+				if (obj[i].mesh_material.type == 'mtl') {
+					mtlLoader.load(obj[i].mesh_material.url, (materials) => {
+						materials.preload();
 
-					root.traverse(function (child) {
-						if (child instanceof Mesh) {
-							child.material = obj[i].mesh_material;
-						}
+						objLoader.setMaterials(materials);
+						objLoader.load(obj[i].url, (root) => {
+							root.scale.set(obj[i].scale, obj[i].scale, obj[i].scale);
+							root.applyMatrix4(obj[i].matrix);
+
+							// Override opacity if specified
+							const userOpacity = obj[i].mesh_material?.opacity;
+							if (userOpacity !== undefined) {
+								root.traverse((child) => {
+									if (child instanceof Mesh && child.material) {
+										if (Array.isArray(child.material)) {
+											child.material.forEach((mat) => {
+												if (mat) {
+													mat.opacity = userOpacity;
+													mat.transparent = userOpacity < 1.0;
+													mat.needsUpdate = true;
+												}
+											});
+										} else {
+											child.material.opacity = userOpacity;
+											child.material.transparent = userOpacity < 1.0;
+											child.material.needsUpdate = true;
+										}
+									}
+								});
+							}
+
+
+							this.shape.getObjectByName(name2).add(root);
+							this.loadedObjs += 1;
+						});
 					});
+				} else {
+					objLoader.load(obj[i].url, (root) => {
+						root.scale.set(obj[i].scale, obj[i].scale, obj[i].scale);
+						root.applyMatrix4(obj[i].matrix);
 
-					this.shape.getObjectByName(name2).add(root);
-					this.loadedObjs += 1
-				});
+						root.traverse((child) => {
+							if (child instanceof Mesh) {
+								child.material = obj[i].mesh_material;
+							}
+						});
+
+						this.shape.getObjectByName(name2).add(root);
+						this.loadedObjs += 1;
+					});
+				}
 			}
 			if (obj[i].type == "stl") {
 				stlLoader.load(obj[i].url, (root) => {
@@ -530,6 +573,48 @@ class Robot extends Objsim {
 
 					this.shape.getObjectByName(name2).add(group);
 					this.loadedObjs += 1
+				});
+			}
+			if (obj[i].type == "glb") {
+				gltfloader.load(obj[i].url, (root) => {
+					const group = root.scene;
+					group.scale.set(obj[i].scale, obj[i].scale, obj[i].scale);
+					group.applyMatrix4(obj[i].matrix);
+
+					if (obj[i].mesh_material.type !== 'glb') {
+						group.traverse(function (child) {
+							if (child instanceof Mesh) {
+								child.material = obj[i].mesh_material;
+							}
+						});
+					}
+					else {
+						const userOpacity = obj[i].mesh_material?.opacity;
+						if (userOpacity !== undefined) {
+							group.traverse((child) => {
+								if (child instanceof Mesh && child.material) {
+									if (Array.isArray(child.material)) {
+										child.material.forEach((mat) => {
+											if (mat) {
+												mat.opacity = userOpacity;
+												mat.transparent = userOpacity < 1.0;
+												mat.needsUpdate = true;
+												mat.material.format = 1023;
+											}
+										});
+									} else {
+										child.material.opacity = userOpacity;
+										child.material.transparent = userOpacity < 1.0;
+										child.material.needsUpdate = true;
+										child.material.format = 1023;
+									}
+								}
+							});
+						}
+					}
+
+					this.shape.getObjectByName(name2).add(group);
+					this.loadedObjs += 1;
 				});
 			}
 

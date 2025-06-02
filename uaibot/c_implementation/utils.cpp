@@ -355,7 +355,7 @@ vector<VectorXf> quadratic_interp_vec(vector<VectorXf> x, int N)
     return quadratic_interp(x, N);
 }
 
-VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alpha, float const_velocity)
+VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alpha, float const_velocity, bool is_closed, float gamma)
 {
     float min_dist = VERYBIGNUMBER;
     float aux_dist;
@@ -390,15 +390,23 @@ VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alp
 
     T = T / (T.norm() + EPS);
 
-    float G = (2 / M_PI) * atan(alpha * min_dist);
+    float G = (2 / M_PI) * atan(alpha * sqrtf(min_dist));
     float H = sqrtf(1 + EPS - G * G);
 
-    // float per = ((float) index_q)/((float) no_q);
-    // float mult = per < 0.9 ? 1.0 : sqrtf((1.0-per)/0.1);
+    float mult;
+
+    if(is_closed)
+        mult = 1;
+    else
+    {
+        float per = ((float) index_q)/((float) no_q);
+        mult = minf(gamma * (1.0-per),1.0);
+    }
+    
 
     VectorFieldResult vfr;
     float sign = const_velocity > 0 ? 1 : -1;
-    vfr.twist = abs(const_velocity) * (G * N + sign * H * T);
+    vfr.twist = abs(const_velocity) * (G * N + mult * sign * H * T);
     vfr.dist = min_dist;
     vfr.index = index_q;
 

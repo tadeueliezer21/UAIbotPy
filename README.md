@@ -1,12 +1,16 @@
-
-
 <h1>UAIBot</h1>
-
-<h2>Introduction</h2>
 
 <p align="center">
     <img src="https://viniciusmgn.github.io/aulas_manipuladores/presentation/images/aula1/logouaibot.svg" alt="UAIBot Logo"/>
 </p>
+
+[![PyPI Version](https://img.shields.io/pypi/v/uaibot?logo=pypi&logoColor=white&label=PyPI)](https://pypi.org/project/uaibot/)
+[![GitHub Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FUAIbot%2FUAIbotPy%2Frefs%2Fheads%2Fmain%2Fpyproject.toml&query=%24.project.version&prefix=v&logo=github&label=GitHub&labelColor=gray&color=blue)](https://github.com/UAIbot/UAIbotPy)
+<!-- For testing only
+[![GitHub Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffbartelt%2FUAIbotPy%2Ffeature%2Fpython-support%2Fpyproject.toml&query=%24.project.version&prefix=v&logo=github&label=GitHub&labelColor=gray&color=blue)](https://github.com/UAIbot/UAIbotPy) -->
+
+
+<h2>Introduction</h2>
 
 UAIBot is a web-based Python robotic simulator developed by <strong>Vinicius Mariano Gonçalves</strong>  (Electrical Engineering Department, Federal University of Minas Gerais, Brazil) and his students. 
 
@@ -90,14 +94,11 @@ If you know Portuguese, you can also see my [Robotic Manipulator course](https:/
 
 <h2>What is exactly the logo of "UAIBot"???</h2>
 
-It is supposed to be a robotic manipulator in front of a mountain. Mountains, along with the aforementioned "Uai", are one of the symbols of the state of Minas Gerais, Brazil. 
+It is supposed to be a robotic manipulator in front of a mountain. Mountains, along with the aforementioned "Uai", are one of the symbols of the state of Minas Gerais, Brazil.
 
 <h2>Collaborators</h2>
 
 [Johnata Brayan](http://setpointcapybara.com/site/) (Electrical Engineering student, UFMG)
 
-
-
-
-
-
+## Contributing
+We welcome contributions! Please read our [Contribution Guidelines](.github/CONTRIBUTING.md) before submitting changes.

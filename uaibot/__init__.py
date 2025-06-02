@@ -19,12 +19,28 @@ except ImportError:
     print("INFO: CPP .so not found! Only python mode is available!")
     os.environ['CPP_SO_FOUND'] = '0'
 
-from robot import *
-from demo import *
-from utils import *
-from simulation import *
-from graphics import *
-from simobjects import *
+from .robot import *
+from .demo import *
+from .utils import *
+from .simulation import *
+from .graphics import *
+from .simobjects import *
+
+try:
+    from .utils import Utils
+    from .robot import Robot
+    from .simulation import Simulation
+    from .simobjects import Box, Ball, ConvexPolytope, Cylinder, PointCloud
+    from .graphics import MeshMaterial, Texture
+    from .demo import Demo
+except ImportError:
+    pass
+
+__all__ = [
+    "Utils", "Robot", "Simulation", "Demo",
+    "Box", "Ball", "ConvexPolytope", "Cylinder", "PointCloud",
+    "MeshMaterial", "Texture",
+]
 
 import numpy as np
 np.set_printoptions(

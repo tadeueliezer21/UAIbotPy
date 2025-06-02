@@ -25,15 +25,15 @@ def _add_ani_frame(self, time, q=None, htm=None, enforce_joint_limits=False):
         raise Exception("The parameter 'enforce_joint_limits' must be a boolean.")
 
     # end error handling
-    self._q = np.matrix(q).reshape((n, 1))
+    self._q = Utils.cvt(q)
 
     if enforce_joint_limits:
         for i in range(len(self.links)):
             self._q[i,0] = min(max(self._q[i,0],self.joint_limit[i,0]),self.joint_limit[i,1])
 
-    f = [time, htm[0,0], htm[0,1], htm[0,2], htm[0,3],
-         htm[1,0], htm[1,1], htm[1,2], htm[1,3],
-         htm[2,0], htm[2,1], htm[2,2], htm[2,3],
+    f = [time, htm[0,0].item(), htm[0,1].item(), htm[0,2].item(), htm[0,3].item(),
+         htm[1,0].item(), htm[1,1].item(), htm[1,2].item(), htm[1,3].item(),
+         htm[2,0].item(), htm[2,1].item(), htm[2,2].item(), htm[2,3].item(),
          0, 0, 0, 1, np.array(q).reshape((n,)).tolist()]
 
     self._htm = htm
@@ -47,4 +47,4 @@ def _add_ani_frame(self, time, q=None, htm=None, enforce_joint_limits=False):
     if len(self.attached_objects) > 0:
         htm = self.fkm(q, 'eef', htm)
         for obj in self.attached_objects:
-            obj[0].add_ani_frame(time, htm @ obj[1])
+            obj[0].add_ani_frame(time, htm * obj[1])

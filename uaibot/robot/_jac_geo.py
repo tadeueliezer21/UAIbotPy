@@ -32,18 +32,18 @@ def _jac_geo(self, q, axis, htm, mode):
     # end error handling
 
     if mode == 'python' or axis == 'com' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-        return _jac_geo_python(self, q, axis, htm)
+        return _jac_geo_python(self, Utils.cvt(q), axis, htm)
     else:
-        fk_res = self.cpp_robot.fk(q, htm, True)
+        fk_res = self.cpp_robot.fk(Utils.cvt(q), htm, True)
 
         if axis=='eef':
-            return np.matrix(np.vstack((fk_res.jac_v_ee, fk_res.jac_w_ee))) , np.matrix(fk_res.htm_ee)
+            return Utils.cvt(np.vstack((fk_res.jac_v_ee, fk_res.jac_w_ee))) , Utils.cvt(fk_res.htm_ee)
         else:
             htm_dh = []
             jac_dh = []
             for i in range(n):
-                htm_dh.append(np.matrix(fk_res.htm_dh[i]))
-                jac_dh.append(np.matrix(np.vstack((fk_res.jac_v_dh[i], fk_res.jac_w_dh[i]))))
+                htm_dh.append(Utils.cvt(fk_res.htm_dh[i]))
+                jac_dh.append(Utils.cvt(np.vstack((fk_res.jac_v_dh[i], fk_res.jac_w_dh[i]))))
 
             return jac_dh, htm_dh
 
@@ -53,9 +53,9 @@ def _jac_geo_python(self, q=None, axis='eef', htm=None):
 
 
     if axis == 'dh' or axis == 'eef':
-        htm_for_jac = self.fkm(q, 'dh', htm)
+        htm_for_jac = self.fkm(q, 'dh', htm, mode='python')
     if axis == 'com':
-        htm_for_jac = self.fkm(q, 'com', htm)
+        htm_for_jac = self.fkm(q, 'com', htm, mode='python')
 
     jac = [np.matrix(np.zeros((6,n))) for i in range(n)]
 
@@ -78,7 +78,7 @@ def _jac_geo_python(self, q=None, axis='eef', htm=None):
 
             if self.links[j].joint_type == 1:
                 jac[i][0:3, j] = z_j_ant
-                jac[i][3:6, j] = np.matrix(np.zeros((3,)))
+                jac[i][3:6, j] = np.matrix(np.zeros((3,1)))
 
     if axis == 'dh' or axis == 'com':
         return jac, htm_for_jac

@@ -1,9 +1,20 @@
 from utils import *
 import numpy as np
-from graphics.meshmaterial import *
-from simobjects.box import *
-from simobjects.pointcloud import *
+
+from uaibot.graphics.meshmaterial import *
+from uaibot.simobjects.box import *
+from uaibot.simobjects.pointcloud import *
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from uaibot.simobjects.pointcloud import PointCloud
+    from uaibot.simobjects.box import Box
+    from uaibot.graphics.meshmaterial import MeshMaterial
+    
 import os
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject
+from typing import Optional, Tuple, List
+
 
 class Ball:
     """
@@ -11,7 +22,7 @@ class Ball:
 
   Parameters
   ----------
-  htm : 4x4 numpy array or 4x4 nested list
+  htm : 4x4 numpy matrix
       The object's configuration.
       (default: the same as the current HTM).
 
@@ -22,10 +33,6 @@ class Ball:
   radius : positive float
       The object's radius, in meters.
       (default: 1).    
-
-  mass : positive float
-      The object's mass, in kg.
-      (default: 1).  
 
   color : string
       The object's color, a HTML - compatible string.
@@ -44,32 +51,27 @@ class Ball:
     #######################################
 
     @property
-    def radius(self):
+    def radius(self) -> float:
         """The ball radius, in meters."""
         return self._radius
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the object."""
         return self._name
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Object pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return np.matrix(self._htm)
 
     @property
-    def mass(self):
-        """Mass of the object, in kg."""
-        return self._mass
-
-    @property
-    def color(self):
+    def color(self) -> str:
         """Color of the object"""
         return self.mesh_material.color
 
     @property
-    def mesh_material(self):
+    def mesh_material(self) -> "MeshMaterial":
         """Mesh material properties of the object."""
         return self._mesh_material
 
@@ -79,15 +81,12 @@ class Ball:
     # Constructor
     #######################################
 
-    def __init__(self, htm=np.identity(4), name="", radius=1, mass=1, color="red", opacity=1,
-                 mesh_material=None):
+    def __init__(self, htm: "HTMatrix" =np.identity(4), name: str ="", radius: float =1, color: str ="red", 
+                 opacity: float =1, mesh_material: Optional["MeshMaterial"] =None) -> "Ball":
 
         # Error handling
         if not Utils.is_a_matrix(htm, 4, 4):
             raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
-
-        if not Utils.is_a_number(mass) or mass < 0:
-            raise Exception("The parameter 'mass' should be a positive float.")
 
         if not Utils.is_a_number(radius) or radius < 0:
             raise Exception("The parameter 'radius' should be a positive float.")
@@ -113,7 +112,6 @@ class Ball:
         self._radius = radius
         self._htm = np.matrix(htm)
         self._name = name
-        self._mass = 1
         self._frames = []
         self._max_time = 0
 
@@ -134,7 +132,6 @@ class Ball:
         string = "Ball with name '" + self.name + "': \n\n"
         string += " Radius (m): " + str(self.radius) + "\n"
         string += " Color: " + str(self.color) + "\n"
-        string += " Mass (kg): " + str(self.mass) + "\n"
         string += " HTM: \n" + str(self.htm) + "\n"
 
         return string
@@ -143,7 +140,7 @@ class Ball:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, htm=None):
+    def add_ani_frame(self, time: float, htm : Optional["HTMatrix"] = None) -> None:
         """
     Add a single configuration to the object's animation queue.
 
@@ -151,7 +148,7 @@ class Ball:
     ----------
     time: positive float
         The timestamp of the animation frame, in seconds.
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -170,9 +167,9 @@ class Ball:
             raise Exception("The parameter 'time' should be a positive float.")
         # end error handling
 
-        f = [time, np.around(htm[0,0],4), np.around(htm[0,1],4), np.around(htm[0,2],4), np.around(htm[0,3],4),
-             np.around(htm[1,0],4), np.around(htm[1,1],4), np.around(htm[1,2],4), np.around(htm[1,3],4),
-             np.around(htm[2,0],4), np.around(htm[2,1],4), np.around(htm[2,2],4), np.around(htm[2,3],4),
+        f = [time, np.around(htm[0,0],4).item(), np.around(htm[0,1],4).item(), np.around(htm[0,2],4).item(), np.around(htm[0,3],4).item(),
+             np.around(htm[1,0],4).item(), np.around(htm[1,1],4).item(), np.around(htm[1,2],4).item(), np.around(htm[1,3],4).item(),
+             np.around(htm[2,0],4).item(), np.around(htm[2,1],4).item(), np.around(htm[2,2],4).item(), np.around(htm[2,3],4).item(),
              0, 0, 0, 1]
 
         self._htm = htm
@@ -180,14 +177,14 @@ class Ball:
         self._max_time = max(self._max_time, time)
 
     # Set config. Restart animation queue
-    def set_ani_frame(self, htm=None):
+    def set_ani_frame(self, htm: Optional["HTMatrix"] = None) -> None:
         """
     Reset object's animation queue and add a single configuration to the 
     object's animation queue.
 
     Parameters
     ----------
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -222,11 +219,11 @@ class Ball:
 
         return string
 
-    def copy(self):
+    def copy(self) -> "Ball":
         """Return a deep copy of the object, without copying the animation frames."""
-        return Ball(self.htm, self.name + "_copy", self.radius, self.mass, self.color)
+        return Ball(self.htm, self.name + "_copy", self.radius, self.color)
 
-    def aabb(self, mode='auto'):
+    def aabb(self, mode: str ='auto') -> "Box":
         """
     Compute an AABB (axis-aligned bounding box), considering the current orientation of the object.
 
@@ -239,7 +236,7 @@ class Ball:
             
     Returns
     -------
-     aab: the AABB as a uaibot.Box object
+     aabb: the AABB as a uaibot.Box object
     """
     
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
@@ -257,7 +254,7 @@ class Ball:
             
         
 
-    def to_point_cloud(self, disc=0.025, mode = 'auto'):
+    def to_point_cloud(self, disc: float =0.025, mode: str = 'auto') -> "PointCloud":
         """
     Transform the object into a PointCloud object using the discretization 'delta'.
 
@@ -305,18 +302,80 @@ class Ball:
             return PointCloud(points = obj_cpp.to_pointcloud(disc).points_gp, color = self.color, size = disc)
       
     # Compute distance to an object
-    def compute_dist(self, obj,  p_init=None, tol=0.001, no_iter_max=20, h=0, eps = 0, mode='auto'):
+    def compute_dist(self, obj: MetricObject,  p_init: Optional[Vector] = None, 
+                     tol: float =0.001, no_iter_max: int =20, h: float =0, 
+                     eps: float = 0, mode: str ='auto') -> Tuple[Vector, Vector, float, List]:
+        """
+    Compute Euclidean distance or differentiable distance between two objects.
+    
+    If h>0 or eps > 0, it computes the Euclidean distance and it uses GJK's algorithm.
+    
+    Else, it computes the differentiable distance through Generalized Alternating Projection (GAP).
+    See the paper 'A Differentiable Distance Metric for Robotics Through Generalized Alternating Projection'.
+    This only works in c++ mode, though.
+    
+    
+    Parameters
+    ----------
+    obj : an object of type 'MetricObject' (see Utils.IS_METRIC)
+        The other object for which we want to compute the distance.
+        
+    p_init : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array) or None
+        Initial point for closest point in this object. If 'None', is set to random.
+        (default: None).
+    
+    tol : positive float
+        Convergence criterion of GAP: it stops when ||a[k+1]-a[k]|| < tol.
+        Only valid when h > 0 or eps > 0.
+        (default: 0.001m).   
+
+    no_iter_max : positive int 
+        Maximum number of iterations of GAP.
+        Only valid when h > 0 or eps > 0.
+        (default: 20 iterations). 
+
+    h : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    eps : nonnegative float
+        h parameter in the generalized distance function.
+        If h=0 and eps=0, it is simply the Euclidean distance.
+        (default: 0). 
+
+    mode : string
+    'c++' for the c++ implementation, 'python' for the python implementation
+    and 'auto' for automatic ('c++' is available, else 'python').
+    (default: 'auto').
+                                                    
+    Returns
+    -------
+    point_this : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in this object.
+
+    point_other : 3 x 1 numpy matrix
+        Closest point (Euclidean or differentiable) in the other object.
+
+    distance : float
+        Euclidean or differentiable distance.
+        
+    hist_error: list of floats
+        History of convergence error.    
+                
+    """
+            
         return Utils.compute_dist(self, obj, p_init, tol, no_iter_max, h, eps, mode)
         
         
-    def projection(self, point, h=0, eps = 0, mode='auto'):
+    def projection(self, point: Vector, h: float =0, eps: float = 0, mode: str ='auto') -> Tuple[np.matrix, float]:
         """
     The projection of a point in the object, that is, the
     closest point in the object to a point 'point'.
 
     Parameters
     ----------
-    point : 3D vector
+    point : a 3D vector (3-element list/tuple, (3,1)/(1,3)/(3,)-shaped numpy matrix/numpy array)
         The point for which the projection will be computed.
 
     h : positive float
@@ -333,7 +392,7 @@ class Ball:
         (default: 'auto')        
     Returns
     -------
-     proj_point : 3D vector
+     proj_point : 3 x 1 numpy matrix
         The projection of the point 'point' in the object.
 
      d : positive float
@@ -360,18 +419,20 @@ class Ball:
             raise Exception("c++ mode is set, but .so file was not loaded!")
 
         # end error handling
+        
+        point_cvt = Utils.cvt(point)
 
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-            dd = np.linalg.norm(point - self._htm[0:3, 3])
+            dd = np.linalg.norm(point_cvt - self._htm[0:3, 3])
             d = max(dd-self.radius,0)
 
             if d == 0:
-                return np.matrix(point).reshape((3,1)), d
+                return point_cvt, d
             else:
-                cp = self._htm[0:3, 3] + self.radius * (np.matrix(point).reshape((3,1)) - self._htm[0:3, 3]) / dd
+                cp = self._htm[0:3, 3] + self.radius * (point_cvt - self._htm[0:3, 3]) / dd
                 return cp, d
         else:
-            pr = obj_cpp.projection(np.matrix(point).reshape((3,1)), h, eps)
-            return np.matrix(pr.proj).transpose(), pr.dist
+            pr = obj_cpp.projection(point_cvt, h, eps)
+            return Utils.cvt(pr.proj), pr.dist
 
 

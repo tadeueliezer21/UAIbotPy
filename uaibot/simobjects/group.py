@@ -1,6 +1,7 @@
 import numpy as np
 from utils import *
-
+from uaibot.utils.types import HTMatrix, Matrix, Vector, MetricObject, GroupableObject
+from typing import Optional, Tuple, List
 
 class Group:
     """
@@ -15,7 +16,7 @@ class Group:
 
    Parameters
    ----------
-   htm : 4x4 numpy array or 4x4 nested list
+   htm : 4x4 numpy matrix
        The object's configuration.
        (default: the same as the current HTM).
 
@@ -33,22 +34,22 @@ class Group:
     #######################################
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the object."""
         return self._name
 
     @property
-    def list_of_objects(self):
+    def list_of_objects(self) -> List["GroupableObject"]:
         """The list of objects contained in the group."""
         return self._list_of_objects
 
     @property
-    def htm(self):
+    def htm(self) -> "HTMatrix":
         """Group pose. A 4x4 homogeneous transformation matrix written is scenario coordinates."""
         return self._htm
 
     @property
-    def htm_base_object(self):
+    def htm_base_object(self) -> List["HTMatrix"]:
         """The pose of each object, written in scenario coordinates, when the group was created."""
         return self._htm_base_object
 
@@ -56,7 +57,8 @@ class Group:
     # Constructor
     #######################################
 
-    def __init__(self, list_of_objects, name="", htm=np.identity(4)):
+    def __init__(self, list_of_objects: List["GroupableObject"], name: str="", 
+                 htm: "HTMatrix" =np.identity(4)) -> "Group":
 
         # Error handling
 
@@ -120,7 +122,7 @@ class Group:
     # Methods
     #######################################
 
-    def add_ani_frame(self, time, htm=None):
+    def add_ani_frame(self, time: float, htm: Optional["HTMatrix"] = None) -> None:
         """
     Add a single configuration to the object's animation queue.
 
@@ -128,7 +130,7 @@ class Group:
     ----------
     time: positive float
         The timestamp of the animation frame, in seconds.
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 
@@ -141,14 +143,14 @@ class Group:
             self.list_of_objects[i].add_ani_frame(time=time, htm=htm @ self.htm_base_object[i])
             self._max_time = max(self._max_time, self.list_of_objects[i]._max_time)
 
-    def set_ani_frame(self, htm=None):
+    def set_ani_frame(self, htm: Optional["HTMatrix"] = None) -> None:
         """
     Reset object's animation queue and add a single configuration to the
     object's animation queue.
 
     Parameters
     ----------
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy matrix
         The object's configuration
         (default: the same as the current HTM).
 

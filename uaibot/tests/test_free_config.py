@@ -4,6 +4,7 @@ import time
 import sys
 import matplotlib.pyplot as plt
 import matplotlib
+import os
 
 print("Testing free configuration")
 
@@ -32,7 +33,7 @@ for i in range(Nobj):
     
     while cont:
         obj = generate_rand_object(color='red', size=0.2, spread=0.4)
-        isfree, message, info = robot.check_free_configuration(q=robot.q, obstacles=[obj])
+        isfree, message, info = robot.check_free_config(q=robot.q, obstacles=[obj])
         cont = not isfree
     
     all_obj.append(obj)
@@ -57,7 +58,7 @@ for i in range(Ntry):
     robot.update_col_object(i)
     
     start = time.time() 
-    isfree, message, info = robot.check_free_configuration(q=qnew, obstacles=all_obj)
+    isfree, message, info = robot.check_free_config(q=qnew, obstacles=all_obj)
     end =  time.time() 
     elapsed = end - start
     sum_time+=elapsed
@@ -87,5 +88,5 @@ print("Max time took to check free configuration: "+str(round(1000*max_time,2))+
 print("Test was a success!")   
 
 
-        
-sim.save("/home/vinicius/Desktop/uaibot_paper/uaibot_files_paper/testing","test_free_config")
+current_folder = os.path.dirname(os.path.abspath(__file__))        
+sim.save(current_folder,"test_free_config")

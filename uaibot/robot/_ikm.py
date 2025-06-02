@@ -1,24 +1,28 @@
 from utils import *
 import numpy as np
 import os
+from ._check_free_config import *
 
-def _ikm(self, htm_target, htm = None, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False, mode='auto'):
+
+
+def _ikm(self, htm_tg, htm = None, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False, 
+         no_tries = 40, check_joint = True, check_auto = True, obstacles = [], mode='auto'):
+    
     n = len(self._links)
-    if q0 is None:
-        q0 = np.matrix(np.reshape((2 * np.pi) * np.random.rand(n) - np.pi, (n, 1)))
-        
     if htm is None:
         htm = self.htm
 
+
+        
     # Error handling
-    if not Utils.is_a_matrix(htm_target, 4, 4):
-        raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
+    if not Utils.is_a_matrix(htm_tg, 4, 4):
+        raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix or 'None'.")
 
     if not Utils.is_a_natural_number(no_iter_max):
         raise Exception("The parameter 'no_iter_max' should be a nonnegative integer number.")
 
-    if not Utils.is_a_vector(q0, n):
-        raise Exception("The parameter 'q0' should be a " + str(n) + " dimensional vector.")
+    if not (q0 is None) and (not Utils.is_a_vector(q0, n)):
+        raise Exception("The parameter 'q0' should be a " + str(n) + " dimensional vector or 'None'.")
 
     if (not Utils.is_a_number(p_tol)) or p_tol <= 0:
         raise Exception("The parameter 'p_tol' should be a nonnegative number.")
@@ -26,32 +30,74 @@ def _ikm(self, htm_target, htm = None, q0=None, p_tol=0.005, a_tol=5, no_iter_ma
     if (not Utils.is_a_number(a_tol)) or a_tol <= 0:
         raise Exception("The parameter 'a_tol' should be a nonnegative number.")
 
+    if not str(type(check_joint)) == "<class 'bool'>":
+        raise Exception("The parameter 'check_joint' should be a boolean.")
+
+    if not str(type(check_joint)) == "<class 'bool'>":
+        raise Exception("The parameter 'check_auto' should be a boolean.")
+        
     if not str(type(ignore_orientation)) == "<class 'bool'>":
         raise Exception("The parameter 'ignore_orientation' should be a boolean.")
 
+    if not Utils.is_a_natural_number(no_tries):
+        raise Exception("The parameter 'no_tries' should be a nonnegative integer number.")
+
+    for obs in obstacles:
+        if not Utils.is_a_metric_object(obs):
+            raise Exception("The parameter 'list' should be a list of metric objects : " + str(Utils.IS_METRIC) + ".")
+            
     if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
         raise Exception("c++ mode is set, but .so file was not loaded!")
         # end error handling
+    
+    for k in range(no_tries):
+        
+        if q0 is None:
+            q0_mod = np.matrix(self.q)
+            for i in range(n):
+                q0_mod[i,0] = self.joint_limit[i,0]+np.random.rand()*(self.joint_limit[i,1]-self.joint_limit[i,0])
+        else:
+            q0_mod = np.matrix(q0)
+            for i in range(n):
+                q0_mod[i,0] += k*0.1*np.random.randn()
+                q0_mod[i,0] = min(q0_mod[i,0], self.joint_limit[i,1])
+                q0_mod[i,0] = max(q0_mod[i,0], self.joint_limit[i,0])
+                
+        q, success = _ikm_aux(self, htm_tg, htm, q0_mod, p_tol, a_tol, no_iter_max, ignore_orientation, mode)            
+        
+        if success: 
+            ok, _, _ = self.check_free_config(Utils.cvt(q), htm, obstacles,
+                                check_joint, check_auto, mode = mode)
+            if ok:
+                return Utils.cvt(q) 
+ 
+    
+    #Failed to find a solution
+    raise Exception("Solution for IK not found. You can try the following: \n" \
+                    " Increasing the maximum number of iterations, 'no_iter_max' (currently " + str(
+        no_iter_max) + ")\n Increasing the maximum number of tries 'no_tries' (currently " + str(
+        no_tries) + ")\n" \
+                    " Increasing the tolerance for the position, 'p_tol' (currently " + str(p_tol) + " meters)\n" \
+                                                                                                        " Increasing the tolerance for the orientation, 'a_tol' (currently " + str(
+        a_tol) + " degrees).")
+        
+
+
+
+def _ikm_aux(self, htm_tg, htm = None, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False, mode='auto'):
 
     if mode == 'python' or  (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
-        return _ikm_python(self, htm_target, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation)
+        return _ikm_python(self, htm_tg, htm, Utils.cvt(q0), p_tol, a_tol, no_iter_max, ignore_orientation)
     else:
-        ik_res = self.cpp_robot.ik(htm_target, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation)
+        out =  self.cpp_robot.ik(htm_tg, htm, Utils.cvt(q0), p_tol, a_tol, no_iter_max, ignore_orientation)
+        return out.qf, out.success
 
-        if not ik_res.success:
-            raise Exception("Solution for IK not found. You can try the following: \n" \
-                            " Increasing the maximum number of iterations, 'no_iter_max' (currently " + str(
-                no_iter_max) + ")\n" \
-                            " Increasing the tolerance for the position, 'p_tol' (currently " + str(p_tol) + " meters)\n" \
-                                                                                                                " Increasing the tolerance for the orientation, 'a_tol' (currently " + str(
-                a_tol) + " degrees).")
-        else:
-            return np.matrix(ik_res.qf).reshape((n,1))        
+
 
 
 # (Private function) Used in IK
-def _evolve_config(self, q, htm, p_tol, a_tol, htm_target, iter_remain, ignore_orientation):
-    n = len(self.links)
+def _evolve_config(self, q, htm, p_tol, a_tol, htm_tg, iter_remain, ignore_orientation):
+
     found = False
     zero_u = False
     iter_end = False
@@ -63,7 +109,7 @@ def _evolve_config(self, q, htm, p_tol, a_tol, htm_target, iter_remain, ignore_o
 
     while (not found) and (not zero_u) and (not iter_end):
 
-        r, jac_r = self.task_function(htm=htm, htm_des = htm_target, q = np.array(q), mode='python')
+        r, jac_r = self.task_function(htm=htm, htm_tg = htm_tg, q = q, mode='python')
         
         # print(r)
         # print(jac_r)
@@ -100,26 +146,18 @@ def _evolve_config(self, q, htm, p_tol, a_tol, htm_target, iter_remain, ignore_o
 
 
 # Inverse kinematics for the end-effector
-def _ikm_python(self, htm_target, htm, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False):
+def _ikm_python(self, htm_tg, htm, q0=None, p_tol=0.005, a_tol=5, no_iter_max=2000, ignore_orientation=False):
     n = len(self._links)
 
     j = 0
     found = False
-    q = np.matrix(q0).reshape((n, 1))
+    q = Utils.cvt(q0)
     no_iter_remain = no_iter_max
 
     while not found and no_iter_remain >= 0:
-        found, i, q = _evolve_config(self, q, htm, p_tol, a_tol, htm_target, no_iter_remain, ignore_orientation)
+        found, i, q = _evolve_config(self, q, htm, p_tol, a_tol, htm_tg, no_iter_remain, ignore_orientation)
         no_iter_remain -= i
         if not found:
             q = np.matrix(np.reshape((2 * np.pi) * np.random.rand(n), (n, 1)))
 
-    if not found:
-        raise Exception("Solution for IK not found. You can try the following: \n" \
-                        " Increasing the maximum number of iterations, 'no_iter_max' (currently " + str(
-            no_iter_max) + ")\n" \
-                           " Increasing the tolerance for the position, 'p_tol' (currently " + str(p_tol) + " meters)\n" \
-                                                                                                            " Increasing the tolerance for the orientation, 'a_tol' (currently " + str(
-            a_tol) + " degrees).")
-    else:
-        return q
+    return q, found

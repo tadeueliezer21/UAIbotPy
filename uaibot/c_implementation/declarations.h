@@ -12,6 +12,13 @@ using namespace Eigen;
 const float VERYBIGNUMBER = 10000000.0;
 const float VERYSMALLNUMBER = 1/VERYBIGNUMBER;
 
+// Global constants for the default delta and ds valuesAdd commentMore actions
+extern double c_delta;
+extern double c_ds;
+// Approximate value for theta=0 in SE(3) EE distance
+extern double c_maxCosTheta;
+extern double c_theta_zero;
+
 struct DistResult
 {
     float D;
@@ -398,7 +405,7 @@ vector<VectorXf> quadratic_interp_vec(vector<VectorXf> x, int N);
 
 PrimDistResult dist_line(vector<Vector3f> a0, vector<Vector3f> a1, vector<Vector3f> b0, vector<Vector3f> b1);
 
-VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alpha, float const_velocity);
+VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alpha, float const_velocity, bool is_closed, float gamma);
 
 VectorXf dp_inv_solve(const MatrixXf& A, const VectorXf& b, float eps);
 
@@ -409,3 +416,6 @@ vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b);
 VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b,const MatrixXf& Aeq,const VectorXf& beq);
 
 VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b);
+
+VectorFieldResult vectorfield_SE3(const Eigen::Matrix4d& state, const vector<Eigen::Matrix4d>& curve, float kt1, float kt2, float kt3, float kn1, float kn2,
+    const vector<Eigen::MatrixXd>& curve_derivative=std::vector<Eigen::MatrixXd>(), double delta=c_delta, double ds=c_ds);

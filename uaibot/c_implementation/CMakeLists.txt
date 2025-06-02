@@ -2,9 +2,14 @@ cmake_minimum_required(VERSION 3.5)
 project(UAIBOT_CPP_BINDS)
 
 
+# Add python 3.11
+find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter Development.Module)
+# include_directories(${Python3_INCLUDE_DIR})
+# link_directories(${Python3_LIBRARY_DIR})
+
 # Add pybind11 
 execute_process(
-    COMMAND "python3" -c "import pybind11; print(pybind11.get_include())"
+    COMMAND "${Python3_EXECUTABLE}" -c "import pybind11; print(pybind11.get_include())"
     OUTPUT_VARIABLE PYBIND11_INCLUDE_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -22,10 +27,6 @@ set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 set(EIGEN3_INCLUDE_DIR ${THIRD_PARTY_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# Add python 3.11
-find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter Development)
-include_directories(${Python3_INCLUDE_DIRS})
-link_directories(${Python3_LIBRARY_DIRS})
 
 # Set C++ standard and optimization flags
 set(CMAKE_CXX_STANDARD 14)
@@ -49,13 +50,22 @@ target_include_directories(nanoflann INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 pybind11_add_module(uaibot_cpp_bind ${SOURCES})
 
 # EXPLICITLY LINK PYTHON 3.11 LIBRARY
-target_include_directories(uaibot_cpp_bind PRIVATE ${EIGEN3_INCLUDE_DIR} ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
-target_link_libraries(uaibot_cpp_bind PRIVATE nanoflann ${Python3_LIBRARIES})
+# target_include_directories(uaibot_cpp_bind PRIVATE ${EIGEN3_INCLUDE_DIR} ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIR})
+target_include_directories(uaibot_cpp_bind PRIVATE ${EIGEN3_INCLUDE_DIR})
+target_link_libraries(uaibot_cpp_bind PRIVATE
+    nanoflann
+    ${Python3_LIBRARY_DIR}
+)
+
+message(STATUS "Python includes: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python library: ${Python3_LIBRARIES}")
+message(STATUS "Python executable: ${Python3_EXECUTABLE}")
 
 # SET RUNTIME SEARCH PATH (Ensures the `.so` file finds dependencies)
 set_target_properties(uaibot_cpp_bind PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_target_properties(uaibot_cpp_bind PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
-set_target_properties(uaibot_cpp_bind PROPERTIES INSTALL_RPATH ${Python3_LIBRARY_DIRS})
+# set_target_properties(uaibot_cpp_bind PROPERTIES INSTALL_RPATH ${Python3_LIBRARY_DIR})
+set_target_properties(uaibot_cpp_bind PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 # Ensure `.so` is output to the correct directory
 # set_target_properties(uaibot_cpp_bind PROPERTIES
@@ -63,7 +73,7 @@ set_target_properties(uaibot_cpp_bind PROPERTIES INSTALL_RPATH ${Python3_LIBRARY
 # )
 
 execute_process(
-    COMMAND python3 -c "import sysconfig; print(sysconfig.get_path('platlib'))"
+    COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('platlib'))"
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )

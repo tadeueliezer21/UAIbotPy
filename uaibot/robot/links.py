@@ -32,20 +32,6 @@ class Link:
   list_model_3d : A list of 'uaibot.Model3D' objects
       The 3d models that compose the links.
 
-  mass : positive float
-      The link mass, in kg.
-      (default: 1 kg).
-
-  com_coordinates : 3d list or 3d numpy array
-      The coordinates of the center of mass of the object, written in its Denavit-Hartenberg frame and
-      in meters.
-      (default: [0,0,0]).
-
-  inertia_matrix : 3x3 numpy array or matrix.
-      The link's inertia matrix, in kg m². Its is calculated with respect to the attached Denavit-Hartenberg frame, and thus
-      is a constant along the motion.
-      (default: np.identity(3)).
-
   """
 
     #######################################
@@ -83,23 +69,6 @@ class Link:
         return self._joint_type
 
     @property
-    def mass(self):
-        """The link's mass, in kg."""
-        return self._mass
-
-    @property
-    def com_coordinates(self):
-        """The coordinates, written in the link's Denavit-Hartenberg frame and in meters, of the center-of-mass
-        point of the link."""
-        return self._com_coordinates
-
-    @property
-    def inertia_matrix(self):
-        """The link's inertia matrix, in kg m². Its is calculated with respect to the attached Denavit-Hartenberg frame, and thus
-        is a constant along the motion."""
-        return self._inertia_matrix
-
-    @property
     def col_objects(self):
         """Collection of objects that compose the collision model of the link."""
         return self._col_objects
@@ -118,8 +87,7 @@ class Link:
     # Constructor
     #######################################
 
-    def __init__(self, joint_number, theta, d, alpha, a, joint_type, list_model_3d,
-                 mass=1, com_coordinates=[0, 0, 0], inertia_matrix=np.identity(3), show_frame=False):
+    def __init__(self, joint_number, theta, d, alpha, a, joint_type, list_model_3d, show_frame=False):
 
         # Error handling
         if str(type(joint_number)) != "<class 'int'>" or joint_number < 0:
@@ -148,15 +116,6 @@ class Link:
                     raise Exception(
                         "The parameter 'list_model_3d' should be a list of 'uaibot.Model3D' objects.")
 
-        if not Utils.is_a_number(mass) or mass < 0:
-            raise Exception("The parameter 'mass' should be a positive float.")
-
-        if not Utils.is_a_pd_matrix(np.matrix(inertia_matrix), 3):
-            raise Exception("The parameter 'inertia_matrix' should be a symmetric positive definite 3x3 matrix.")
-
-        if not Utils.is_a_vector(com_coordinates, 3):
-            raise Exception("The parameter 'com_coordinates' should be a 3d vector.")
-
         if not str(type(show_frame)) == "<class 'bool'>":
             raise Exception("The parameter 'show_frame' should be a boolean.")
 
@@ -169,10 +128,7 @@ class Link:
         self._joint_type = joint_type
         self._col_objects = []
         self._list_model_3d = list_model_3d
-        self._com_coordinates = np.matrix(np.array(com_coordinates).reshape((3,1)))
         self._show_frame = show_frame
-        self._mass = mass
-        self._inertia_matrix = np.matrix(inertia_matrix)
 
     #######################################
     # Std. Print
@@ -193,8 +149,6 @@ class Link:
 
         string += " α (rad) : " + str(self._alpha) + " \n"
         string += " a (m)   : " + str(self._a) + " \n"
-        string += " Link mass (kg): " + str(self._mass) + "\n"
-        string += " Link inertia matrix (kg*m²): \n " + str(self._inertia_matrix) + "\n"
 
         return string
 
@@ -212,7 +166,7 @@ class Link:
     obj: object
         Object to be added.
 
-    htm : 4x4 numpy array or 4x4 nested list
+    htm : 4x4 numpy array
         The transformation between the link's HTM and the object's HTM
 
     """
