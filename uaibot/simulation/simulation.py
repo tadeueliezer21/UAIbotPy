@@ -481,7 +481,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.5) -> "Simulation":
+    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
         """
     Create an environment of a grid.
 
@@ -757,10 +757,11 @@ class Simulation:
         
         #Check ld_urls
         img_types = ['png', 'bmp', 'jpg', 'jpeg']
-        for url in self.ldr_urls:
-            error = Utils.is_url_available(Utils.url_modified(url,self.local_host_port), img_types)
-            if not (error == "ok!"):
-                raise Exception("The parameter 'url' " + error)
+        if not (self.ldr_urls is None):
+            for url in self.ldr_urls:
+                error = Utils.is_url_available(Utils.url_modified(url,self.local_host_port), img_types)
+                if not (error == "ok!"):
+                    raise Exception("The parameter 'url' " + error)
 
         #Initialize string injection
         _STRJAVASCRIPT = "<html>\n"
