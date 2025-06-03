@@ -395,8 +395,7 @@ class Robot:
         return _fkm(self, q, axis, htm, mode)
 
 
-    def ikm(self, htm_target: Optional[HTMatrix]=None, htm_tg: Optional[HTMatrix]=None, 
-            htm: Optional[HTMatrix]=None, q0: Optional[Vector]=None, p_tol: float=0.001, 
+    def ikm(self, htm_tg: HTMatrix, htm: Optional[HTMatrix]=None, q0: Optional[Vector]=None, p_tol: float=0.001, 
             a_tol: float =5, no_iter_max: int =200, ignore_orientation: bool = False, 
             no_tries = 40, check_joint: bool = True, check_auto: bool = True, 
             obstacles: List[MetricObject]=[], mode: str ='auto') -> Vector:
@@ -412,10 +411,7 @@ class Robot:
     Parameters
     ----------
     htm_tg : 4x4 numpy matrix
-        The target end-effector HTM, written in scenario coordinates.
-    htm_target : 4x4 numpy matrix
-        The target end-effector HTM, written in scenario coordinates.
-        This is deprecated for compability, use 'htm_tg' instead. You can leave this as 'None'.        
+        The target end-effector HTM, written in scenario coordinates.       
     htm : 4x4 numpy matrix
         The pose of the basis of the manipulator.
         (default: 'None' (the current base htm))
@@ -456,19 +452,6 @@ class Robot:
     q : n x 1 numpy matrix
         The configuration that solves the IK problem.
     """
-    
-    
-        # Backward compatibility shim
-        if htm_tg is None and htm_target is not None:
-            htm_tg = htm_target
-            import warnings
-            warnings.warn(
-                "'htm_target' is deprecated, use 'htm_tg' instead.",
-                DeprecationWarning
-            )
-        elif htm_tg is None:
-            raise ValueError("Missing required argument: 'htm_tg'")    
-        
     
         return _ikm(self, htm_tg, htm, q0, p_tol, a_tol, no_iter_max, ignore_orientation, 
                     no_tries, check_joint, check_auto, obstacles, mode)
@@ -664,8 +647,7 @@ class Robot:
 
         return _vector_field_rn(q, curve, alpha, const_vel, is_closed, gamma, mode)
  
-    def task_function(self, htm_target: Optional[HTMatrix]=None, 
-                      htm_tg: Optional[HTMatrix]=None, q: Optional[None]=None, 
+    def task_function(self, htm_tg: HTMatrix, q: Optional[None]=None, 
                       htm: Optional[Vector] = None, mode: str = 'auto') -> Tuple[np.matrix,np.matrix]:
         """
     Computes the 6-dimensional task function for end-effector pose control,  
@@ -683,11 +665,7 @@ class Robot:
     ----------
     htm_tg : 4x4 numpy array 
         The target end-effector pose. 
-
-    htm_target : 4x4 numpy matrix
-        The target end-effector HTM, written in scenario coordinates.
-        This is deprecated for compability, use 'htm_tg' instead. You can leave this as 'None'.  
-         
+     
     q : a nD vector (n-element list/tuple, (n,1)/(1,n)/(n,)-shaped numpy matrix/numpy array)
         The manipulator's joint configuration.
         (default: the current  joint configuration (robot.q) for the manipulator).
@@ -709,18 +687,6 @@ class Robot:
     jac_r : 6 x n numpy matrix
         The respective task Jacobian.
     """
-    
-        # Backward compatibility shim
-        if htm_tg is None and htm_target is not None:
-            htm_tg = htm_target
-            import warnings
-            warnings.warn(
-                "'htm_target' is deprecated, use 'htm_tg' instead.",
-                DeprecationWarning
-            )
-        elif htm_tg is None:
-            raise ValueError("Missing required argument: 'htm_tg'")      
-    
     
         return _task_function(self, htm_tg, q, htm, mode)
 
@@ -1565,7 +1531,7 @@ class Robot:
         # Backward compatibility shim
         import warnings
         warnings.warn(
-            "'check_free_configuration' is deprecated, use 'check_free_config' instead.",
+            "'check_free_configuration' is deprecated and will be removed soon, use 'check_free_config' instead.",
             DeprecationWarning
         )
               

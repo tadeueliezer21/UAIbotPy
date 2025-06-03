@@ -84,7 +84,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
                          opacity=opacity)
     
     base_3d_obj = [Model3D(
-        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_base_link.glb',
+        'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_base_link.glb',
         scale,
         htm1 ,
         GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)]
@@ -93,7 +93,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_1.glb',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_link_1.glb',
             scale,
             htm2,
             GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
@@ -103,7 +103,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_2.glb',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_link_2.glb',
             scale,
             htm3,
             GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
@@ -112,7 +112,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_3.glb',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_link_3.glb',
             scale,
             htm4,
             GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
@@ -121,7 +121,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_4.glb',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_link_4.glb',
             scale,
             htm5,
             GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
@@ -130,7 +130,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_5.glb',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_link_5.glb',
             scale,
             htm6 ,
             GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
@@ -138,7 +138,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
     )
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_6.glb',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_link_6.glb',
             scale,
             htm7,
             GLBMeshMaterial(opacity=opacity) if color == '' else default_material_0)
@@ -146,7 +146,7 @@ def _create_kuka_lbr_iiwa(htm, name, color, opacity):
     )
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/KukaLBRIIWA/iiwa_link_7.glb',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KukaLBRIIWA/iiwa_link_7.glb',
             scale,
             htm8,
             GLBMeshMaterial(opacity=opacity) if color == '' else default_material_1)

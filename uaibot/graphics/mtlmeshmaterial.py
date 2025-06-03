@@ -51,9 +51,7 @@ class MTLMeshMaterial:
             raise Exception(
                 "The parameter 'opacity' should be a float between 0 (fully transparent) and 1 (fully opaque).")
 
-        error = Utils.is_url_available(url, ['mtl'])
-        if not (error == "ok!"):
-            raise Exception("The parameter 'url' " + error)
+
         
         self._url = url
         self._opacity = opacity
@@ -62,7 +60,7 @@ class MTLMeshMaterial:
     #######################################
     # Std. Print
     #######################################
-
+   
     def __repr__(self):
 
         string = "MTL Mesh Material"
@@ -72,9 +70,15 @@ class MTLMeshMaterial:
     #######################################
     # Methods
     #######################################
+    
 
     def gen_code(self, name):
 
+        error = Utils.is_url_available(self.url, ['mtl'])
+        if not (error == "ok!"):
+            raise Exception("The parameter 'url' " + error)
+        
+        
         string = "const material_"+ name + " = {"
         
         string+= "type: 'mtl',"

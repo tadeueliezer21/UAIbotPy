@@ -157,7 +157,7 @@ def _create_kinova_gen3(
 
     base_3d_obj = [
         Model3D(
-            "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_base.obj",
+            "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_base.obj",
             scale,
             htm_base,
             mesh1,
@@ -169,7 +169,7 @@ def _create_kinova_gen3(
     link_3d_obj.append(
         [
             Model3D(
-                "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_shoulder.obj",
+                "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_shoulder.obj",
                 scale,
                 htm1,
                 mesh1,
@@ -180,7 +180,7 @@ def _create_kinova_gen3(
     link_3d_obj.append(
         [
             Model3D(
-                "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_halfarm1.obj",
+                "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_halfarm1.obj",
                 scale,
                 htm2,
                 mesh1,
@@ -191,7 +191,7 @@ def _create_kinova_gen3(
     link_3d_obj.append(
         [
             Model3D(
-                "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_halfarm2.obj",
+                "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_halfarm2.obj",
                 scale,
                 htm3,
                 mesh1,
@@ -202,7 +202,7 @@ def _create_kinova_gen3(
     link_3d_obj.append(
         [
             Model3D(
-                "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_forearm.obj",
+                "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_forearm.obj",
                 scale,
                 htm4,
                 mesh1,
@@ -213,7 +213,7 @@ def _create_kinova_gen3(
     link_3d_obj.append(
         [
             Model3D(
-                "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_wrist1.obj",
+                "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_wrist1.obj",
                 scale,
                 htm5,
                 mesh1,
@@ -224,7 +224,7 @@ def _create_kinova_gen3(
     link_3d_obj.append(
         [
             Model3D(
-                "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_wrist2.obj",
+                "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_wrist2.obj",
                 scale,
                 htm6,
                 mesh1,
@@ -235,7 +235,7 @@ def _create_kinova_gen3(
     link_3d_obj.append(
         [
             Model3D(
-                "https://raw.githubusercontent.com/fbartelt/robotics-experiments/refs/heads/main/models/kinova_kortex/Kinova7dof_eefNcamera.obj",
+                "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaGen3/Kinova7dof_eefNcamera.obj",
                 scale,
                 htm7,
                 mesh1,

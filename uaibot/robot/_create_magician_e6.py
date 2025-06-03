@@ -69,7 +69,7 @@ def _create_magician_e6(htm, name, color, opacity):
     
 
     base_3d_obj = [Model3D(
-        'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MagicianE6/base_link.stl',
+        'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/base_link.stl',
         scale,
         np.identity(4),
         MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
@@ -79,7 +79,7 @@ def _create_magician_e6(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MagicianE6/Link1.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link1.stl',
             scale,
             htm1,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -89,7 +89,7 @@ def _create_magician_e6(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MagicianE6/Link2.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link2.stl',
             scale,
             htm2,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -99,7 +99,7 @@ def _create_magician_e6(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MagicianE6/Link3.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link3.stl',
             scale,
             htm3,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -109,7 +109,7 @@ def _create_magician_e6(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MagicianE6/Link4.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link4.stl',
             scale,
             htm4,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -119,7 +119,7 @@ def _create_magician_e6(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MagicianE6/Link5.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link5.stl',
             scale,
             htm5,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#C0C0C0",
@@ -128,7 +128,7 @@ def _create_magician_e6(htm, name, color, opacity):
     )
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MagicianE6/Link6.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link6.stl',
             scale,
             htm6,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="black",

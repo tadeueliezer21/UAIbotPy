@@ -12,7 +12,7 @@ import os
 
 
 # Get the point cloud data
-url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/PointCloud/data_wall_with_hole.npy"
+url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/PointCloud/data_wall_with_hole.npy"
 wallpoints = np.load(BytesIO(requests.get(url).content))
 pc = ub.PointCloud(points = wallpoints, size=0.02, color='cyan')
 

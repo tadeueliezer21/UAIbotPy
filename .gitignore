@@ -187,5 +187,6 @@ uaibot/tests/test_free_config.html
 uaibot/tests/test_o2o.html
 uaibot/tests/test_o2o_smooth.html
 uaibot/tests/control.html
+ignore_folder/
 *.html
 .vscode/

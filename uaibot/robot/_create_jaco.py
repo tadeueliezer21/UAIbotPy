@@ -98,9 +98,9 @@ def _create_jaco(htm=np.identity(4), name='', color=None, opacity=1, eef_frame_v
 
     link0_mth = Utils.inv_htm(Q00)
     base_3d_obj = [
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/base.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/base.obj',
                 scale=scale, htm=link0_mth, mesh_material=mesh),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/base_ring.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/base_ring.obj',
                 scale=scale, htm=link0_mth, mesh_material=mesh_ring)]
     
     link_3d_obj = []
@@ -108,75 +108,75 @@ def _create_jaco(htm=np.identity(4), name='', color=None, opacity=1, eef_frame_v
     # Shoulder
     link1_mth = Utils.inv_htm(Q01)
     link_3d_obj.append([
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/shoulder.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/shoulder.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/shoulder_ring.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/shoulder_ring.obj',
                 scale=scale, htm=link1_mth, mesh_material=mesh_ring),
     ])
 
     # Upper arm + elbow
     link2_mth = Utils.inv_htm(Q02)
     link_3d_obj.append([
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/upperarm.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/upperarm.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/upperarm_ring.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/upperarm_ring.obj',
                 scale=scale, htm=link2_mth, mesh_material=mesh_ring),
     ])
 
     # Forearm
     link3_mth = Utils.inv_htm(Q03)
     link_3d_obj.append([
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/forearm.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/forearm.obj',
                 scale=scale, htm=link3_mth, mesh_material=mesh),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/forearm_ring.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/forearm_ring.obj',
                 scale=scale, htm=link3_mth, mesh_material=mesh_ring),
     ])
 
     link4_mth = Utils.inv_htm(Q04)
     link_3d_obj.append([
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/wrist1.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/wrist1.obj',
                 scale=scale, htm=link4_mth, mesh_material=mesh),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/wrist1_ring.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/wrist1_ring.obj',
                 scale=scale, htm=link4_mth, mesh_material=mesh_ring),
     ])
 
     link5_mth = Utils.inv_htm(Q05)
     link_3d_obj.append([
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/wrist2.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/wrist2.obj',
                 scale=scale, htm=link5_mth, mesh_material=mesh),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/wrist2_ring.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/wrist2_ring.obj',
                 scale=scale, htm=link5_mth, mesh_material=mesh_ring),
     ])
 
     link6_mth = Utils.inv_htm(Q06)
     link_3d_obj.append([
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/gripper.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/gripper.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/handpalm.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/handpalm.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger1_mounting.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger1_mounting.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger1_proximal.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger1_proximal.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger1_distal.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger1_distal.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger1_nail.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger1_nail.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_nail),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger2_mounting.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger2_mounting.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger2_proximal.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger2_proximal.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger2_distal.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger2_distal.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/finger2_nail.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/finger2_nail.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_nail),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/thumb_mounting.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/thumb_mounting.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/thumb_proximal.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/thumb_proximal.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/thumb_distal.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/thumb_distal.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_ring),
-        Model3D(url='https://raw.githubusercontent.com/fbartelt/robotics-experiments/main/models/jaco/thumb_nail.obj',
+        Model3D(url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/KinovaJaco/thumb_nail.obj',
                 scale=scale, htm=link6_mth, mesh_material=mesh_nail),
     ])
 

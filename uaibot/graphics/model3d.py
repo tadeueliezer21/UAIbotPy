@@ -64,11 +64,6 @@ class Model3D:
         
         ALLOWED_MESHES_TYPES = ["uaibot.MeshMaterial","uaibot.MTLMeshMaterial","uaibot.GLBMeshMaterial"] 
 
-
-        error = Utils.is_url_available(url, ['obj','stl','dae','glb'])
-        if not (error == "ok!"):
-            raise Exception("The parameter 'url' " + error)
-
         if not Utils.is_a_matrix(htm, 4, 4):
             raise Exception("The parameter 'htm' should be a 4x4 homogeneous transformation matrix.")
 
@@ -104,6 +99,7 @@ class Model3D:
     # Std. Print
     #######################################
 
+
     def __repr__(self):
 
         string = "3D object model with url: '" + self.url + "': \n\n"
@@ -114,9 +110,15 @@ class Model3D:
     # Methods
     #######################################
 
+   
     def gen_code(self, name):
         """Generate code for injection."""
 
+        error = Utils.is_url_available(self.url, ['obj','stl','dae','glb'])
+        if not (error == "ok!"):
+            raise Exception("The parameter 'url' " + error)    
+        
+        
         string = self.mesh_material.gen_code(name)
         string += "const htm_" + name + " = new Matrix4(); \n"
         string += "htm_" + name + ".set(" \

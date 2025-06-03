@@ -138,7 +138,7 @@ class Texture:
                  min_filter: str ="LinearMipmapLinearFilter", offset: List[float] =[0, 0], 
                  repeat: List[float]=[1, 1], rotation: float =0, center: List[float] =[0, 0])->"Texture":
 
-        image_types = ["png", "bmp", "jpg", "jpeg"]
+        
         mapping_list = ['UVMapping', 'CubeReflectionMapping', 'CubeRefractionMapping',
                         'EquirectangularReflectionMapping', 'EquirectangularRefractionMapping',
                         'CubeUVReflectionMapping', 'CubeUVRefractionMapping']
@@ -147,9 +147,7 @@ class Texture:
         min_filter_list = ['NearestFilter', 'NearestMipmapNearestFilter', 'NearestMipmapLinearFilter', 'LinearFilter',
                            'LinearMipmapNearestFilter', 'LinearMipmapLinearFilter']
 
-        error = Utils.is_url_available(url, image_types)
-        if not (error == "ok!"):
-            raise Exception("The parameter 'url' " + error)
+
 
         if not (str(type(mapping)) == "<class 'str'>" and (mapping in mapping_list)):
             raise Exception(
@@ -210,6 +208,11 @@ class Texture:
 
     def gen_code(self, name):
 
+        image_types = ["png", "bmp", "jpg", "jpeg"]
+        error = Utils.is_url_available(self.url, image_types)
+        if not (error == "ok!"):
+            raise Exception("The parameter 'url' " + error)
+        
         string = "const texture_" + name + " = new TextureLoader().load('" + self.url + "');\n"
         string += "texture_" + name + ".wrapS = " + str(self.wrap_s) + ";\n"
         string += "texture_" + name + ".wrapT = " + str(self.wrap_t) + ";\n"
@@ -221,3 +224,4 @@ class Texture:
         string += "texture_" + name + ".center.set(" + str(self.center[0]) + "," + str(self.center[1]) + ");\n\n"
 
         return string
+

@@ -74,6 +74,15 @@ class Simulation:
       The final one is the camera zoom.
       If None, uses a default configuration for the camera.
       (default: None).
+      
+  pixel_ratio: float between 0 and 1,
+      A parameter that sets the resolution. Can be reduced from 1 to reduce the rendering load.
+      (default: 0.9).
+    
+  anti_aliasing: boolean
+      If anti_aliasing is used in rendering or not.
+      (default: True).
+          
   """
 
     _CAMERATYPE = ['perspective', 'orthographic']
@@ -90,7 +99,7 @@ class Simulation:
     _STRJAVASCRIPT += "<div id='canvas_container_##SIMID##' style='width:##WIDTH##px;height:##HEIGHT##px;position:relative'>\n"
     _STRJAVASCRIPT += "<div id='loading_screen_##SIMID##' style='width:##WIDTH##px;height:##HEIGHT##px;position:relative; " \
                       "background-color: ##LOADSCREENCOLOR##;text-align:center;align-items:center;display:flex;justify-content:center'> \n "
-    _STRJAVASCRIPT += "<img src='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/SVG/logo_uai_bot.svg' style='width:200px;height:114px'/>\n "
+    _STRJAVASCRIPT += "<img src='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/SVG/logo_uai_bot.svg' style='width:200px;height:114px'/>\n "
     _STRJAVASCRIPT += "</div>\n"
     _STRJAVASCRIPT += "<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js'></script>\n"
     _STRJAVASCRIPT += "<canvas id='scene_##SIMID##' width='##WIDTH##px' height='##HEIGHT##px'></canvas>\n"
@@ -193,7 +202,7 @@ class Simulation:
                  show_world_frame: bool = True, show_grid: bool = True, 
                  load_screen_color: str ="#19bd39", background_color: str ="#F5F6FA",
                  camera_start_pose: Optional[List[float]] = None,
-                 pixel_ratio : float = 1.0, anti_aliasing: bool = True) -> "Simulation":
+                 pixel_ratio : float = 0.9, anti_aliasing: bool = True) -> "Simulation":
 
         if not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0:
             raise Exception("The parameter 'ambient_light_intensity' should be a nonnegative float.")
@@ -319,7 +328,7 @@ class Simulation:
     """
 
         texture_ground = Texture(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/factory_ground.png',
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/factory_ground.png',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
 
         mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
@@ -332,7 +341,7 @@ class Simulation:
         light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
         light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
-        ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/factory_"
+        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/factory_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "nz.png",
                     ldr_url + "nz.png"]
 
@@ -364,7 +373,7 @@ class Simulation:
     """
 
         texture_ground = Texture(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/grass.png',
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grass.png',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[100, 100])
 
         mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
@@ -377,7 +386,7 @@ class Simulation:
         light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
         light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
-        ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/green_"
+        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/green_"
         ldr_list = [ldr_url + "px.jpg", ldr_url + "nx.jpg", ldr_url + "py.jpg", ldr_url + "ny.jpg", ldr_url + "pz.jpg",
                     ldr_url + "nz.jpg"]
 
@@ -410,12 +419,12 @@ class Simulation:
     """
 
         texture_ground = Texture(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/factory_ground.png',
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/factory_ground.png',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
 
 
         # texture_ground = Texture(
-        #     url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/grass.png',
+        #     url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grass.png',
         #     wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[20, 20])
 
         mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
@@ -428,7 +437,7 @@ class Simulation:
         light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
         light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
-        ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/hill_"
+        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/hill_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
@@ -461,7 +470,7 @@ class Simulation:
     """
 
         texture_ground = Texture(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/ground_orchard.jpg',
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/ground_orchard.jpg',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[5, 5])
 
         mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
@@ -474,7 +483,7 @@ class Simulation:
         light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
         light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
 
-        ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/orchard_road_"
+        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/orchard_road_"
         ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
                     ldr_url + "nz.png"]
 
@@ -489,7 +498,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
+    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 4.5) -> "Simulation":
         """
     Create an environment of a grid.
 
@@ -507,7 +516,7 @@ class Simulation:
 
         
         texture_ground = Texture(
-            url='https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/Textures/grid_dark.png',
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grid_dark.png',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
         
         mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
@@ -536,7 +545,7 @@ class Simulation:
         light5 = PointLight(name="light5", color="white", intensity=light_intensity, htm=Utils.trn([ 0,0,5]))
 
         
-        ldr_url = "https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/LDR/"
+        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/"
         # ldr_list = [ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png",
         #             ldr_url + "grid_ldr_dark.png"]
         # ldr_list = [ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png",
@@ -759,7 +768,7 @@ class Simulation:
         
     def gen_code(self):
         """Generate code for injection."""
-
+        
         string = Simulation._STRJAVASCRIPT
         
         aa_value = 'true' if self.anti_aliasing else 'false'

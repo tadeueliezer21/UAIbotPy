@@ -660,10 +660,10 @@ class Utils:
             return np.load(local_path, allow_pickle=True)
 
 
-        allproblems_1 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_1.npz")
-        allproblems_2 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_2.npz")
-        allproblems_3 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_3.npz")
-        allproblems_4 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/viniciusmgn/uaibot_content@master/contents/MotionPlanningProblems/fishbotics_mp_problems_part_4.npz")
+        allproblems_1 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/MotionPlanningProblems/fishbotics_mp_problems_part_1.npz")
+        allproblems_2 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/MotionPlanningProblems/fishbotics_mp_problems_part_2.npz")
+        allproblems_3 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/MotionPlanningProblems/fishbotics_mp_problems_part_3.npz")
+        allproblems_4 = load_npz_from_url_cached("https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/MotionPlanningProblems/fishbotics_mp_problems_part_4.npz")
           
                         
         allproblems_1 = allproblems_1['arr_0'].item()
