@@ -206,14 +206,14 @@ class Texture:
     # Methods
     #######################################
 
-    def gen_code(self, name):
+    def gen_code(self, name, port):
 
         image_types = ["png", "bmp", "jpg", "jpeg"]
-        error = Utils.is_url_available(self.url, image_types)
+        error = Utils.is_url_available(Utils.url_modified(self.url,port), image_types)
         if not (error == "ok!"):
             raise Exception("The parameter 'url' " + error)
         
-        string = "const texture_" + name + " = new TextureLoader().load('" + self.url + "');\n"
+        string = "const texture_" + name + " = new TextureLoader().load('" + Utils.url_modified(self.url,port) + "');\n"
         string += "texture_" + name + ".wrapS = " + str(self.wrap_s) + ";\n"
         string += "texture_" + name + ".wrapT = " + str(self.wrap_t) + ";\n"
         string += "texture_" + name + ".magFilter = " + str(self.mag_filter) + ";\n"

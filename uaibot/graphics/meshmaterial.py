@@ -797,64 +797,64 @@ class MeshMaterial:
                             flat_shading=True, normal_scale=[1, 1], 
                             texture_map=texture)
                                                  
-    def gen_code(self, name):
+    def gen_code(self, name, port):
 
         string = ""
 
         # Create textures
         if not (self.map == ""):
-            string += self.map.gen_code("map_" + name)
+            string += self.map.gen_code("map_" + name, port = port)
 
         if not (self.alpha_map == ""):
-            string += self.alpha_map.gen_code("alpha_map_" + name)
+            string += self.alpha_map.gen_code("alpha_map_" + name, port = port)
 
         if not (self.ao_map == ""):
-            string += self.ao_map.gen_code("ao_map_" + name)
+            string += self.ao_map.gen_code("ao_map_" + name, port = port)
 
         if not (self.bump_map == ""):
-            string += self.bump_map.gen_code("bump_map_" + name)
+            string += self.bump_map.gen_code("bump_map_" + name, port = port)
 
         if not (self.emissive_map == ""):
-            string += self.emissive_map.gen_code("emissive_map_" + name)
+            string += self.emissive_map.gen_code("emissive_map_" + name, port = port)
 
         if not (self.env_map == ""):
-            string += self.env_map.gen_code("env_map_" + name)
+            string += self.env_map.gen_code("env_map_" + name, port = port)
 
         if not (self.light_map == ""):
-            string += self.light_map.gen_code("light_map_" + name)
+            string += self.light_map.gen_code("light_map_" + name, port = port)
 
         if not (self.metalness_map == ""):
-            string += self.metalness_map.gen_code("metalness_map_" + name)
+            string += self.metalness_map.gen_code("metalness_map_" + name, port = port)
 
         if not (self.normal_map == ""):
-            string += self.normal_map.gen_code("normal_map_" + name)
+            string += self.normal_map.gen_code("normal_map_" + name, port = port)
 
         if not (self.roughness_map == ""):
-            string += self.roughness_map.gen_code("roughness_map_" + name)
+            string += self.roughness_map.gen_code("roughness_map_" + name, port = port)
 
         if not (self.clearcoat_map == ""):
-            string += self.clearcoat_map.gen_code("clearcoat_map_" + name)
+            string += self.clearcoat_map.gen_code("clearcoat_map_" + name, port = port)
 
         if not (self.clearcoat_normal_map == ""):
-            string += self.clearcoat_normal_map.gen_code("clearcoat_normal_map_" + name)
+            string += self.clearcoat_normal_map.gen_code("clearcoat_normal_map_" + name, port = port)
 
         if not (self.clearcoat_roughness_map == ""):
-            string += self.clearcoat_roughness_map.gen_code("clearcoat_roughness_map_" + name)
+            string += self.clearcoat_roughness_map.gen_code("clearcoat_roughness_map_" + name, port = port)
 
         if not (self.sheen_roughness_map == ""):
-            string += self.sheen_roughness_map.gen_code("sheen_roughness_map_" + name)
+            string += self.sheen_roughness_map.gen_code("sheen_roughness_map_" + name, port = port)
 
         if not (self.sheen_color_map == ""):
-            string += self.sheen_color_map.gen_code("sheen_color_map_" + name)
+            string += self.sheen_color_map.gen_code("sheen_color_map_" + name, port = port)
 
         if not (self.specular_intensity_map == ""):
-            string += self.specular_intensity_map.gen_code("specular_intensity_map_" + name)
+            string += self.specular_intensity_map.gen_code("specular_intensity_map_" + name, port = port)
 
         if not (self.specular_color_map == ""):
-            string += self.specular_color_map.gen_code("specular_color_map_" + name)
+            string += self.specular_color_map.gen_code("specular_color_map_" + name, port = port)
 
         if not (self.transmission_map == ""):
-            string += self.transmission_map.gen_code("transmission_map_" + name)
+            string += self.transmission_map.gen_code("transmission_map_" + name, port = port)
 
         # Create mesh
         string += "const material_" + name + " = new MeshPhysicalMaterial({\n"

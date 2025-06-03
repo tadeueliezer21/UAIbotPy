@@ -138,7 +138,7 @@ class Arrow:
             raise Exception("The parameter 'time' should be a positive float.")
         # end error handling
 
-        length_vector = np.linalg.norm(np.matrix(vector))
+        length_vector = np.linalg.norm(np.matrix(vector)).item()
 
         #if length_vector < 0.0001:
         #    raise Exception("'origin' and 'vector' are too close to each other.")
@@ -157,7 +157,7 @@ class Arrow:
         self.add_ani_frame(0, start_point, end_point)
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
 
         length_vector = np.linalg.norm(np.matrix(self.vector))

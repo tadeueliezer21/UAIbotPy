@@ -218,7 +218,7 @@ class PointCloud:
         self.add_ani_frame(0, initial_ind, final_ind)
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
 
         string = "\n"

@@ -164,7 +164,7 @@ class Group:
 
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
 
         self._max_time = 0
@@ -174,7 +174,7 @@ class Group:
         string = "\n"
         string += "//BEGIN DECLARATION OF THE GROUP '" + self.name + "'\n\n"
         for obj in self.list_of_objects:
-            string += obj.gen_code() + "\n"
+            string += obj.gen_code(port=port) + "\n"
 
         string = string.replace("//USER INPUT GOES HERE", "")
         string += "\n//USER INPUT GOES HERE"

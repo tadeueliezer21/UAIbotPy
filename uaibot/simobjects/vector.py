@@ -143,7 +143,7 @@ class Vector:
         self.add_ani_frame(0, start_point, end_point)
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
 
         length_vector = np.linalg.norm(np.matrix(self.vector))

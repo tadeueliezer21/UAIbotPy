@@ -358,12 +358,12 @@ class ConvexPolytope:
         self.add_ani_frame(0, htm)
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
 
         string = "\n"
         string += "//BEGIN DECLARATION OF THE CONVEX POLYTOPE '" + self.name + "'\n\n"
-        string += self.mesh_material.gen_code(self._name) + "\n"
+        string += self.mesh_material.gen_code(self._name, port=port) + "\n"
         string += "const var_" + self._name + " = new ConvexPolytope(" + str(self._vertexes) + "," + str(
             self._faces) + "," + str(self._frames) + ", material_" + self._name + ");\n"
         string += "sceneElements.push(var_" + self._name + ");\n"

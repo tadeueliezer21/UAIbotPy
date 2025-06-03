@@ -72,9 +72,10 @@ class MTLMeshMaterial:
     #######################################
     
 
-    def gen_code(self, name):
+    def gen_code(self, name, port):
 
-        error = Utils.is_url_available(self.url, ['mtl'])
+
+        error = Utils.is_url_available(Utils.url_modified(self.url,port), ['mtl'])
         if not (error == "ok!"):
             raise Exception("The parameter 'url' " + error)
         
@@ -83,7 +84,7 @@ class MTLMeshMaterial:
         
         string+= "type: 'mtl',"
         string+= "opacity: "+str(self.opacity)+","
-        string+= "url: '"+self.url+"'};\n\n"
+        string+= "url: '"+Utils.url_modified(self.url,port)+"'};\n\n"
         
 
 

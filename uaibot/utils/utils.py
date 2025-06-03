@@ -10,11 +10,11 @@ import quadprog
 from .types import *
 from typing import Callable
 import urllib.request
-import io
 import hashlib
 import os
 if os.environ['CPP_SO_FOUND']=="1":
     import uaibot_cpp_bind as ub_cpp
+
     
 
 class Utils:
@@ -38,6 +38,7 @@ class Utils:
     IS_OBJ_SIM = ['uaibot.Ball', 'uaibot.Box', 'uaibot.Cylinder', 'uaibot.ConvexPolytope', 'uaibot.Robot',
                   'uaibot.PointLight', 'uaibot.Frame', 'uaibot.PointCloud', 'uaibot.Arrow',
                   'uaibot.RigidObject', 'uaibot.Group', 'uaibot.HTMLDiv']
+    
 
     #######################################
     # Basic functions
@@ -1019,6 +1020,16 @@ class Utils:
       """
         return Utils.get_uaibot_type(obj) in Utils.IS_OBJ_SIM
 
+
+    @staticmethod
+    def url_modified(url, port):
+        if port == '':
+            return url
+        else:  
+            base = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master"
+            relative_path = url[len(base):].lstrip('/')
+            return f"http://localhost:{port}/{relative_path}"            
+        
     @staticmethod
     def is_url_available(url, types):
         """

@@ -180,7 +180,7 @@ class Link:
 
         self._col_objects.append([obj, htm])
 
-    def gen_code(self, name):
+    def gen_code(self, name, port):
         """Generate code for injection."""
 
         name_link = "link_" + str(self.joint_number) + "_" + name
@@ -188,7 +188,7 @@ class Link:
         string = "const object3d_" + name_link + "_list = [];\n\n"
 
         for i in range(len(self._list_model_3d)):
-            string += self.list_model_3d[i].gen_code(name_link + "_obj_" + str(i))
+            string += self.list_model_3d[i].gen_code(name_link + "_obj_" + str(i), port=port)
             string += "object3d_" + name_link + "_list.push(object3d_" + name_link + "_obj_" + str(i) + ");\n"
 
         string += "\n"

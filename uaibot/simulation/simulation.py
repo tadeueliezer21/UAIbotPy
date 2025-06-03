@@ -19,6 +19,8 @@ from uaibot.utils.types import HTMatrix, Matrix, Vector, SimObject
 from typing import Optional, Tuple, List
 import os
 import inspect
+import webbrowser
+import random
 
 class Simulation:
     """
@@ -82,40 +84,19 @@ class Simulation:
   anti_aliasing: boolean
       If anti_aliasing is used in rendering or not.
       (default: True).
+      
+  local_host_port: string
+      If you want the data (3D models, textures, etc...) of your animation to 
+      come from a localhost, specify the port here as a string (e.g. '8000').
+      If empty (''), it comes from an online server.
+      (default: '')
           
   """
 
     _CAMERATYPE = ['perspective', 'orthographic']
     # Import the javascript code as a string
 
-    _STRJAVASCRIPT = "<html>\n"
 
-    _STRJAVASCRIPT += "<style>\n"
-    _STRJAVASCRIPT += ".controller:hover{opacity:1 !important;}\n"
-    _STRJAVASCRIPT += "</style>\n"
-
-    _STRJAVASCRIPT += "<body>\n"
-
-    _STRJAVASCRIPT += "<div id='canvas_container_##SIMID##' style='width:##WIDTH##px;height:##HEIGHT##px;position:relative'>\n"
-    _STRJAVASCRIPT += "<div id='loading_screen_##SIMID##' style='width:##WIDTH##px;height:##HEIGHT##px;position:relative; " \
-                      "background-color: ##LOADSCREENCOLOR##;text-align:center;align-items:center;display:flex;justify-content:center'> \n "
-    _STRJAVASCRIPT += "<img src='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/SVG/logo_uai_bot.svg' style='width:200px;height:114px'/>\n "
-    _STRJAVASCRIPT += "</div>\n"
-    _STRJAVASCRIPT += "<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js'></script>\n"
-    _STRJAVASCRIPT += "<canvas id='scene_##SIMID##' width='##WIDTH##px' height='##HEIGHT##px'></canvas>\n"
-    _STRJAVASCRIPT += "<!-- USER DIVS GO HERE -->"
-    _STRJAVASCRIPT += "<div class = 'controller' style='width:##WIDTH##px;height:30px;'></div>\n"
-    _STRJAVASCRIPT += "</div>\n"
-    _STRJAVASCRIPT += "\n <script type=\"module\">\n"
-
-    p = Path(__file__).with_name('threejs_sim.js')
-
-    for line in open(p.absolute()).readlines():
-        _STRJAVASCRIPT += line
-
-    _STRJAVASCRIPT += "\n </script>"
-    _STRJAVASCRIPT += "\n </body>"
-    _STRJAVASCRIPT += "\n </html>"
 
     #######################################
     # Attributes
@@ -192,6 +173,11 @@ class Simulation:
         """If the animation uses anti aliasing. Make this number smaller to ahve a performance boost"""
         return self._anti_aliasing
     
+    @property
+    def local_host_port(self) -> str:
+        """Port of your local host serving the models."""
+        return self._local_host_port
+    
     #######################################
     # Constructor
     #######################################
@@ -202,7 +188,8 @@ class Simulation:
                  show_world_frame: bool = True, show_grid: bool = True, 
                  load_screen_color: str ="#19bd39", background_color: str ="#F5F6FA",
                  camera_start_pose: Optional[List[float]] = None,
-                 pixel_ratio : float = 0.9, anti_aliasing: bool = True) -> "Simulation":
+                 pixel_ratio : float = 0.9, anti_aliasing: bool = True,
+                 local_host_port: str = '') -> "Simulation":
 
         if not Utils.is_a_number(ambient_light_intensity) or ambient_light_intensity < 0:
             raise Exception("The parameter 'ambient_light_intensity' should be a nonnegative float.")
@@ -230,14 +217,10 @@ class Simulation:
         if not Utils.is_a_color(background_color):
             raise Exception("The parameter 'background_color' must be a HTML-compatible color.")
 
-        if not (ldr_urls is None):
-            if not (str(type(ldr_urls)) == "<class 'list'>") or not (len(ldr_urls) == 6):
-                raise Exception("The parameter 'ldr_urls' should be a list of six urls or 'None'.")
-            else:
-                for url in ldr_urls:
-                    error = Utils.is_url_available(url, ['png', 'bmp', 'jpg', 'jpeg'])
-                    if not (error == "ok!"):
-                        raise Exception("The parameter 'url' #F5F6FA" + error)
+
+        if not isinstance(local_host_port, str):
+            raise Exception("The parameter 'local_host_port' must be a string.")
+        
 
         if camera_start_pose is None:
             if camera_type=="perspective":
@@ -278,7 +261,7 @@ class Simulation:
         self._camera_start_pose = np.array(camera_start_pose).tolist()
         self._pixel_ratio = pixel_ratio
         self._anti_aliasing = anti_aliasing
-   
+        self._local_host_port = local_host_port   
              
         #Add reference frame
         if self._show_world_frame:
@@ -498,7 +481,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 4.5) -> "Simulation":
+    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.5) -> "Simulation":
         """
     Create an environment of a grid.
 
@@ -606,7 +589,8 @@ class Simulation:
                  height: Optional[int] = None, show_world_frame: Optional[bool] = None, 
                  show_grid: Optional[bool] = None, load_screen_color: Optional[str] = None, 
                  background_color: Optional[str] = None, camera_start_pose: Optional[List[float]] = None,
-                 pixel_ratio : Optional[float] = None, anti_aliasing: Optional[bool] = None) -> None:
+                 pixel_ratio : Optional[float] = None, anti_aliasing: Optional[bool] = None, 
+                 local_host_port: Optional[str] = None) -> None:
         """
       Change the simulation parameters.
 
@@ -702,12 +686,6 @@ class Simulation:
         if not (ldr_urls is None):
             if not (str(type(ldr_urls)) == "<class 'list'>") or not (len(ldr_urls) == 6):
                 raise Exception("The parameter 'ldr_urls' should be a list of six urls or 'None'.")
-            else:
-                for url in ldr_urls:
-                    error = Utils.is_url_available(url, ['png', 'bmp', 'jpg', 'jpeg'])
-                    if not (error == "ok!"):
-                        raise Exception("The parameter 'url' " + error)
-
 
         if (not camera_start_pose is None) and (not Utils.is_a_vector(camera_start_pose,7)):
             raise Exception("The parameter 'camera_start_pose' should be either None or a 7 element vector.")
@@ -717,6 +695,11 @@ class Simulation:
 
         if (not anti_aliasing is None) and (not str(type(anti_aliasing)) == "<class 'bool'>"):
             raise Exception("The parameter 'anti_aliasing' must be a boolean.")
+        
+        if (not local_host_port is None) and (not isinstance(local_host_port, str)):
+            raise Exception("The parameter 'local_host_port' must be a string.")
+        
+        
         
         if not ambient_light_intensity is None:
             self._ambient_light_intensity = ambient_light_intensity
@@ -763,14 +746,105 @@ class Simulation:
             
         if not anti_aliasing is None:     
             self._anti_aliasing = anti_aliasing
+            
+        if not local_host_port is None: 
+            self._local_host_port = local_host_port
 
 
         
     def gen_code(self):
         """Generate code for injection."""
         
-        string = Simulation._STRJAVASCRIPT
+        #Check ld_urls
+        img_types = ['png', 'bmp', 'jpg', 'jpeg']
+        for url in self.ldr_urls:
+            error = Utils.is_url_available(Utils.url_modified(url,self.local_host_port), img_types)
+            if not (error == "ok!"):
+                raise Exception("The parameter 'url' " + error)
+
+        #Initialize string injection
+        _STRJAVASCRIPT = "<html>\n"
+
+        _STRJAVASCRIPT += "<style>\n"
+        _STRJAVASCRIPT += ".controller:hover{opacity:1 !important;}\n"
+        _STRJAVASCRIPT += "</style>\n"
+
+        _STRJAVASCRIPT += "<body>\n"
+
+        _STRJAVASCRIPT += "<div id='canvas_container_##SIMID##' style='width:##WIDTH##px;height:##HEIGHT##px;position:relative'>\n"
+        _STRJAVASCRIPT += "<div id='loading_screen_##SIMID##' style='width:##WIDTH##px;height:##HEIGHT##px;position:relative; " \
+                        "background-color: ##LOADSCREENCOLOR##;text-align:center;align-items:center;display:flex;justify-content:center'> \n "
         
+        
+        _STRJAVASCRIPT += "<img src='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/SVG/logo_uai_bot.svg' style='width:200px;height:114px'/>\n "
+        
+        
+        _STRJAVASCRIPT += "</div>\n"
+        _STRJAVASCRIPT += "<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js'></script>\n"
+        _STRJAVASCRIPT += "<canvas id='scene_##SIMID##' width='##WIDTH##px' height='##HEIGHT##px'></canvas>\n"
+        _STRJAVASCRIPT += "<!-- USER DIVS GO HERE -->"
+        _STRJAVASCRIPT += "<div class = 'controller' style='width:##WIDTH##px;height:30px;'></div>\n"
+        _STRJAVASCRIPT += "</div>\n"
+        _STRJAVASCRIPT += "\n <script type=\"module\">\n"
+
+        p = Path(__file__).with_name('threejs_sim.js')
+
+        for line in open(p.absolute()).readlines():
+            _STRJAVASCRIPT += line
+
+        _STRJAVASCRIPT += "\n </script>"
+        _STRJAVASCRIPT += "\n </body>"
+        _STRJAVASCRIPT += "\n </html>"
+            
+        string = _STRJAVASCRIPT
+        
+        #Make modifications if local host
+        if not (self.local_host_port == ''):
+            string = re.sub('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/SVG/logo_uai_bot.svg',
+                            'http://localhost:'+self.local_host_port+'/SVG/logo_uai_bot.svg', 
+                            string)
+                    
+            string = re.sub('https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/tex-mml-chtml.js', 
+                            string)
+            
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/build/three.module.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/build/three.module.js', 
+                            string)
+            
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/examples/jsm/controls/OrbitControls.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/controls/OrbitControls.js', 
+                            string)
+
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/OBJLoader.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/loaders/OBJLoader.js', 
+                            string)
+            
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/STLLoader.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/loaders/STLLoader.js', 
+                            string)
+            
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/MTLLoader.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/loaders/MTLLoader.js', 
+                            string)
+            
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/GLTFLoader.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/loaders/GLTFLoader.js', 
+                            string)
+
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/examples/jsm/loaders/ColladaLoader.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/loaders/ColladaLoader.js', 
+                            string)
+            
+            string = re.sub('https://cdn.skypack.dev/three@0.135.0/examples/jsm/geometries/ParametricGeometry.js',
+                            'http://localhost:'+self.local_host_port+'/Scripts/threejs/geometries/ParametricGeometry.js', 
+                            string)
+            
+            string = re.sub('https://cdn.skypack.dev/dat.gui',
+                            'http://localhost:'+self.local_host_port+'/Scripts/dat.gui.module.js', 
+                            string)
+            
+                                                                                                                                
         aa_value = 'true' if self.anti_aliasing else 'false'
         string = string.replace(
             'antialias: true',
@@ -795,7 +869,9 @@ class Simulation:
 
         max_time = 0
         for obj in self.list_of_objects:
-            string = re.sub("//USER INPUT GOES HERE", obj.gen_code(), string)
+            
+            code = obj.gen_code(port = self.local_host_port)
+            string = re.sub("//USER INPUT GOES HERE", code, string)
             max_time = max(max_time, obj._max_time)
 
         sim_id = str(time.time()).replace(".","")
@@ -823,7 +899,8 @@ class Simulation:
                         string)
         string = re.sub("//SIMULATION PARAMETERS GO HERE",
                         "const ldrUrls = " + (
-                            str(self.ldr_urls) if not (self.ldr_urls is None) else "[]") + ";\n //SIMULATION PARAMETERS GO HERE",
+                            str([Utils.url_modified(url,self.local_host_port) for url in self.ldr_urls]) if not 
+                            (self.ldr_urls is None) else "[]") + ";\n //SIMULATION PARAMETERS GO HERE",
                         string)
         string = re.sub("//SIMULATION PARAMETERS GO HERE",
                         "const cameraStartPose = "+str(self.camera_start_pose)+";\n //SIMULATION PARAMETERS GO HERE",
@@ -840,7 +917,27 @@ class Simulation:
     def run(self) -> None:
         """Run simulation."""
 
-        display(HTML(self.gen_code()))
+        if Utils.get_environment()=='Local':
+            
+            if self.local_host_port=='':
+                rand_suffix = random.randint(10**10, 10**12)
+                file_name = f"sim_{rand_suffix}"
+
+                frame = inspect.stack()[1] 
+                caller_filepath = frame.filename
+                current_folder = os.path.dirname(os.path.abspath(caller_filepath))
+                self.save(current_folder, file_name)
+
+                abs_path = Path(current_folder+"/"+file_name+".html").resolve()
+                file_url = abs_path.as_uri()
+                webbrowser.open(file_url, new=1)
+            else:
+                print("'run' functionality does not work in localhost. Please \
+                      ensure that the html file is saved inside your localhost folder \
+                      and open it in your browser through the localhost address. ")
+
+        else:
+            display(HTML(self.gen_code()))
 
     def save(self, address: Optional[str] = None, file_name : str = 'sim') -> None:
         """

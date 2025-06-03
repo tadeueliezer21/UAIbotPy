@@ -111,15 +111,15 @@ class Model3D:
     #######################################
 
    
-    def gen_code(self, name):
+    def gen_code(self, name, port):
         """Generate code for injection."""
-
-        error = Utils.is_url_available(self.url, ['obj','stl','dae','glb'])
+        
+        error = Utils.is_url_available(Utils.url_modified(self.url,port), ['obj','stl','dae','glb'])
         if not (error == "ok!"):
             raise Exception("The parameter 'url' " + error)    
         
         
-        string = self.mesh_material.gen_code(name)
+        string = self.mesh_material.gen_code(name, port = port)
         string += "const htm_" + name + " = new Matrix4(); \n"
         string += "htm_" + name + ".set(" \
                   + str(self.htm[0,0]) + "," + str(self.htm[0,1]) + "," + str(self.htm[0,2]) + "," + str(
@@ -132,7 +132,7 @@ class Model3D:
             self.htm[3,3]) + ");\n"
 
         string += "const object3d_" + name + "={\n"
-        string += "url: '" + self.url + "',\n"
+        string += "url: '" + Utils.url_modified(self.url,port) + "',\n"
         string += "scale: " + str(self.scale) + ",\n"
         string += "matrix: htm_" + name + ",\n"
         string += "type: '" + self._type + "',\n"

@@ -58,7 +58,7 @@ class GLBMeshMaterial:
     # Methods
     #######################################
 
-    def gen_code(self, name):
+    def gen_code(self, name, port):
 
         string = "const material_"+ name + " = {"
         

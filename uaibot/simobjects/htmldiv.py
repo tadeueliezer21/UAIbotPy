@@ -133,7 +133,7 @@ class HTMLDiv:
         self.add_ani_frame(0, html_text, style)
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
 
         string = "\n"

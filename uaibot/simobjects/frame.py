@@ -170,19 +170,8 @@ class Frame:
         self._axis_group.set_ani_frame(htm)
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
         
-        return self._axis_group.gen_code()
+        return self._axis_group.gen_code(port=port)
 
-        # string = "\n"
-        # string += "//BEGIN DECLARATION OF THE FRAME '" + self.name + "'\n\n"
-        # string += self._ball.gen_code().replace("//USER INPUT GOES HERE", "")
-        # string += "var var_axes_" + self.name + " = new AxesHelper(" + str(
-        #     self.size) + ");\n"
-        # string += "var_dummy_ball_" + self.name + ".shape.add(var_axes_" + self.name + ");\n"
-        # string += "var_axes_" + self.name + ".setColors('" + \
-        #           self.axis_color[0] + "', '" + self.axis_color[1] + "', '" + self.axis_color[2] + "');\n"
-        # string += "sceneElements.push(var_dummy_ball_" + self.name + ");\n"
-        # string += "//USER INPUT GOES HERE"
-        # return string

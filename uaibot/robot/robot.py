@@ -811,9 +811,9 @@ class Robot:
     # Methods for simulation
     #######################################
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
-        return _gen_code(self)
+        return _gen_code(self, port)
 
     def update_col_object(self, time: float, mode: str ='auto') -> None:
         """

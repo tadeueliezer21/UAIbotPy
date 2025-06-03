@@ -167,7 +167,7 @@ class RigidObject:
         self.add_ani_frame(0, htm)
         self._max_time = 0
 
-    def gen_code(self):
+    def gen_code(self, port):
         """Generate code for injection."""
 
         string = "\n"
@@ -175,7 +175,7 @@ class RigidObject:
 
         string += "var list_object3d_" + self.name + " = [];\n"
         for i in range(len(self.list_model_3d)):
-            string += self.list_model_3d[i].gen_code(self.name + "_" + str(i)) + ";\n"
+            string += self.list_model_3d[i].gen_code(self.name + "_" + str(i),port=port) + ";\n"
             string += "list_object3d_" + self.name + ".push(object3d_" + self.name + "_" + str(i) + ");\n"
 
         string += "const var_" + self.name + " = new RigidObject(" + str(
