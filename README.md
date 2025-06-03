@@ -98,8 +98,8 @@ It is supposed to be a robotic manipulator in front of a mountain. Mountains, al
 
 <h2>Collaborators</h2>
 
-[Johnata Brayan](http://setpointcapybara.com/site/) (Electrical Engineering student, UFMG)
-Felipe Bartelt (PhD student, UFMG)
+[Johnata Brayan](http://setpointcapybara.com/site/) (Electrical Engineering student, UFMG)<br>
+Felipe Bartelt (PhD student, UFMG)<br>
 
 ## Contributing
 We welcome contributions! Please read our [Contribution Guidelines](.github/CONTRIBUTING.md) before submitting changes.
