@@ -761,7 +761,7 @@ class MeshMaterial:
 
         return MeshMaterial(metalness=0.9, clearcoat=0.5, roughness=0.0, 
                             flat_shading=True, normal_scale=[1, 1], 
-                            texture_map=texture, color=color)
+                            texture_map=texture, color=color, side='DoubleSide')
 
 
     @staticmethod
@@ -773,7 +773,7 @@ class MeshMaterial:
 
         return MeshMaterial(metalness=0.9, clearcoat=0.5, roughness=0.0, 
                             flat_shading=True, normal_scale=[1, 1], 
-                            texture_map=texture)
+                            texture_map=texture, side='DoubleSide')
 
     @staticmethod
     def create_wood()-> "MeshMaterial":
@@ -784,7 +784,7 @@ class MeshMaterial:
 
         return MeshMaterial(metalness=0, roughness=1.0, 
                             flat_shading=True, normal_scale=[1, 1], 
-                            texture_map=texture)
+                            texture_map=texture, side='DoubleSide')
 
     @staticmethod
     def create_rough_metal()-> "MeshMaterial":
@@ -795,7 +795,7 @@ class MeshMaterial:
 
         return MeshMaterial(metalness=0.5, roughness=0.5, 
                             flat_shading=True, normal_scale=[1, 1], 
-                            texture_map=texture)
+                            texture_map=texture, side='DoubleSide')
                                                  
     def gen_code(self, name, port):
 
