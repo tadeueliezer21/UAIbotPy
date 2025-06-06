@@ -494,14 +494,10 @@ class Simulation:
         Simulation object.
     """
 
+
         texture_ground = Texture(
-            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/factory_ground.png',
-            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
-
-
-        # texture_ground = Texture(
-        #     url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grass.png',
-        #     wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[20, 20])
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grass.png',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[20, 20])
 
         mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=1)
 
@@ -576,7 +572,7 @@ class Simulation:
     @staticmethod
     def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
         """
-    Create an environment of a grid.
+    Create an environment of a grid (dark).
 
     Parameters
     ----------
@@ -620,14 +616,66 @@ class Simulation:
         light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 2, 2, 5.0]))
         light5 = PointLight(name="light5", color="white", intensity=light_intensity, htm=Utils.trn([ 0,0,5]))
 
+        sim = Simulation(objects, ambient_light_intensity=light_intensity, show_grid=False)
+        sim.add(ground)
+        sim.add(wall1)
+        sim.add(wall2)
+        sim.add(wall3)
+        sim.add(wall4)
+        sim.add(light1)
+        sim.add(light2)
+        sim.add(light3)
+        sim.add(light4)
+        sim.add(light5)
+
+        return sim
+
+    @staticmethod
+    def create_sim_grid_blue(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
+        """
+    Create an environment of a grid (blue).
+
+    Parameters
+    ----------
+    objects: list of objects that can be simulated (see Utils.IS_OBJ_SIM)
+        The objects to be added to the scenario.
+
+    Returns
+    -------
+    sim: 'Simulation' object
+        Simulation object.
+    """
+
+
         
-        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/"
-        # ldr_list = [ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png", ldr_url + "grid_ldr_dark.png",
-        #             ldr_url + "grid_ldr_dark.png"]
-        # ldr_list = [ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png", ldr_url + "grid_ldr.png",
-        #             ldr_url + "grid_ldr.png"]
+        texture_ground = Texture(
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grid.png',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
+        
+        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=0)
+        
+        size = 20
 
+        ground = Box(width=size, depth=size, height=0.01, htm=Utils.trn([0, 0, -0.005]),
+                     mesh_material=mesh_ground)
 
+        wall1 = Box(width=0.005, depth=size, height=size, htm=Utils.trn([size/2, 0, size/2]),
+                     mesh_material=mesh_ground)
+
+        wall2 = Box(width=0.005, depth=size, height=size, htm=Utils.trn([-size/2, 0, size/2]),
+                     mesh_material=mesh_ground)
+
+        wall3 = Box(width=size, depth=0.005, height=size, htm=Utils.trn([0, size/2, size/2]),
+                     mesh_material=mesh_ground)
+
+        wall4 = Box(width=size, depth=0.005, height=size, htm=Utils.trn([0, -size/2, size/2]),
+                     mesh_material=mesh_ground)
+                        
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-2,-2, 5.0]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-2, 2, 5.0]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 2,-2, 5.0]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 2, 2, 5.0]))
+        light5 = PointLight(name="light5", color="white", intensity=light_intensity, htm=Utils.trn([ 0,0,5]))
 
         sim = Simulation(objects, ambient_light_intensity=light_intensity, show_grid=False)
         sim.add(ground)
@@ -642,7 +690,7 @@ class Simulation:
         sim.add(light5)
 
         return sim
-            
+                
     @staticmethod
     def create_sim_lesson(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
