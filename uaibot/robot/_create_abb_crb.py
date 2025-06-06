@@ -62,27 +62,28 @@ def _create_abb_crb(htm, name, color, opacity):
                           
     # Create 3d objects
 
-    htm1 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, 1., 0.], [0., -1., 0.0008, 0.], [0., 0., 0., 1.]])
-    htm2 = np.matrix([[0.0008, 0., 1., -0.444], [-1., 0.0008, 0.0008, 0.], [-0.0008, -1., 0., 0.], [0., 0., 0., 1.]])
-    htm3 = np.matrix([[0.0008, 0., 1., -0.11], [0., 1., 0., 0.], [-1., 0., 0.0008, 0.], [0., 0., 0., 1.]])
-    htm4 = np.matrix([[0., -0.0008, -1., 0.], [1., 0.0008, 0., -0.47], [0.0008, -1., 0.0008, 0.], [0., 0., 0., 1.]])
-    htm5 = np.matrix([[0., -0.0016, 1., -0.08], [0.0008, -1., -0.0016, 0.], [1., 0.0008, 0., 0.], [0., 0., 0., 1.]])
-    htm6 = np.matrix([[0.0008, 0., -1., 0.], [0., 1., 0., 0.], [1., 0., 0.0008, 0.], [0., 0., 0., 1.]])
+    htm0 = np.matrix([[1., 0., 0., 0.], [0., 0., -1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]])
+    htm1 = np.matrix([[1., 0., 0., 0.], [0., 1., -0.0008, 0.], [0., 0.0008, 1., 0.], [0., 0., 0., 1.]])
+    htm2 = np.matrix([[0.0008, 1., 0., -0.444], [-1., 0.0008, -0.0008, 0.], [-0.0008, -0., 1., 0.], [0., 0., 0., 1.]])
+    htm3 = np.matrix([[0.0008, 1., 0., -0.11], [0., 0., -1., 0.], [-1., 0.0008, 0., 0.], [0., 0., 0., 1.]])
+    htm4 = np.matrix([[0., -1., 0.0008, 0.], [1., 0., -0.0008, -0.47], [0.0008, 0.0008, 1., 0.], [0., 0., 0., 1.]])
+    htm5 = np.matrix([[0., 1., 0.0016, -0.08], [0.0008, -0.0016, 1., 0.], [1., 0., -0.0008, 0.], [0., 0., 0., 1.]])
+    htm6 = np.matrix([[0.0008, -1., -0., 0.], [0., 0., -1., 0.], [1., 0.0008, 0., 0.], [0., 0., 0., 1.]])
 
-    
+
 
     base_3d_obj = [
         Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/base_link.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/base_link.obj',
             scale,
-            np.identity(4),
+            htm0,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#606060",
                          opacity=opacity))]
 
     link_3d_obj = []
 
     link_3d_obj.append(
-        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link_1.stl',
+        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link1.obj',
                  scale,
                  htm1,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#606060",
@@ -90,7 +91,7 @@ def _create_abb_crb(htm, name, color, opacity):
     )
 
     link_3d_obj.append(
-        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link_2.stl',
+        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link2.obj',
                  scale,
                  htm2,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#606060",
@@ -98,7 +99,7 @@ def _create_abb_crb(htm, name, color, opacity):
     )
 
     link_3d_obj.append(
-        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link_3.stl',
+        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link3.obj',
                  scale,
                  htm3,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#606060",
@@ -106,7 +107,7 @@ def _create_abb_crb(htm, name, color, opacity):
     )
 
     link_3d_obj.append(
-        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link_4.stl',
+        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link4.obj',
                  scale,
                  htm4,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -114,7 +115,7 @@ def _create_abb_crb(htm, name, color, opacity):
     )
 
     link_3d_obj.append(
-        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link_5.stl',
+        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link5.obj',
                  scale,
                  htm5,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -122,7 +123,7 @@ def _create_abb_crb(htm, name, color, opacity):
     )
 
     link_3d_obj.append(
-        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link_6.stl',
+        [Model3D('https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/ABBCRB15000/link6.obj',
                  scale,
                  htm6,
                  MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="silver",

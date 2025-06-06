@@ -48,15 +48,21 @@ def _create_staubli_tx60(htm, name, color, opacity):
                             name=name + "_C3_0", width=0.15, depth=0.27, height=0.13, color="orange", opacity=0.3))
 
     # Create 3d objects
-    htm1 = np.matrix([[1., 0., 0., 0.], [0., 0.0008, 1., -0.005], [0., -1., 0.0008, 0.], [0., 0., 0., 1.]])
-    htm2 = np.matrix([[0.0008, 0.1279, 0.9918, -0.31], [-1., 0.0001, 0.0008, 0.], [0., -0.9918, 0.1279, 0.02], [0., 0., 0., 1.]])
-    htm3 = np.matrix([[-1., 0.0016, 0., -0.], [-0.0016, -1., 0., 0.005], [0., 0., 1., 0.], [0., 0., 0., 1.]])
-    htm4 = np.matrix([[-1., -0.0016, 0., 0.], [0., 0.0008, 1., -0.31], [-0.0016, 1., -0.0008, 0.], [0., 0., 0., 1.]])
-
+    
+    htm0 = np.matrix([[1., 0., 0., 0.], [0., 0., -1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]])
+    htm1 = np.matrix([[1., 0., 0., 0.], [0., 1., -0.0008, -0.005], [0., 0.0008, 1., 0.], [0., 0., 0., 1.]])
+    htm2 = np.matrix([[0.0008, 0.9918, -0.1279, -0.31], [-1., 0.0008, -0.0001, 0.], [0., 0.1279, 0.9918, 0.02], [0., 0., 0., 1.]])
+    htm3 = np.matrix([[-1., 0., -0.0016, 0.], [-0.0016, -0., 1., 0.005], [0., 1., 0., 0.], [0., 0., 0., 1.]])
+    htm4 = np.matrix([[-1., -0., 0.0016, 0.], [0., 1., -0.0008, -0.31], [-0.0016, -0.0008, -1., 0.], [0., 0., 0., 1.]])
+    htm5 = np.matrix([[1., 0., 0., 0.], [0., 0., -1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]])
+    htm6 = np.matrix([[1., 0., 0., 0.], [0., 0., -1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]])
+    
+    
+    
     base_3d_obj = [Model3D(
-        'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/base_link.stl',
+        'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/base_link.obj',
         scale,
-        np.identity(4),
+        htm0,
         MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
                      color=color, opacity=opacity))]
 
@@ -64,7 +70,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link_1.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link1.obj',
             scale,
             htm1,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -74,7 +80,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link_2.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link2.obj',
             scale,
             htm2,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -84,7 +90,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link_3.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link3.obj',
             scale,
             htm3,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -94,7 +100,7 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link_4.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link4.obj',
             scale,
             htm4,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
@@ -104,18 +110,18 @@ def _create_staubli_tx60(htm, name, color, opacity):
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link_5.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link5.obj',
             scale,
-            np.identity(4),
+            htm5,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#C0C0C0",
                          opacity=opacity))
          ]
     )
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link_6.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/StaubliTX60/link6.obj',
             scale,
-            np.identity(4),
+            htm6,
             MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="black",
                          opacity=opacity))
          ]
