@@ -1070,7 +1070,7 @@ class Robot:
         return Robot(name, links, base_3d_obj, htm, htm_base_0, htm_n_eef, q0, eef_frame_visible, joint_limits)
 
     @staticmethod
-    def create_magician_e6(htm: HTMatrix = np.identity(4), name: str = "", color: str = "#3e3f42", 
+    def create_magician_e6(htm: HTMatrix = np.identity(4), name: str = "", color: str = "", 
                            opacity: float = 1, eef_frame_visible: bool = True) -> "Robot":
         """
     Create a DOBOT Magician E6, a six degree of freedom manipulator.
@@ -1088,7 +1088,7 @@ class Robot:
 
     htm : color
         A HTML-compatible string representing the object color.
-        (default: 'white')'.
+        (default: '')'.
 
     opacity : positive float between 0 and 1
         The opacity of the robot. 1 = fully opaque and 0 = transparent.

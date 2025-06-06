@@ -1,6 +1,7 @@
 from utils import *
 
 from graphics.meshmaterial import *
+from graphics.mtlmeshmaterial import *
 from graphics.model3d import *
 
 from simobjects.ball import *
@@ -60,79 +61,85 @@ def _create_magician_e6(htm, name, color, opacity):
     # Create 3d objects
     
 
-    htm1 = np.matrix([[-0., -1.,  0., -0.    ],[-0.,  0., -1.,  0.0402],[ 1., -0., -0.,  0.    ],[ 0.,  0.,  0.,  1.    ]])
-    htm2 = np.matrix([[-0.,  1., -0., -0.1892],[ 1.,  0., -0.,  0.    ],[-0., -0., -1.,  0.04  ],[ 0.,  0., 0.,  1.    ]])
-    htm3 = np.matrix([[-0.,  1., -0., -0.1601],[ 1.,  0., -0., -0.    ],[-0., -0., -1., -0.049 ],[ 0.,  0.,  0.,  1.    ]])
-    htm4 = np.matrix([[ 1., -0., -0., -0.    ],[-0., -0., -1.,  0.032 ],[ 0.,  1., -0., -0.0001],[ 0.,  0.,  0.,  1.    ]])
-    htm5 = np.matrix([[-0., -1., -0., -0.,    ],[-0.,  0., -1.,  0.0341],[ 1., -0., -0., -0.    ],[ 0.,  0.,  0.,  1.    ]])
-    htm6 = np.matrix([[ 1., -0., -0., -0.    ],[ 0.,  1., -0., -0.0001],[ 0.,  0.,  1., -0.018 ],[ 0.,  0.,  0.,  1.    ]])
+    htm0 = np.array([[ 1.,  0.,  0.,  0.], [ 0.,  0., -1.,  0.], [ 0.,  1.,  0.,  0.], [ 0.,  0.,  0.,  1.]])
+    htm1 = np.array([[0., -0., 1., 0.], [0., -1., -0., 0.0402], [1., 0., 0., 0.], [0., 0., 0., 1.]])
+    htm2 = np.array([[0., 0., -1., -0.1892], [1., 0., 0., 0.], [0., -1., -0., 0.04], [0., 0., 0., 1.]])
+    htm3 = np.array([[0., 0., -1., -0.1601], [1., 0., 0., 0.], [0., -1., -0., -0.049], [0., 0., 0., 1.]])
+    htm4 = np.array([[1., 0., 0., 0.], [0., -1., -0., 0.032], [0., 0., -1., -0.0001], [0., 0., 0., 1.]])
+    htm5 = np.array([[0., -0., 1., 0.], [0., -1., -0., 0.0341], [1., 0., 0., 0.], [0., 0., 0., 1.]])
+    htm6 = np.array([[1., 0., 0., 0.], [0., 0., -1., -0.0001], [0., 1., 0., -0.018], [0., 0., 0., 1.]])
     
+    default_material = MeshMaterial(metalness=0.3, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],color=color, opacity=opacity)
+
 
     base_3d_obj = [Model3D(
-        'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/base_link.stl',
+        'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/base_link.obj',
         scale,
-        np.identity(4),
-        MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5],
-                     color=color, opacity=opacity))]
+        htm0,
+        MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/base_link.mtl',
+                         opacity=opacity) if color=='' else default_material)
+                   ]
 
     link_3d_obj = []
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link1.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link1.obj',
             scale,
             htm1,
-            MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link1.mtl',
+                         opacity=opacity) if color=='' else default_material)
          ]
     )
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link2.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link2.obj',
             scale,
             htm2,
-            MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link2.mtl',
+                         opacity=opacity) if color=='' else default_material)
          ]
     )
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link3.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link3.obj',
             scale,
             htm3,
-            MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link3.mtl',
+                         opacity=opacity) if color=='' else default_material)
          ]
     )
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link4.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link4.obj',
             scale,
             htm4,
-            MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color=color,
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link4.mtl',
+                         opacity=opacity) if color=='' else default_material)
          ]
     )
 
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link5.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link5.obj',
             scale,
             htm5,
-            MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="#C0C0C0",
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link5.mtl',
+                         opacity=opacity) if color=='' else default_material)
          ]
     )
+    
+    
     link_3d_obj.append(
         [Model3D(
-            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link6.stl',
+            'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link6.obj',
             scale,
             htm6,
-            MeshMaterial(metalness=0.7, clearcoat=1, roughness=0.5, normal_scale=[0.5, 0.5], color="black",
-                         opacity=opacity))
+            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link6.mtl',
+                         opacity=opacity) if color=='' else default_material)
          ]
     )
 
