@@ -658,7 +658,7 @@ class Robot extends Objsim {
 		}
 		else if (variable instanceof Group) {
 			for (let i = 0; i < variable.children.length; i++) {
-				this.setEnvMapTemp(variable.children[i]);
+				this.setEnvMapTemp(variable.children[i], envMap);
 			}
 		}
 	}
@@ -742,20 +742,26 @@ for (let i = 0; i < sceneElements.length; i++) {
 
 //Add LDR to the scene
 if (!(ldrUrls.length == 0)) {
+
 	const pmremGenerator = new PMREMGenerator(renderer);
 	var ldrCubeMap = new CubeTextureLoader().load(ldrUrls, function () {
 
-		var ldrCubeRenderTarget = pmremGenerator.fromCubemap(ldrCubeMap);
+	    ldrCubeMap.encoding = sRGBEncoding;
+	    const ldrCubeRenderTarget = pmremGenerator.fromCubemap(ldrCubeMap);
+	    const envMap = ldrCubeRenderTarget.texture;
 
-		ldrCubeMap.encoding = sRGBEncoding;
+	    scene.environment = envMap;
 
+	    for (let i = 0; i < sceneElements.length; i++) {
+		const sceneObj = sceneElements[i];
 
-		for (let i = 0; i < sceneElements.length; i++) {
-			sceneElements[i].setEnvMap(ldrCubeRenderTarget.texture);
-		}
-		scene.background = ldrCubeMap;
+		sceneObj.setEnvMap(envMap);
+
+	    }
+
+	    scene.background = ldrCubeMap;
 	});
-	renderer.toneMappingExposure = 1.0;
+
 }
 
 

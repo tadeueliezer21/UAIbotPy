@@ -138,8 +138,7 @@ def _create_magician_e6(htm, name, color, opacity):
             'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link6.obj',
             scale,
             htm6,
-            MTLMeshMaterial(url = 'https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/RobotModels/MagicianE6/Link6.mtl',
-                         opacity=opacity) if color=='' else default_material)
+            mesh_material=MeshMaterial(color = 'silver' ,metalness = 1.0, roughness = 0.0))
          ]
     )
 
