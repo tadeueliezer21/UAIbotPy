@@ -570,7 +570,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 2.0) -> "Simulation":
+    def create_sim_grid(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
         """
     Create an environment of a grid (dark).
 
@@ -631,7 +631,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_sim_grid_blue(objects: List["SimObject"] =[], light_intensity: float = 3.0) -> "Simulation":
+    def create_sim_grid_blue(objects: List["SimObject"] =[], light_intensity: float = 2.0) -> "Simulation":
         """
     Create an environment of a grid (blue).
 
