@@ -336,7 +336,100 @@ class Simulation:
         sim.add(light4)
 
         return sim
+
+
+    @staticmethod
+    def create_sim_sky(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
+        """
+    Create an environment of a sky.
+    Outside panorama taken from:
+    'https://polyhaven.com/a/citrus_orchard_puresky'
+
+    Parameters
+    ----------
+    objects: list of objects that can be simulated (see Utils.IS_OBJ_SIM)
+        The objects to be added to the scenario.
+
+    Returns
+    -------
+    sim: 'Simulation' object
+        Simulation object.
+    """
+
+        texture_ground = Texture(
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grass.png',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[100, 100])
+
+        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=1)
+
+        ground = Box(name="ground", width=100, depth=100, height=0.01, htm=Utils.trn([0, 0, -0.005]),
+                     mesh_material=mesh_ground)
+
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
+
+        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/puresky_"
+        ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
+                    ldr_url + "nz.png"]
+
+
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
+        sim.add(ground)
+        sim.add(light1)
+        sim.add(light2)
+        sim.add(light3)
+        sim.add(light4)
+
+        return sim
     
+    @staticmethod
+    def create_sim_snow(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
+        """
+    Create an environment of a snowy region.
+    Outside panorama taken from:
+    'https://polyhaven.com/a/passendorf_snow'
+
+    Parameters
+    ----------
+    objects: list of objects that can be simulated (see Utils.IS_OBJ_SIM)
+        The objects to be added to the scenario.
+
+    Returns
+    -------
+    sim: 'Simulation' object
+        Simulation object.
+    """
+
+        texture_ground = Texture(
+            url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/snow.jpg',
+            wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[20, 20])
+
+        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=1)
+
+        ground = Box(name="ground", width=100, depth=100, height=0.01, htm=Utils.trn([0, 0, -0.005]),
+                     mesh_material=mesh_ground)
+
+        light1 = PointLight(name="light1", color="white", intensity=light_intensity, htm=Utils.trn([-1,-1, 1.5]))
+        light2 = PointLight(name="light2", color="white", intensity=light_intensity, htm=Utils.trn([-1, 1, 1.5]))
+        light3 = PointLight(name="light3", color="white", intensity=light_intensity, htm=Utils.trn([ 1,-1, 1.5]))
+        light4 = PointLight(name="light4", color="white", intensity=light_intensity, htm=Utils.trn([ 1, 1, 1.5]))
+
+        ldr_url = "https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/LDR/snow_"
+        ldr_list = [ldr_url + "px.png", ldr_url + "nx.png", ldr_url + "py.png", ldr_url + "ny.png", ldr_url + "pz.png",
+                    ldr_url + "nz.png"]
+
+
+        sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
+        sim.add(ground)
+        sim.add(light1)
+        sim.add(light2)
+        sim.add(light3)
+        sim.add(light4)
+
+        return sim
+            
     @staticmethod
     def create_sim_mountain(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
@@ -359,7 +452,7 @@ class Simulation:
             url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grass.png',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[100, 100])
 
-        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
+        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=1)
 
         ground = Box(name="ground", width=100, depth=100, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
@@ -410,7 +503,7 @@ class Simulation:
         #     url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grass.png',
         #     wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[20, 20])
 
-        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
+        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=1)
 
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
@@ -435,7 +528,7 @@ class Simulation:
         return sim
 
     @staticmethod
-    def create_orchard_road(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
+    def create_sim_orchard_road(objects: List["SimObject"] =[], light_intensity: float = 1.0) -> "Simulation":
         """
     Create an environment of an orchard road.
     Outside panorama taken from:
@@ -456,7 +549,7 @@ class Simulation:
             url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/ground_orchard.jpg',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[5, 5])
 
-        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
+        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=1)
 
         ground = Box(name="ground", width=20, depth=20, height=0.01, htm=Utils.trn([0, 0, -0.005]),
                      mesh_material=mesh_ground)
@@ -502,7 +595,7 @@ class Simulation:
             url='https://cdn.jsdelivr.net/gh/UAIbot/uaibot_data@master/Textures/grid_dark.png',
             wrap_s='RepeatWrapping', wrap_t='RepeatWrapping', repeat=[4, 4])
         
-        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=1, roughness=1)
+        mesh_ground = MeshMaterial(texture_map=texture_ground, metalness=0, roughness=1)
         
         size = 20
 
