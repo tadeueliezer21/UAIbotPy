@@ -1102,7 +1102,8 @@ class Utils:
             if Utils.get_uaibot_type(obj) == 'uaibot.Cylinder':
                 return ub_cpp.CPP_GeometricPrimitives.create_cylinder(htm, obj.radius, obj.height)
             if Utils.get_uaibot_type(obj) == 'uaibot.PointCloud':
-                return obj.cpp_pointcloud 
+                list_of_points = [obj._points[:, i:i+1] for i in range(obj._points.shape[1])]
+                return ub_cpp.CPP_GeometricPrimitives.create_pointcloud(list_of_points)
             if Utils.get_uaibot_type(obj) == 'uaibot.ConvexPolytope':
                 Q = htm[0:3,0:3]
                 p = htm[0:3,-1]
@@ -1272,12 +1273,12 @@ class Utils:
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
             if Utils.is_a_metric_object(obj_a):
-                obj_a_cpp = Utils.obj_to_cpp(obj_a) 
+                obj_a_cpp = obj_a.cpp_obj
             else:
                 obj_a_cpp = obj_a
 
             if Utils.is_a_metric_object(obj_b):
-                obj_b_cpp = Utils.obj_to_cpp(obj_b) 
+                obj_b_cpp = obj_b.cpp_obj
             else:
                 obj_b_cpp = obj_b
            

@@ -119,8 +119,8 @@ def _compute_dist(self, obj, q=None, htm=None, old_dist_struct=None, tol=0.0005,
     else:
         
 
-        old_dsro = _diststructrobotobj_py2cpp(old_dist_struct)       
-        new_dsro = self.cpp_robot.compute_dist(Utils.obj_to_cpp(obj), q, htm, old_dsro, tol, no_iter_max, max_dist, h+1e-6, eps+1e-6)
+        old_dsro = _diststructrobotobj_py2cpp(old_dist_struct)    
+        new_dsro = self.cpp_robot.compute_dist(obj.cpp_obj, q, htm, old_dsro, tol, no_iter_max, max_dist, h+1e-6, eps+1e-6)
 
         return _diststructrobotobj_cpp2py(new_dsro, obj, self)
             

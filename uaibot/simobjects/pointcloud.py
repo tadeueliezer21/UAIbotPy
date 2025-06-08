@@ -70,9 +70,9 @@ class PointCloud:
         return np.array(self._points)
 
     @property
-    def cpp_pointcloud(self):
-        """The c++ version of the point cloud"""
-        return self._cpp_pointcloud
+    def cpp_obj(self):
+        """Used in the c++ interface"""
+        return self._cpp_obj
     
     #######################################
     # Constructor
@@ -146,10 +146,9 @@ class PointCloud:
         self._max_time = 0
         
         if os.environ['CPP_SO_FOUND']=='1':
-            list_of_points = [self._points[:, i:i+1] for i in range(self._points.shape[1])]
-            self._cpp_pointcloud = ub_cpp.CPP_GeometricPrimitives.create_pointcloud(list_of_points)
+            self._cpp_obj = Utils.obj_to_cpp(self)
         else:
-            self._cpp_pointcloud = []
+            self._cpp_obj = []
 
         self.add_ani_frame(0, 0, np.shape(self._points)[1])
 
@@ -251,7 +250,7 @@ class PointCloud:
     """
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
-            obj_cpp = self._cpp_pointcloud
+            obj_cpp = self._cpp_obj
             
         if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
             raise Exception("c++ mode is set, but .so file was not loaded!")
@@ -385,5 +384,5 @@ class PointCloud:
         if mode == 'python' or (mode=='auto' and os.environ['CPP_SO_FOUND']=='0'):
             raise Exception("Projection to point cloud available only for c++ mode!")
         else:
-            pr = self._cpp_pointcloud.projection(Utils.cvt(point), h, eps)
+            pr = self._cpp_obj.projection(Utils.cvt(point), h, eps)
             return Utils.cvt(pr.proj), pr.dist

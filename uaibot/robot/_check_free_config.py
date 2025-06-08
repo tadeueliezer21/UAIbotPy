@@ -56,7 +56,7 @@ def _check_free_config(self, q=None, htm=None, obstacles=[],
             if Utils.get_uaibot_type(obs) == 'uaibot.CPP_GeometricPrimitives':
                 obstacles_cpp.append(obs)
             else:
-                obstacles_cpp.append(Utils.obj_to_cpp(obs))
+                obstacles_cpp.append(obs.cpp_obj)
                 
         cfcres = self.cpp_robot.check_free_configuration(Utils.cvt(q), htm, obstacles_cpp, check_joint, check_auto, tol, dist_tol, no_iter_max)
         return cfcres.isfree, cfcres.message, cfcres.info
