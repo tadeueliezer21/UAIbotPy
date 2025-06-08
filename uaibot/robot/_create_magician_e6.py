@@ -26,8 +26,6 @@ def _create_magician_e6(htm, name, color, opacity):
         raise Exception("The parameter 'opacity' should be a float between 0 and 1.")
 
 
-    c=0
-
     link_info = [[0, 0, 0, 0, 0, 0], #"theta" rotation in z
                  [0.167, -0.086, 0.086, -0.086, 0.101, -0.065],  # "d" translation in z
                  [-np.pi/2, 0, 0, np.pi/2, -np.pi/2, np.pi],  # "alfa" rotation in x

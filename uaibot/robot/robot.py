@@ -394,7 +394,6 @@ class Robot:
     """
         return _fkm(self, q, axis, htm, mode)
 
-
     def ikm(self, htm_tg: HTMatrix, htm: Optional[HTMatrix]=None, q0: Optional[Vector]=None, p_tol: float=0.001, 
             a_tol: float =5, no_iter_max: int =200, ignore_orientation: bool = False, 
             no_tries = 40, check_joint: bool = True, check_auto: bool = True, 
@@ -576,6 +575,7 @@ class Robot:
     #######################################
     # Methods for control
     #######################################
+    
     @staticmethod
     def vector_field(q, curve: List[Vector], alpha: float =1, 
                      const_vel: float =1, is_closed: bool = True, gamma: float=10, mode: str ='auto') -> Tuple[np.matrix,float,int]:
@@ -1435,9 +1435,6 @@ class Robot:
 
         return _compute_dist_auto(self, q, old_dist_struct, tol, no_iter_max, max_dist, h, eps, mode)
 
-
-        
-
     def check_free_config(self, q: Optional[Vector]=None, htm: Optional[HTMatrix]=None, 
                           obstacles: List[MetricObject]=[], check_joint: bool = True, check_auto: bool = True,
                           tol: float = 0.0005, dist_tol: float = 0.005, no_iter_max: int = 20, 
@@ -1517,9 +1514,6 @@ class Robot:
 
         return _check_free_config(self, q, htm, obstacles, check_joint, check_auto, tol, dist_tol, no_iter_max, mode)
 
-
-
-     
     #######################################################################################################   
     #LEGACY
     def check_free_configuration(self, q: Optional[Vector]=None, htm: Optional[HTMatrix]=None, 
