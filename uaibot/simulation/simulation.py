@@ -248,8 +248,8 @@ class Simulation:
                 self._width = 960 
                 self._height = 720 
             else:
-                self._width = 800
-                self._height = 600                
+                self._width = 500
+                self._height = 500                
         else:
             self._width = width
             self._height = height
@@ -423,10 +423,7 @@ class Simulation:
 
         sim = Simulation(objects, ambient_light_intensity=2*light_intensity, ldr_urls=ldr_list)
         sim.add(ground)
-        sim.add(light1)
-        sim.add(light2)
-        sim.add(light3)
-        sim.add(light4)
+
 
         return sim
             
