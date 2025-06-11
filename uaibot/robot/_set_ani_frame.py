@@ -27,3 +27,5 @@ def _set_ani_frame(self, q=None, htm=None, enforce_joint_limits=False):
     
     if self.eef_frame_visible:
         self._eef_frame.add_ani_frame(0,self.fkm(q))
+        
+    self.update_col_object(0)
