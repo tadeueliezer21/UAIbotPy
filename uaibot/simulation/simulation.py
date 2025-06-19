@@ -932,6 +932,23 @@ class Simulation:
             _STRJAVASCRIPT += line
 
         _STRJAVASCRIPT += "\n </script>"
+        
+        _STRJAVASCRIPT += "<style>\n"
+        _STRJAVASCRIPT += "html, body {\n"
+        _STRJAVASCRIPT += "margin: 0; \n"
+        _STRJAVASCRIPT += "padding: 0; \n"
+        _STRJAVASCRIPT += "overflow: hidden; \n"
+        _STRJAVASCRIPT += "width: 100%; \n"
+        _STRJAVASCRIPT += "height: 100%; \n"
+        _STRJAVASCRIPT += "}\n"
+
+        _STRJAVASCRIPT += "canvas {\n"
+        _STRJAVASCRIPT += "display: block;\n"
+        _STRJAVASCRIPT += "width: 100%; \n"
+        _STRJAVASCRIPT += "height: 100%;\n"
+        _STRJAVASCRIPT += "}\n"
+        _STRJAVASCRIPT += "</style>\n"
+              
         _STRJAVASCRIPT += "\n </body>"
         _STRJAVASCRIPT += "\n </html>"
             
