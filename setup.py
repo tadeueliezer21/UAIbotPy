@@ -35,13 +35,8 @@ class CMakeBuild(build_ext):
         # Windows-specific configuration
         if sys.platform == "win32":
             cmake_args.extend([
-                "-DCMAKE_CXX_FLAGS=/Zc:__cplusplus /EHsc /D_USE_MATH_DEFINES /wd4244 /wd4267",
-                "-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON"
+                "-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON",
             ])
-            # /wd4244  # Disable conversion warnings
-            # /wd4267  # Disable size_t conversion warnings
-            # /wd4996  # Disable deprecated function warnings
-            # Copied some flags from mplcairo (https://github.com/matplotlib/mplcairo/blob/93c97b00f07e24bb86e8a53dd49bde9bfe45e6ad/setup.py)
         else:
             # Unix-specific configuration (Old ubuntu use gmake as default)
             cmake_args.append("-DCMAKE_MAKE_PROGRAM=make")
@@ -59,9 +54,8 @@ class CMakeBuild(build_ext):
             
             # Build with platform-specific arguments
             build_args = ["cmake", "--build", ".", "--config", "Release"]
-            if sys.platform == "win32":
-                build_args.extend(["--", "/m"])
-            else:
+            # Parallel builds in windows are not consistent enough to set them here (/m for MSVC, f -j for others)
+            if sys.platform != "win32":
                 num_jobs = multiprocessing.cpu_count()
                 build_args.extend(["--", f"-j{num_jobs}"])
 
