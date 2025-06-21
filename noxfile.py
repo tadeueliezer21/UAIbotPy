@@ -20,7 +20,6 @@ def tests(session: nox.Session) -> None:
         "pytest",
         "tests/test_utils/",
         "tests/test_simobjects/",
-        "-v",          # Show individual test names
         "--tb=long",   # Full error tracebacks
         "--color=yes", # Colorized output
     )

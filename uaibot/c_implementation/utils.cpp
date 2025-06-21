@@ -11,7 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <random>
-
+#include <numeric>  // Required for std::iota on windows...
 
 // #include "utils.cuh"
 #include "declarations.h"
