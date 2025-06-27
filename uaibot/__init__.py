@@ -30,25 +30,24 @@ try:
     from .utils import Utils
     from .robot import Robot
     from .simulation import Simulation
-    from .simobjects import Box, Ball, ConvexPolytope, Cylinder, PointCloud
-    from .graphics import MeshMaterial, Texture
+    from .simobjects import Arrow, Ball, Box, ConvexPolytope, Cylinder, Frame, Group, HTMLDiv, PointCloud, PointLight, RigidObject, Vector
+    from .graphics import GLBMeshMaterial, MeshMaterial, Model3D, MTLMeshMaterial, Texture
     from .demo import Demo
 except ImportError:
     pass
 
 __all__ = [
     "Utils", "Robot", "Simulation", "Demo",
-    "Box", "Ball", "ConvexPolytope", "Cylinder", "PointCloud",
-    "MeshMaterial", "Texture",
+    "Arrow", "Ball", "Box", "ConvexPolytope", 
+    "Cylinder", "Frame", "Group", "HTMLDiv", 
+    "PointCloud", "PointLight", "RigidObject", "Vector",
+    "GLBMeshMaterial", "MeshMaterial", "Model3D", 
+    "MTLMeshMaterial", "Texture"
 ]
 
 import numpy as np
 np.set_printoptions(
     precision=4,   
-    linewidth=80,  
+    linewidth=100,  
     suppress=True  
 )
-
-
-
-

@@ -90,6 +90,13 @@ class Box:
         """Mesh material properties of the object"""
         return self._mesh_material
 
+    @property
+    def cpp_obj(self):
+        """Used in the c++ interface"""
+        self._cpp_obj.htm = self._htm
+        return self._cpp_obj
+    
+    
     #######################################
     # Constructor
     #######################################
@@ -145,6 +152,10 @@ class Box:
         # Set initial total configuration
         self.set_ani_frame(self._htm)
 
+        if os.environ['CPP_SO_FOUND']=="1":
+            self._cpp_obj =  Utils.obj_to_cpp(self)
+            
+            
     #######################################
     # Std. Print
     #######################################
@@ -262,7 +273,7 @@ class Box:
     """
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
-            obj_cpp = Utils.obj_to_cpp(self) 
+            obj_cpp = self.cpp_obj 
             
         if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
             raise Exception("c++ mode is set, but .so file was not loaded!")
@@ -306,7 +317,7 @@ class Box:
     """
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
-            obj_cpp = Utils.obj_to_cpp(self) 
+            obj_cpp = self.cpp_obj
             
         if mode=='c++' and os.environ['CPP_SO_FOUND']=='0':
             raise Exception("c++ mode is set, but .so file was not loaded!")
@@ -451,7 +462,7 @@ class Box:
 
 
         if (mode == 'c++') or (mode=='auto' and os.environ['CPP_SO_FOUND']=='1'):
-            obj_cpp = Utils.obj_to_cpp(self)
+            obj_cpp = self.cpp_obj
             
         if ( ( h > 0 or eps > 0) and ((mode == 'python') or ((mode=='auto' and os.environ['CPP_SO_FOUND']=='0')))):
             raise Exception("In Python mode, smoothing parameters 'h' and 'eps' must be set to 0!")
