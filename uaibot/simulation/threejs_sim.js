@@ -912,53 +912,53 @@ renderer.setAnimationLoop(() => {
 //------------------------------------------------------------
 
 
-window.addEventListener('resize', onWindowResize, false);
+// window.addEventListener('resize', onWindowResize, false);
 
-function onWindowResize() {
+// function onWindowResize() {
     
-    const canvas = document.querySelector('canvas');
-    const widthAttr = canvas.getAttribute('width');
-    const heightAttr = canvas.getAttribute('height');
-    const factor = widthAttr/heightAttr
-	const canvas_div =  document.getElementById('canvas_container_'+sceneID)
+//     const canvas = document.querySelector('canvas');
+//     const widthAttr = canvas.getAttribute('width');
+//     const heightAttr = canvas.getAttribute('height');
+//     const factor = widthAttr/heightAttr
+// 	const canvas_div =  document.getElementById('canvas_container_'+sceneID)
     
-	if(factor>1)
-	{
-		const width = Math.round(0.9*factor*window.innerHeight);
-		const height = 0.9*window.innerHeight;
+// 	if(factor>1)
+// 	{
+// 		const width = Math.round(0.9*factor*window.innerHeight);
+// 		const height = 0.9*window.innerHeight;
 		
-		canvas_div.style.width = width;
-    	canvas_div.style.height = height;
+// 		canvas_div.style.width = width;
+//     	canvas_div.style.height = height;
 			
-		camera.aspect = width / height;
-		camera.updateProjectionMatrix();
-		renderer.setSize(width, height);
-	}
-	else
-	{
-		const width = 0.9*window.innerWidth;
-		const height =  Math.round((0.9/factor)*window.innerWidth);
+// 		camera.aspect = width / height;
+// 		camera.updateProjectionMatrix();
+// 		renderer.setSize(width, height);
+// 	}
+// 	else
+// 	{
+// 		const width = 0.9*window.innerWidth;
+// 		const height =  Math.round((0.9/factor)*window.innerWidth);
 		
-		canvas_div.style.width = width;
-    	canvas_div.style.height = height;
+// 		canvas_div.style.width = width;
+//     	canvas_div.style.height = height;
 			
-		camera.aspect = width / height;
-		camera.updateProjectionMatrix();
-		renderer.setSize(width, height);
-	}
+// 		camera.aspect = width / height;
+// 		camera.updateProjectionMatrix();
+// 		renderer.setSize(width, height);
+// 	}
 
 
-    // ---- GUI WIDTH FIX ----
-    const canvasWidth = renderer.domElement.clientWidth;
-    const customContainer = document.getElementById('canvas_container_' + sceneID);
+//     // ---- GUI WIDTH FIX ----
+//     const canvasWidth = renderer.domElement.clientWidth;
+//     const customContainer = document.getElementById('canvas_container_' + sceneID);
 
-    if (customContainer) {
-        try {
-            customContainer.getElementsByClassName('c')[0].style.width = (canvasWidth - 20) + 'px';
-            customContainer.getElementsByClassName('dg main')[0].style.width = canvasWidth + 'px';
-            customContainer.getElementsByClassName('slider')[0].style.width = (canvasWidth - 100) + 'px';
-        } catch (e) {
-            console.warn('GUI resize skipped:', e);
-        }
-    }
-}
+//     if (customContainer) {
+//         try {
+//             customContainer.getElementsByClassName('c')[0].style.width = (canvasWidth - 20) + 'px';
+//             customContainer.getElementsByClassName('dg main')[0].style.width = canvasWidth + 'px';
+//             customContainer.getElementsByClassName('slider')[0].style.width = (canvasWidth - 100) + 'px';
+//         } catch (e) {
+//             console.warn('GUI resize skipped:', e);
+//         }
+//     }
+// }
