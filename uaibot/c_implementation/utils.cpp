@@ -11,7 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <random>
-#include <numeric>  // Required for std::iota on windows...
+#include <numeric> // Required for std::iota on windows...
 
 // #include "utils.cuh"
 #include "declarations.h"
@@ -216,8 +216,6 @@ MatrixXf null_space(MatrixXf A)
         return Anull;
 }
 
-
-
 MatrixXf m_vert_stack(MatrixXf A1, MatrixXf A2)
 {
     MatrixXf A(A1.rows() + A2.rows(), A1.cols());
@@ -395,14 +393,13 @@ VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alp
 
     float mult;
 
-    if(is_closed)
+    if (is_closed)
         mult = 1;
     else
     {
-        float per = ((float) index_q)/((float) no_q);
-        mult = minf(gamma * (1.0-per),1.0);
+        float per = ((float)index_q) / ((float)no_q);
+        mult = minf(gamma * (1.0 - per), 1.0);
     }
-    
 
     VectorFieldResult vfr;
     float sign = const_velocity > 0 ? 1 : -1;
@@ -468,23 +465,24 @@ PrimDistResult dist_line(vector<Vector3f> a0, vector<Vector3f> a1, vector<Vector
     return ldr;
 }
 
-VectorXf dp_inv_solve(const MatrixXf& A, const VectorXf& b, float eps) {
+VectorXf dp_inv_solve(const MatrixXf &A, const VectorXf &b, float eps)
+{
     int n = A.rows();
     int m = A.cols();
-    
+
     MatrixXf M(n + m, n + m);
     VectorXf rhs(n + m);
-    
+
     M.topLeftCorner(m, m) = eps * MatrixXf::Identity(m, m);
     M.topRightCorner(m, n) = -A.transpose();
     M.bottomLeftCorner(n, m) = A;
     M.bottomRightCorner(n, n) = MatrixXf::Identity(n, n);
-    
+
     rhs.head(m).setZero();
     rhs.tail(n) = b;
-    
+
     VectorXf solution = M.colPivHouseholderQr().solve(rhs);
-    
+
     return solution.head(m);
 }
 
@@ -492,28 +490,33 @@ VectorXf sqrt_sign(VectorXf v)
 {
     VectorXf w = VectorXf(v.rows());
 
-    for(int i=0; i < v.rows(); i++)
-        w[i] = v[i] > 0? sqrtf(v[i]): -sqrtf(-v[i]);
+    for (int i = 0; i < v.rows(); i++)
+        w[i] = v[i] > 0 ? sqrtf(v[i]) : -sqrtf(-v[i]);
 
     return w;
 }
 
-vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b) {
+vector<Vector3f> get_vertex(const MatrixXf &A, const VectorXf &b)
+{
     vector<Vector3f> vertices;
     int num_constraints = A.rows();
     int dim = A.cols();
 
-    if (num_constraints < 3 || dim != 3) {
+    if (num_constraints < 3 || dim != 3)
+    {
         cerr << "Error: A must have at least 3 constraints and be in 3D." << endl;
         return vertices;
     }
 
     vector<int> indices(num_constraints);
-    iota(indices.begin(), indices.end(), 0); 
+    iota(indices.begin(), indices.end(), 0);
 
-    for (size_t i = 0; i < num_constraints; ++i) {
-        for (size_t j = i + 1; j < num_constraints; ++j) {
-            for (size_t k = j + 1; k < num_constraints; ++k) {
+    for (size_t i = 0; i < num_constraints; ++i)
+    {
+        for (size_t j = i + 1; j < num_constraints; ++j)
+        {
+            for (size_t k = j + 1; k < num_constraints; ++k)
+            {
                 MatrixXf A_sub(3, 3);
                 VectorXf b_sub(3);
 
@@ -526,14 +529,15 @@ vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b) {
                 b_sub(2) = b(k);
 
                 FullPivLU<MatrixXf> lu(A_sub);
-                if (!lu.isInvertible()) continue; 
+                if (!lu.isInvertible())
+                    continue;
 
                 Vector3f p = lu.solve(b_sub);
 
                 VectorXf check = A * p - b;
 
-                
-                if (check.maxCoeff()<=1e-5) {
+                if (check.maxCoeff() <= 1e-5)
+                {
                     vertices.push_back(p);
                 }
             }
@@ -543,7 +547,7 @@ vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b) {
     return vertices;
 }
 
-VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b,const MatrixXf& Aeq,const VectorXf& beq) 
+VectorXf solveQP(const MatrixXf &H, const VectorXf &f, const MatrixXf &A, const VectorXf &b, const MatrixXf &Aeq, const VectorXf &beq)
 {
     // Solve min_u (u'*H*u)/2 + f'*u
     // such that:
@@ -554,7 +558,6 @@ VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const Vec
     int n = H.rows();
     int meq = Aeq.rows();
     int mineq = A.rows();
-
 
     quadprogpp::Matrix<double> H_aux, Aeq_aux, A_aux;
     quadprogpp::Vector<double> f_aux, beq_aux, b_aux, u_aux;
@@ -608,9 +611,105 @@ VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const Vec
     }
 }
 
-VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b) 
+VectorXf solveQP(const MatrixXf &H, const VectorXf &f, const MatrixXf &A, const VectorXf &b)
 {
     int n = H.rows();
-    return solveQP(H,f,A,b,MatrixXf::Zero(0, n),VectorXf::Zero(0));
+    return solveQP(H, f, A, b, MatrixXf::Zero(0, n), VectorXf::Zero(0));
 }
 
+// Definição do adaptador de PointCloud para Eigen::Vector3f, necessário para o código compilar.
+// Esta é uma implementação comum para usar nanoflann com Eigen.
+struct PointCloudEigen
+{
+    const std::vector<Eigen::Vector3f> &pts;
+
+    PointCloudEigen(const std::vector<Eigen::Vector3f> &points) : pts(points) {}
+
+    inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+    inline float kdtree_get_pt(const size_t idx, const size_t dim) const
+    {
+        return pts[idx][dim];
+    }
+
+    template <class BBOX>
+    bool kdtree_get_bbox(BBOX & /*bb*/) const { return false; }
+};
+
+// Função raycast_pointcloud refatorada usando nanoflann kdtree
+std::vector<Eigen::Vector3f> raycast_pointcloud(
+    const std::vector<Eigen::Vector3f> &points,
+    const Eigen::Vector3f &origin,
+    const Eigen::Vector3f &direction,
+    float angle_deg)
+{
+    std::vector<Eigen::Vector3f> result;
+
+    if (points.empty())
+    {
+        return result;
+    }
+
+    // Normaliza a direção
+    Eigen::Vector3f dir = direction.normalized();
+
+    // Converte o ângulo para cosseno para o limiar do produto escalar
+    float cos_threshold = std::cos(angle_deg * M_PI / 180.0f);
+
+    // Cria um adaptador de nuvem de pontos para nanoflann
+    PointCloudEigen cloud_adapter(points);
+
+    // Constrói um índice KD-tree
+    // Usando L2_Simple_Adaptor para distância Euclidiana ao quadrado e 3 dimensões
+    // Especifica explicitamente todos os parâmetros de template para L2_Simple_Adaptor para garantir size_t para IndexType
+    using my_kd_tree_t = nanoflann::KDTreeSingleIndexAdaptor<
+        nanoflann::L2_Simple_Adaptor<
+            float,           // T: tipo de dado das coordenadas (ex: float)
+            PointCloudEigen, // DataSource: seu adaptador de nuvem de pontos
+            float,           // _DistanceType: tipo para as distâncias (ex: float)
+            size_t           // _IndexType: tipo para os índices (explicitamente size_t)
+            >,
+        PointCloudEigen,
+        3 /* dim */,
+        size_t /* IndexType para o próprio KDTreeSingleIndexAdaptor */
+        >;
+
+    my_kd_tree_t index(3 /*dim*/, cloud_adapter, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* leaf_max_size */));
+    index.buildIndex();
+
+    // Calcula um raio de busca suficientemente grande para abranger todos os pontos que poderiam estar no cone.
+    // Esta é uma busca por raio preliminar; a filtragem angular refinará os resultados.
+    float max_dist_sq = 0.0f;
+    for (const auto &p : points)
+    {
+        max_dist_sq = std::max(max_dist_sq, (p - origin).squaredNorm());
+    }
+    // Adiciona um pequeno epsilon para garantir que todos os pontos sejam cobertos.
+    float search_radius_sq = max_dist_sq + 1e-6f;
+
+    // *** CORREÇÃO AQUI ***
+    // O tipo do vetor de resultados deve ser `nanoflann::ResultItem<size_t, float>`
+    // em vez de `std::pair<size_t, float>`.
+    std::vector<nanoflann::ResultItem<size_t, float>> ret_matches;
+
+    // Ponto de consulta para a busca por raio (origem)
+    float query_pt[3] = {origin.x(), origin.y(), origin.z()};
+
+    // Realiza a busca por raio, passando ret_matches como o vetor de saída
+    index.radiusSearch(&query_pt[0], search_radius_sq, ret_matches, nanoflann::SearchParameters());
+
+    // Filtra os resultados com base na condição do ângulo do cone
+    for (const auto &match : ret_matches)
+    {
+        // O acesso aos membros .first e .second é o mesmo que em std::pair
+        const Eigen::Vector3f &p = points[match.first];
+        Eigen::Vector3f v = (p - origin).normalized();
+        float dot_product = dir.dot(v);
+        if (dot_product >= cos_threshold)
+        {
+            result.push_back(p);
+        }
+    }
+
+    return result;
+}

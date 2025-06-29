@@ -30,7 +30,8 @@ using namespace std::chrono;
 using namespace Eigen;
 namespace py = pybind11;
 
-PYBIND11_MODULE(uaibot_cpp_bind, m) {
+PYBIND11_MODULE(uaibot_cpp_bind, m)
+{
      m.doc() = "UAIBot C++ interface";
 
      py::class_<FKResult>(m, "CPP_FKResult")
@@ -202,14 +203,14 @@ PYBIND11_MODULE(uaibot_cpp_bind, m) {
               static_cast<IKResult (Manipulator::*)(Matrix4f, Matrix4f, VectorXf, float, float, int, bool) const>(&Manipulator::ik),
               py::arg("tg_htm"), py::arg("htm"), py::arg("q0"), py::arg("p_tol"), py::arg("a_tol"), py::arg("no_iter_max"), py::arg("ignore_orientation"))
          .def("set_joint_param",
-              (void(Manipulator::*)(int, float, float, float, float, int, float, float)) & Manipulator::set_joint_param,
+              (void (Manipulator::*)(int, float, float, float, float, int, float, float))&Manipulator::set_joint_param,
               py::arg("ind_link"), py::arg("theta"), py::arg("d"), py::arg("alpha"), py::arg("a"), py::arg("joint_type"), py::arg("q_min"),
               py::arg("q_max"))
          .def("add_geo_prim",
-              (void(Manipulator::*)(int, GeometricPrimitives)) & Manipulator::add_geo_prim,
+              (void (Manipulator::*)(int, GeometricPrimitives))&Manipulator::add_geo_prim,
               py::arg("ind_link"), py::arg("prim"))
          .def("set_htm_extra",
-              (void(Manipulator::*)(Matrix4f, Matrix4f)) & Manipulator::set_htm_extra,
+              (void (Manipulator::*)(Matrix4f, Matrix4f))&Manipulator::set_htm_extra,
               py::arg("htm_world_to_dh0"), py::arg("htm_dhn_to_ee"))
          .def("check_free_configuration",
               static_cast<CheckFreeConfigResult (Manipulator::*)(VectorXf, Matrix4f, vector<GeometricPrimitives>, bool, bool, float, float, int) const>(&Manipulator::check_free_configuration),
@@ -227,6 +228,14 @@ PYBIND11_MODULE(uaibot_cpp_bind, m) {
      m.def("vectorfield_rn", &vectorfield_rn, py::arg("q"), py::arg("q_path"), py::arg("alpha"), py::arg("const_velocity"), py::arg("is_closed"), py::arg("gamma"));
      m.def("dp_inv_solve", &dp_inv_solve, py::arg("A"), py::arg("b"), py::arg("eps"));
      m.def("vectorfield_SE3", &vectorfield_SE3, py::arg("state"), py::arg("curve"), py::arg("kt1"), py::arg("kt2"),
-           py::arg("kt3"), py::arg("kn1"), py::arg("kn2"), py::arg("curve_derivative")=std::vector<Eigen::MatrixXd>(),
-           py::arg("delta") = c_delta, py::arg("ds")=c_ds);
+           py::arg("kt3"), py::arg("kn1"), py::arg("kn2"), py::arg("curve_derivative") = std::vector<Eigen::MatrixXd>(),
+           py::arg("delta") = c_delta, py::arg("ds") = c_ds);
+
+     m.doc() = "Raycasting module using Eigen and pybind11";
+     m.def("raycast_pointcloud", &raycast_pointcloud,
+           py::arg("points"),
+           py::arg("origin"),
+           py::arg("direction"),
+           py::arg("angle_deg"),
+           "Return points within a view cone based on origin, direction and angle");
 }

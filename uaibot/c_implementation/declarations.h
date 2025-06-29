@@ -10,7 +10,7 @@ using namespace std;
 using namespace Eigen;
 
 const float VERYBIGNUMBER = 10000000.0;
-const float VERYSMALLNUMBER = 1/VERYBIGNUMBER;
+const float VERYSMALLNUMBER = 1 / VERYBIGNUMBER;
 
 // Global constants for the default delta and ds valuesAdd commentMore actions
 extern double c_delta;
@@ -134,7 +134,7 @@ struct QueueElement
     Vector3f proj_A;
     Vector3f proj_B;
 
-    bool operator>(const QueueElement& other) const
+    bool operator>(const QueueElement &other) const
     {
         return dist > other.dist;
     }
@@ -156,10 +156,9 @@ struct AABB
     Vector3f p;
 
     AABB();
-    static AABB get_aabb_pointcloud(const vector<Vector3f>& points, int start, int end);
+    static AABB get_aabb_pointcloud(const vector<Vector3f> &points, int start, int end);
     static float dist_aabb(AABB aabb1, AABB aabb2);
 };
-
 
 struct BVH
 {
@@ -168,9 +167,9 @@ struct BVH
     vector<int> left_child;
     vector<int> right_child;
 
-    static int build_bvh(BVH &bvh, vector<Vector3f>& points, int start, int end, int parentIndex);
+    static int build_bvh(BVH &bvh, vector<Vector3f> &points, int start, int end, int parentIndex);
     BVH();
-    BVH(vector<Vector3f>& points);
+    BVH(vector<Vector3f> &points);
 };
 
 struct CheckFreeConfigResult
@@ -205,7 +204,6 @@ struct DistStructRobotObj
     DistStructLinkObj get_item(int ind_link, int ind_obj_link);
 };
 
-
 struct DistStructLinkLink
 {
     bool is_null;
@@ -233,15 +231,11 @@ struct DistStructRobotAuto
     DistStructLinkLink get_item(int ind_link_1, int ind_link_2, int ind_obj_link_1, int ind_obj_link_2);
 };
 
-
-using PointCloud =  std::shared_ptr<nanoflann::PointCloud<float>>;
+using PointCloud = std::shared_ptr<nanoflann::PointCloud<float>>;
 
 using KDTree = std::shared_ptr<nanoflann::KDTreeSingleIndexAdaptor<
-        nanoflann::L2_Simple_Adaptor<float, nanoflann::PointCloud<float>>,
-        nanoflann::PointCloud<float>, 3 
-        >>;
-
-
+    nanoflann::L2_Simple_Adaptor<float, nanoflann::PointCloud<float>>,
+    nanoflann::PointCloud<float>, 3>>;
 
 struct GeometricPrimitives
 {
@@ -251,19 +245,18 @@ struct GeometricPrimitives
     Matrix4f htm;
     int type;
 
-    //For point cloud
-    KDTree kdtree; 
+    // For point cloud
+    KDTree kdtree;
     PointCloud pointcloud;
     BVH bvh;
 
-    //For convex polytopes
+    // For convex polytopes
     MatrixXf A;
     VectorXf b;
 
-    //For point cloud and convex polytopes
+    // For point cloud and convex polytopes
     vector<Vector3f> points_gp;
     Vector3f center;
-
 
     GeometricPrimitives();
 
@@ -273,7 +266,6 @@ struct GeometricPrimitives
     static GeometricPrimitives create_pointcloud(vector<Vector3f> &points);
     static GeometricPrimitives create_convexpolytope(Matrix4f htm, MatrixXf A, VectorXf b);
 
-  
     GeometricPrimitives to_pointcloud(float disc) const;
     ProjResult projection(Vector3f point, float h, float eps) const;
     Vector3f support(Vector3f direction) const;
@@ -342,11 +334,10 @@ struct Manipulator
                                                    bool check_auto, float tol, float dist_tol, int no_iter_max) const;
 
     DistStructRobotObj compute_dist(GeometricPrimitives obj, VectorXf q, Matrix4f htm, DistStructRobotObj old_dist_struct,
-                                                 float tol, int no_iter_max, float max_dist, float h, float eps) const;
+                                    float tol, int no_iter_max, float max_dist, float h, float eps) const;
 
     DistStructRobotAuto compute_dist_auto(VectorXf q, DistStructRobotAuto old_dist_struct,
-                                                float tol, int no_iter_max, float max_dist, float h, float eps) const;
-
+                                          float tol, int no_iter_max, float max_dist, float h, float eps) const;
 };
 
 int mini(int a, int b);
@@ -407,15 +398,17 @@ PrimDistResult dist_line(vector<Vector3f> a0, vector<Vector3f> a1, vector<Vector
 
 VectorFieldResult vectorfield_rn(VectorXf q, vector<VectorXf> &q_path, float alpha, float const_velocity, bool is_closed, float gamma);
 
-VectorXf dp_inv_solve(const MatrixXf& A, const VectorXf& b, float eps);
+VectorXf dp_inv_solve(const MatrixXf &A, const VectorXf &b, float eps);
 
 VectorXf sqrt_sign(VectorXf v);
 
-vector<Vector3f> get_vertex(const MatrixXf& A, const VectorXf& b);
+vector<Vector3f> get_vertex(const MatrixXf &A, const VectorXf &b);
 
-VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b,const MatrixXf& Aeq,const VectorXf& beq);
+VectorXf solveQP(const MatrixXf &H, const VectorXf &f, const MatrixXf &A, const VectorXf &b, const MatrixXf &Aeq, const VectorXf &beq);
 
-VectorXf solveQP(const MatrixXf& H,const VectorXf& f,const MatrixXf& A,const VectorXf& b);
+VectorXf solveQP(const MatrixXf &H, const VectorXf &f, const MatrixXf &A, const VectorXf &b);
 
-VectorFieldResult vectorfield_SE3(const Eigen::Matrix4d& state, const vector<Eigen::Matrix4d>& curve, float kt1, float kt2, float kt3, float kn1, float kn2,
-    const vector<Eigen::MatrixXd>& curve_derivative=std::vector<Eigen::MatrixXd>(), double delta=c_delta, double ds=c_ds);
+VectorFieldResult vectorfield_SE3(const Eigen::Matrix4d &state, const vector<Eigen::Matrix4d> &curve, float kt1, float kt2, float kt3, float kn1, float kn2,
+                                  const vector<Eigen::MatrixXd> &curve_derivative = std::vector<Eigen::MatrixXd>(), double delta = c_delta, double ds = c_ds);
+
+std::vector<Eigen::Vector3f> raycast_pointcloud(const std::vector<Eigen::Vector3f> &points, const Eigen::Vector3f &origin, const Eigen::Vector3f &direction, float angle_deg);

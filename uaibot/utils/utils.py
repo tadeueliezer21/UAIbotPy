@@ -1322,9 +1322,26 @@ class Utils:
             return Utils.cvt(dist_res.proj_A), Utils.cvt(dist_res.proj_B), dist_res.dist, dist_res.hist_error
 
 
+    @staticmethod
+    def raycast_pointcloud(points, origin, direction, angle_deg):
+        """
+        Executa o raycast em uma nuvem de pontos.
 
+        :param points: array Nx3 (numpy.ndarray) ou list of np.array, contendo os pontos da nuvem.
+        :param origin: numpy.array shape (3,) - ponto de origem da câmera.
+        :param direction: numpy.array shape (3,) - vetor de direção (será normalizado).
+        :param angle_deg: float - ângulo do cone de visão em graus.
 
+        :return: Lista de pontos visíveis dentro do cone.
+        """
+        if isinstance(points, np.ndarray):
+            if points.shape[1] != 3:
+                raise ValueError("A matriz de pontos deve ter shape (N, 3)")
+            points = [np.array(p, dtype=np.float32) for p in points]
 
+        origin = np.array(origin, dtype=np.float32)
+        direction = np.array(direction, dtype=np.float32)
 
+        return ub_cpp.raycast_pointcloud(points, origin, direction, angle_deg)
 
 
